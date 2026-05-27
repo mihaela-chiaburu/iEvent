@@ -1,3 +1,6 @@
 <Solution>
-  <Project Path="iEvent/iEvent.csproj" />
+  <Project Path="iEvent.Application/iEvent.Application.csproj" />
+  <Project Path="iEvent.Domain/iEvent.Domain.csproj" />
+  <Project Path="iEvent.Infrastructure/iEvent.Infrastructure.csproj" />
+  <Project Path="iEvent/iEvent.WebApi.csproj" />
 </Solution>
