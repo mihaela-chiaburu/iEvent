@@ -2,5 +2,6 @@
   <Project Path="iEvent.Application/iEvent.Application.csproj" />
   <Project Path="iEvent.Domain/iEvent.Domain.csproj" />
   <Project Path="iEvent.Infrastructure/iEvent.Infrastructure.csproj" />
+  <Project Path="iEvent.Tests/iEvent.Tests.csproj" Id="8c26f1d2-7e8c-4e5b-969f-10b4ae3ba2fe" />
   <Project Path="iEvent/iEvent.WebApi.csproj" />
 </Solution>
