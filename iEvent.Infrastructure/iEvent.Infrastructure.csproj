@@ -7,12 +7,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Persistence\**" />
+    <EmbeddedResource Remove="Persistence\**" />
+    <None Remove="Persistence\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\iEvent.Application\iEvent.Application.csproj" />
     <ProjectReference Include="..\iEvent.Domain\iEvent.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Persistence\" />
+    <Folder Include="Identity\" />
+    <Folder Include="ExternalServices\" />
+    <Folder Include="Repositories\" />
+    <Folder Include="Persistance\" />
   </ItemGroup>
 
 </Project>
