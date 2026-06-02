@@ -1,0 +1,37 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using iEvent.Domain.Enums;
+
+namespace iEvent.Domain.Entities
+{
+    public class Booking
+    {
+        [Key]
+        public Guid BookingId { get; set; }
+
+        [Required]
+        public Guid CustomerId { get; set; }
+
+        [Required]
+        public Guid EventId { get; set; }
+
+        [Required]
+        public DateTime BookingDate { get; set; }
+
+        [Required]
+        public BookingStatus Status { get; set; } = BookingStatus.Pending;
+
+        [Range(0, 10000000)]
+        public double TotalPrice { get; set; }
+
+        [ForeignKey(nameof(CustomerId))]
+        public Customer? Customer { get; set; }
+
+        [ForeignKey(nameof(EventId))]
+        public Event? Event { get; set; }
+
+        public List<BookingTicket> BookingTickets { get; set; } = new();
+    }
+}
