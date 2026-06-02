@@ -19,7 +19,7 @@ namespace iEvent.Domain.Entities
         public int Quantity { get; set; }
 
         [Range(0, 1000000)]
-        public double UnitPrice { get; set; }
+        public decimal UnitPrice { get; set; }
 
         [ForeignKey(nameof(BookingId))]
         public Booking? Booking { get; set; }

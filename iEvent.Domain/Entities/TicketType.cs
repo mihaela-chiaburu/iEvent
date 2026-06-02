@@ -18,7 +18,7 @@ namespace iEvent.Domain.Entities
         public string Name { get; set; } = string.Empty;
 
         [Range(0, 1000000)]
-        public double Price { get; set; }
+        public decimal Price { get; set; }
 
         [Range(0, 1000000)]
         public int QuantityAvailable { get; set; }

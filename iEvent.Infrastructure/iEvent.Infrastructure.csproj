@@ -20,7 +20,6 @@
   <ItemGroup>
     <Folder Include="Identity\" />
     <Folder Include="ExternalServices\" />
-    <Folder Include="Repositories\" />
   </ItemGroup>
 
   <ItemGroup>

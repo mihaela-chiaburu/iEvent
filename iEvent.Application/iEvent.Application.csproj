@@ -10,10 +10,4 @@
     <ProjectReference Include="..\iEvent.Domain\iEvent.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Interfaces\Services\" />
-    <Folder Include="Interfaces\Repositories\" />
-    <Folder Include="Services\" />
-  </ItemGroup>
-
 </Project>

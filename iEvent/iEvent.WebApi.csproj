@@ -18,10 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\iEvent.Application\iEvent.Application.csproj" />
     <ProjectReference Include="..\iEvent.Infrastructure\iEvent.Infrastructure.csproj" />
   </ItemGroup>

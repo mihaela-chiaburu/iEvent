@@ -24,7 +24,7 @@ namespace iEvent.Domain.Entities
         public BookingStatus Status { get; set; } = BookingStatus.Pending;
 
         [Range(0, 10000000)]
-        public double TotalPrice { get; set; }
+        public decimal TotalPrice { get; set; }
 
         [ForeignKey(nameof(CustomerId))]
         public Customer? Customer { get; set; }
