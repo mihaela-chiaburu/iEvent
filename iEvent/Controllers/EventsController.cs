@@ -7,18 +7,18 @@ namespace iEvent.WebApi.Controllers
 {
     [ApiController]
     [Route("api/events")]
-    public class EventController : Controller
+    public class EventsController : Controller
     {
         private readonly IEventService _eventService;
-        public EventController(IEventService eventService)
+        public EventsController(IEventService eventService)
         {
             _eventService = eventService;
         }
         
         [HttpGet]
-        public async Task<ActionResult<List<EventRespDto>>> GetAll()
+        public async Task<ActionResult<List<EventRespDto>>> GetAll([FromQuery] string? city)
         {
-            var events = await _eventService.GetAllAsync();
+            var events = await _eventService.GetAllAsync(city);
             return Ok(events);
         }
 

@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using iEvent.Application.DTOs;
 using iEvent.Application.Interfaces.Repositories;
 using iEvent.Application.Interfaces.Services;
@@ -50,9 +48,9 @@ namespace iEvent.Application.Services
             return true;
         }
 
-        public async Task<List<EventRespDto>> GetAllAsync()
+        public async Task<List<EventRespDto>> GetAllAsync(string? city)
         {
-            var ievent = await _eventRepository.GetAllAsync();
+            var ievent = await _eventRepository.GetAllAsync(city);
             return ievent.Select(MapToRespDto).ToList();
         }
 

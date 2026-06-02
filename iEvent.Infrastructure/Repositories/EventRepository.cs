@@ -24,9 +24,19 @@ namespace iEvent.Infrastructure.Repositories
             await _dbContext.SaveChangesAsync();
         }
 
-        public Task<List<Event>> GetAllAsync()
+        public Task<List<Event>> GetAllAsync(string? city)
         {
-            return _dbContext.Events.AsNoTracking().ToListAsync();
+            var query = _dbContext.Events
+                .AsNoTracking()
+                .Include(e => e.Venue)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(city))
+            {
+                query = query.Where(e => e.Venue != null && e.Venue.City == city);
+            }
+
+            return query.ToListAsync();
         }
 
         public Task<Event?> GetByIdAsync(Guid id)

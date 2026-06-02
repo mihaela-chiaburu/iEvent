@@ -9,7 +9,7 @@ namespace iEvent.Application.Interfaces.Services
 {
     public interface IEventService
     {
-        Task<List<EventRespDto>> GetAllAsync();
+        Task<List<EventRespDto>> GetAllAsync(string? city);
         Task<EventRespDto?> GetByIdAsync(Guid id);
         Task<EventRespDto> CreateAsync(EventCreateDto dto);
         Task<bool> UpdateAsync(Guid id, EventUpdateDto dto);
