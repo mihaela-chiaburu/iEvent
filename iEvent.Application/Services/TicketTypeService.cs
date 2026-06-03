@@ -18,9 +18,9 @@ namespace iEvent.Application.Services
             _ticketTypeRepository = ticketTypeRepository;
         }
 
-        public async Task<List<TicketTypeRespDto>> GetAllAsync()
+        public async Task<List<TicketTypeRespDto>> GetAllAsync(Guid? EventId)
         {
-            var ticketTypes = await _ticketTypeRepository.GetAllAsync();
+            var ticketTypes = await _ticketTypeRepository.GetAllAsync(EventId);
             return ticketTypes.Select(MapToRespDto).ToList();
         }
 

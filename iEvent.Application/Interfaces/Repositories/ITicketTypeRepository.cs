@@ -7,7 +7,7 @@ namespace iEvent.Application.Interfaces.Repositories
 {
     public interface ITicketTypeRepository
     {
-        Task<List<TicketType>> GetAllAsync();
+        Task<List<TicketType>> GetAllAsync(Guid? EventId);
         Task<TicketType?> GetByIdAsync(Guid id);
         Task<List<TicketType>> GetByIdsAsync(IEnumerable<Guid> ids);
         Task AddAsync(TicketType ticketType);

@@ -18,9 +18,20 @@ namespace iEvent.Infrastructure.Repositories
             _dbContext = dbContext;
         }
 
-        public Task<List<TicketType>> GetAllAsync()
+        public Task<List<TicketType>> GetAllAsync(Guid? EventId)
         {
-            return _dbContext.TicketTypes.AsNoTracking().ToListAsync();
+            var query = _dbContext.TicketTypes
+                .AsNoTracking()
+                .Include(e => e.Event)
+                .AsQueryable();
+
+            if (!(EventId == null))
+            {
+                query = query.Where(e => e.Event != null && e.Event.EventId == EventId);
+            }
+
+            return query.ToListAsync();
+            //return _dbContext.TicketTypes.AsNoTracking().ToListAsync();
         }
 
         public Task<TicketType?> GetByIdAsync(Guid id)

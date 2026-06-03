@@ -19,9 +19,9 @@ namespace iEvent.WebApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<TicketTypeRespDto>>> GetAll()
+        public async Task<ActionResult<List<TicketTypeRespDto>>> GetAll([FromQuery] Guid? EventId)
         {
-            var ticketTypes = await _ticketTypeService.GetAllAsync();
+            var ticketTypes = await _ticketTypeService.GetAllAsync(EventId);
             return Ok(ticketTypes);
         }
 

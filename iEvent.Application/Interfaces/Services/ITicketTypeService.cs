@@ -7,7 +7,7 @@ namespace iEvent.Application.Interfaces.Services
 {
     public interface ITicketTypeService
     {
-        Task<List<TicketTypeRespDto>> GetAllAsync();
+        Task<List<TicketTypeRespDto>> GetAllAsync(Guid? EventId);
         Task<TicketTypeRespDto?> GetByIdAsync(Guid id);
         Task<TicketTypeRespDto> CreateAsync(TicketTypeCreateDto dto);
         Task<bool> UpdateAsync(Guid id, TicketTypeUpdateDto dto);
