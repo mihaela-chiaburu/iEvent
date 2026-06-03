@@ -1,9 +1,11 @@
 ﻿using iEvent.Domain.Entities;
+using iEvent.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace iEvent.Infrastructure.Persistance
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public DbSet<Venue> Venues { get; set; }
         public DbSet<Event> Events { get; set; }
@@ -42,6 +44,12 @@ namespace iEvent.Infrastructure.Persistance
                 .WithOne(b => b.Customer)
                 .HasForeignKey(b => b.CustomerId);
 
+            modelBuilder.Entity<Customer>()
+                .HasOne<ApplicationUser>()
+                .WithOne()
+                .HasForeignKey<Customer>(c => c.IdentityUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Event>()
                 .HasMany<Booking>()
                 .WithOne(b => b.Event)
@@ -64,6 +72,12 @@ namespace iEvent.Infrastructure.Persistance
                 .HasMany(a => a.AuditLogs)
                 .WithOne(l => l.AdminUser)
                 .HasForeignKey(l => l.AdminId);
+
+            modelBuilder.Entity<AdminUser>()
+                .HasOne<ApplicationUser>()
+                .WithOne()
+                .HasForeignKey<AdminUser>(a => a.IdentityUserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

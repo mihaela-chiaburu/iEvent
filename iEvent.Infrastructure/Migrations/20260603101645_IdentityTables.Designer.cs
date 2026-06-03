@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using iEvent.Infrastructure.Persistance;
 
@@ -11,9 +12,11 @@ using iEvent.Infrastructure.Persistance;
 namespace iEvent.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260603101645_IdentityTables")]
+    partial class IdentityTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -166,20 +169,20 @@ namespace iEvent.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("IdentityUserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
-                    b.HasKey("AdminId");
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
-                    b.HasIndex("IdentityUserId")
-                        .IsUnique();
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
+                    b.HasKey("AdminId");
 
                     b.ToTable("AdminUsers");
                 });
@@ -276,24 +279,21 @@ namespace iEvent.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("IdentityUserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("PhoneNumber")
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
                     b.HasKey("CustomerId");
-
-                    b.HasIndex("IdentityUserId")
-                        .IsUnique();
 
                     b.ToTable("Customers");
                 });
@@ -506,15 +506,6 @@ namespace iEvent.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("iEvent.Domain.Entities.AdminUser", b =>
-                {
-                    b.HasOne("iEvent.Infrastructure.Identity.ApplicationUser", null)
-                        .WithOne()
-                        .HasForeignKey("iEvent.Domain.Entities.AdminUser", "IdentityUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("iEvent.Domain.Entities.AuditLog", b =>
                 {
                     b.HasOne("iEvent.Domain.Entities.AdminUser", "AdminUser")
@@ -562,15 +553,6 @@ namespace iEvent.Infrastructure.Migrations
                     b.Navigation("Booking");
 
                     b.Navigation("TicketType");
-                });
-
-            modelBuilder.Entity("iEvent.Domain.Entities.Customer", b =>
-                {
-                    b.HasOne("iEvent.Infrastructure.Identity.ApplicationUser", null)
-                        .WithOne()
-                        .HasForeignKey("iEvent.Domain.Entities.Customer", "IdentityUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("iEvent.Domain.Entities.Event", b =>

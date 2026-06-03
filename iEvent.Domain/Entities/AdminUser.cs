@@ -20,11 +20,8 @@ namespace iEvent.Domain.Entities
         public string Email { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(500)]
-        public string PasswordHash { get; set; } = string.Empty;
-
-        [Required]
-        public AdminRole Role { get; set; } = AdminRole.EventManager;
+        [StringLength(450)]
+        public string IdentityUserId { get; set; } = string.Empty;
 
         public List<AuditLog> AuditLogs { get; set; } = new();
     }
