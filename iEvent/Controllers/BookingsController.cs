@@ -21,6 +21,22 @@ namespace iEvent.WebApi.Controllers
             _bookingService = bookingService;
         }
 
+        [Authorize]
+        [HttpGet("my")]
+        public async Task<ActionResult<List<BookingRespDto>>> GetMyBookings()
+        {
+            var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (identityUserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var bookings = await _bookingService.GetMyBookingsAsync(identityUserId);
+
+            return Ok(bookings);
+        }
+
         [Authorize(Roles = "BookingManager,SuperAdmin")]
         [HttpGet]
         public async Task<ActionResult<List<BookingRespDto>>> GetAll()

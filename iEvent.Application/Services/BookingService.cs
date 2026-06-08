@@ -75,6 +75,8 @@ namespace iEvent.Application.Services
                 BookingDate = DateTime.UtcNow,
                 Status = BookingStatus.Pending,
                 BookingCode = $"BK-{DateTime.UtcNow:yyyyMMdd}-{Random.Shared.Next(1000, 9999)}",
+                PaymentMethod = dto.PaymentMethod,
+                PaidAt = null
             };
 
             foreach (var ticket in dto.Tickets)
@@ -146,6 +148,7 @@ namespace iEvent.Application.Services
             if (booking == null) return false;
 
             booking.Status = BookingStatus.Paid;
+            booking.PaidAt = DateTime.UtcNow;
             await _bookingRepository.UpdateAsync(booking);
 
             return true;
@@ -157,6 +160,7 @@ namespace iEvent.Application.Services
             if (booking == null) return false;
 
             booking.Status = BookingStatus.Pending;
+            booking.PaidAt = null;
             await _bookingRepository.UpdateAsync(booking);
 
             return true;
@@ -171,6 +175,19 @@ namespace iEvent.Application.Services
             await _bookingRepository.UpdateAsync(booking);
 
             return true;
+        }
+
+        public async Task<List<BookingRespDto>> GetMyBookingsAsync(string identityUserId)
+        {
+            var customer = await _customerRepository.GetByIdentityUserIdAsync(identityUserId);
+            if (customer == null)
+            {
+                return new List<BookingRespDto>();
+            }
+
+            var bookings = await _bookingRepository.GetByCustomerIdAsync(customer.CustomerId);
+
+            return bookings.Select(MapToRespDto).ToList();
         }
 
         private static BookingRespDto MapToRespDto(Booking booking)
@@ -190,7 +207,9 @@ namespace iEvent.Application.Services
                     Quantity = bt.Quantity,
                     UnitPrice = (double)bt.UnitPrice
                 }).ToList(),
-                BookingCode = booking.BookingCode
+                BookingCode = booking.BookingCode,
+                PaymentMethod = booking.PaymentMethod,
+                PaidAt = booking.PaidAt
             };
         }
 
