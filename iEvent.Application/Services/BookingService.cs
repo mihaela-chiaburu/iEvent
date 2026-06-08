@@ -146,6 +146,7 @@ namespace iEvent.Application.Services
         {
             var booking = await _bookingRepository.GetByIdAsync(id);
             if (booking == null) return false;
+            if (booking.Status == BookingStatus.Cancelled) return false;
 
             booking.Status = BookingStatus.Paid;
             booking.PaidAt = DateTime.UtcNow;
@@ -158,6 +159,7 @@ namespace iEvent.Application.Services
         {
             var booking = await _bookingRepository.GetByIdAsync(id);
             if (booking == null) return false;
+            if (booking.Status == BookingStatus.Cancelled) return false;
 
             booking.Status = BookingStatus.Pending;
             booking.PaidAt = null;
@@ -170,6 +172,19 @@ namespace iEvent.Application.Services
         {
             var booking = await _bookingRepository.GetByIdAsync(id);
             if (booking == null) return false;
+
+            if (booking.Status == BookingStatus.Cancelled) return true;
+
+            foreach (var bookingTicket in booking.BookingTickets)
+            {
+                var ticketType = await _ticketTypeRepository.GetByIdAsync(
+                    bookingTicket.TicketTypeId);
+
+                if (ticketType != null)
+                {
+                    ticketType.QuantityAvailable += bookingTicket.Quantity;
+                }
+            }
 
             booking.Status = BookingStatus.Cancelled;
             await _bookingRepository.UpdateAsync(booking);

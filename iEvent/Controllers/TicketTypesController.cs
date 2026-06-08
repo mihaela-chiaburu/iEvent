@@ -48,7 +48,7 @@ namespace iEvent.WebApi.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.TicketTypeId }, created);
         }
 
-        [Authorize(Roles = "EventManager,SuperAdmin")]
+        [Authorize(Roles = "EventManager,BookingManager,SuperAdmin")]
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] TicketTypeUpdateDto dto)
         {
