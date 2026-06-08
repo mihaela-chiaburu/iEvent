@@ -37,9 +37,13 @@ namespace iEvent.Domain.Entities
         [Required]
         [StringLength(20)]
         public string BookingCode { get; set; } = string.Empty;
+
         [Required]
         public PaymentMethod PaymentMethod { get; set; }
 
         public DateTime? PaidAt { get; set; }
+
+        [Required]
+        public DateTime ExpiresAt { get; set; }
     }
 }

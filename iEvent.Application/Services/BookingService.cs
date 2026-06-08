@@ -27,13 +27,20 @@ namespace iEvent.Application.Services
         public async Task<List<BookingRespDto>> GetAllAsync()
         {
             var bookings = await _bookingRepository.GetAllAsync();
+            foreach (var booking in bookings)
+            {
+                await ExpireIfNeededAsync(booking);
+            }
             return bookings.Select(MapToRespDto).ToList();
         }
 
         public async Task<BookingRespDto?> GetByIdAsync(Guid id)
         {
             var booking = await _bookingRepository.GetByIdAsync(id);
-            return booking == null ? null : MapToRespDto(booking);
+            if (booking == null) return null;
+            await ExpireIfNeededAsync(booking);
+
+            return MapToRespDto(booking);
         }
 
         public async Task<BookingRespDto?> CreateAsync(BookingCreateDto dto, string identityUserId)
@@ -67,6 +74,10 @@ namespace iEvent.Application.Services
                 return null;
             }
 
+            var expirationTime = dto.PaymentMethod == PaymentMethod.CashAtVenue
+                                ? DateTime.UtcNow.AddHours(2)
+                                : DateTime.UtcNow.AddMinutes(10);
+
             var booking = new Booking
             {
                 BookingId = Guid.NewGuid(),
@@ -76,7 +87,8 @@ namespace iEvent.Application.Services
                 Status = BookingStatus.Pending,
                 BookingCode = $"BK-{DateTime.UtcNow:yyyyMMdd}-{Random.Shared.Next(1000, 9999)}",
                 PaymentMethod = dto.PaymentMethod,
-                PaidAt = null
+                PaidAt = null,
+                ExpiresAt = expirationTime,
             };
 
             foreach (var ticket in dto.Tickets)
@@ -139,6 +151,12 @@ namespace iEvent.Application.Services
         {
             var booking = await _bookingRepository.GetByCodeAsync(code);
 
+            if (booking == null)
+            {
+                return null;
+            }
+            await ExpireIfNeededAsync(booking);
+
             return booking == null ? null : MapToRespDto(booking);
         }
 
@@ -147,6 +165,7 @@ namespace iEvent.Application.Services
             var booking = await _bookingRepository.GetByIdAsync(id);
             if (booking == null) return false;
             if (booking.Status == BookingStatus.Cancelled) return false;
+            if (booking.Status == BookingStatus.Expired) return false;
 
             booking.Status = BookingStatus.Paid;
             booking.PaidAt = DateTime.UtcNow;
@@ -160,6 +179,7 @@ namespace iEvent.Application.Services
             var booking = await _bookingRepository.GetByIdAsync(id);
             if (booking == null) return false;
             if (booking.Status == BookingStatus.Cancelled) return false;
+            if (booking.Status == BookingStatus.Expired) return false;
 
             booking.Status = BookingStatus.Pending;
             booking.PaidAt = null;
@@ -202,6 +222,11 @@ namespace iEvent.Application.Services
 
             var bookings = await _bookingRepository.GetByCustomerIdAsync(customer.CustomerId);
 
+            foreach (var booking in bookings)
+            {
+                await ExpireIfNeededAsync(booking);
+            }
+
             return bookings.Select(MapToRespDto).ToList();
         }
 
@@ -212,6 +237,33 @@ namespace iEvent.Application.Services
             if (booking == null)
             {
                 return null;
+            }
+
+            if (booking.Status == BookingStatus.Pending & booking.ExpiresAt < DateTime.UtcNow)
+            {
+                booking.Status = BookingStatus.Expired;
+
+                foreach (var bookingTicket in booking.BookingTickets)
+                {
+                    var ticketType = await _ticketTypeRepository.GetByIdAsync(
+                        bookingTicket.TicketTypeId);
+
+                    if (ticketType != null)
+                    {
+                        ticketType.QuantityAvailable += bookingTicket.Quantity;
+                    }
+                }
+
+                await _bookingRepository.UpdateAsync(booking);
+
+                return new PaymentSimulationRespDto
+                {
+                    BookingId = booking.BookingId,
+                    BookingCode = booking.BookingCode,
+                    Status = BookingStatus.Expired,
+                    PaymentSucceeded = false,
+                    Message = "Booking has expired."
+                };
             }
 
             if (booking.PaymentMethod != PaymentMethod.Online)
@@ -305,6 +357,33 @@ namespace iEvent.Application.Services
             };
         }
 
+        private async Task ExpireIfNeededAsync(Booking booking)
+        {
+            if (booking.Status != BookingStatus.Pending)
+            {
+                return;
+            }
+
+            if (booking.ExpiresAt > DateTime.UtcNow)
+            {
+                return;
+            }
+
+            foreach (var bookingTicket in booking.BookingTickets)
+            {
+                var ticketType = await _ticketTypeRepository.GetByIdAsync(
+                    bookingTicket.TicketTypeId);
+
+                if (ticketType != null)
+                {
+                    ticketType.QuantityAvailable += bookingTicket.Quantity;
+                }
+            }
+
+            booking.Status = BookingStatus.Expired;
+
+            await _bookingRepository.UpdateAsync(booking);
+        }
 
     }
 }
