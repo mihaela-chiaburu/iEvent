@@ -190,6 +190,83 @@ namespace iEvent.Application.Services
             return bookings.Select(MapToRespDto).ToList();
         }
 
+        public async Task<PaymentSimulationRespDto?> SimulatePaymentAsync(Guid bookingId, bool shouldSucceed)
+        {
+            var booking = await _bookingRepository.GetByIdAsync(bookingId);
+
+            if (booking == null)
+            {
+                return null;
+            }
+
+            if (booking.PaymentMethod != PaymentMethod.Online)
+            {
+                return new PaymentSimulationRespDto
+                {
+                    BookingId = booking.BookingId,
+                    BookingCode = booking.BookingCode,
+                    Status = booking.Status,
+                    PaymentSucceeded = false,
+                    PaidAt = booking.PaidAt,
+                    Message = "This booking was created for cash payment at venue and cannot be paid online."
+                };
+            }
+
+            if (booking.Status == BookingStatus.Cancelled)
+            {
+                return new PaymentSimulationRespDto
+                {
+                    BookingId = booking.BookingId,
+                    BookingCode = booking.BookingCode,
+                    Status = booking.Status,
+                    PaymentSucceeded = false,
+                    PaidAt = booking.PaidAt,
+                    Message = "Cannot pay for a cancelled booking."
+                };
+            }
+
+            if (booking.Status == BookingStatus.Paid)
+            {
+                return new PaymentSimulationRespDto
+                {
+                    BookingId = booking.BookingId,
+                    BookingCode = booking.BookingCode,
+                    Status = booking.Status,
+                    PaymentSucceeded = true,
+                    PaidAt = booking.PaidAt,
+                    Message = "Booking is already paid."
+                };
+            }
+
+            if (shouldSucceed)
+            {
+                booking.Status = BookingStatus.Paid;
+                booking.PaidAt = DateTime.UtcNow;
+
+                await _bookingRepository.UpdateAsync(booking);
+
+                return new PaymentSimulationRespDto
+                {
+                    BookingId = booking.BookingId,
+                    BookingCode = booking.BookingCode,
+                    Status = booking.Status,
+                    PaymentSucceeded = true,
+                    PaidAt = booking.PaidAt,
+                    Message = "Payment succeeded. Booking marked as paid."
+                };
+            }
+
+            return new PaymentSimulationRespDto
+            {
+                BookingId = booking.BookingId,
+                BookingCode = booking.BookingCode,
+                Status = booking.Status,
+                PaymentSucceeded = false,
+                PaidAt = booking.PaidAt,
+                Message = "Payment failed. Booking remains pending."
+            };
+        }
+
         private static BookingRespDto MapToRespDto(Booking booking)
         {
             return new BookingRespDto

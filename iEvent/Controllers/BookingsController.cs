@@ -159,5 +159,21 @@ namespace iEvent.WebApi.Controllers
 
             return Ok(new { message = "Booking cancelled." });
         }
+
+        [Authorize]
+        [HttpPost("{id:guid}/simulate-payment")]
+        public async Task<ActionResult<PaymentSimulationRespDto>> SimulatePayment( Guid id, [FromBody] SimulatePaymentRequestDto request)
+        {
+            var result = await _bookingService.SimulatePaymentAsync(
+                id,
+                request.ShouldSucceed);
+
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(result);
+        }
     }
 }
