@@ -38,7 +38,21 @@ namespace iEvent.Application.Services
 
         public async Task<BookingRespDto?> CreateAsync(BookingCreateDto dto, string identityUserId)
         {
-            var ticketTypeIds = dto.Tickets.Select(t => t.TicketTypeId).ToList();
+            if (dto.Tickets == null || !dto.Tickets.Any())
+            {
+                return null;
+            }
+
+            if (dto.Tickets.Any(t => t.Quantity <= 0))
+            {
+                return null;
+            }
+
+            var ticketTypeIds = dto.Tickets
+                .Select(t => t.TicketTypeId)
+                .Distinct()
+                .ToList();
+
             var ticketTypes = await _ticketTypeRepository.GetByIdsAsync(ticketTypeIds);
 
             if (ticketTypes.Count != ticketTypeIds.Count)
@@ -59,12 +73,21 @@ namespace iEvent.Application.Services
                 EventId = dto.EventId,
                 CustomerId = customer.CustomerId,
                 BookingDate = DateTime.UtcNow,
-                Status = BookingStatus.Pending
+                Status = BookingStatus.Pending,
+                BookingCode = $"BK-{DateTime.UtcNow:yyyyMMdd}-{Random.Shared.Next(1000, 9999)}",
             };
 
             foreach (var ticket in dto.Tickets)
             {
                 var ticketType = ticketTypes.First(t => t.TicketTypeId == ticket.TicketTypeId);
+
+                if (ticket.Quantity > ticketType.QuantityAvailable)
+                {
+                    return null;
+                }
+
+                ticketType.QuantityAvailable -= ticket.Quantity;
+
                 var bookingTicket = new BookingTicket
                 {
                     BookingTicketId = Guid.NewGuid(),
@@ -77,9 +100,11 @@ namespace iEvent.Application.Services
                 booking.BookingTickets.Add(bookingTicket);
             }
 
-            booking.TotalPrice = booking.BookingTickets.Sum(bt => bt.UnitPrice * bt.Quantity);
+            booking.TotalPrice = booking.BookingTickets
+                .Sum(bt => bt.UnitPrice * bt.Quantity);
 
             await _bookingRepository.AddAsync(booking);
+
             return MapToRespDto(booking);
         }
 
@@ -108,6 +133,13 @@ namespace iEvent.Application.Services
             return true;
         }
 
+        public async Task<BookingRespDto?> GetByCodeAsync(string code)
+        {
+            var booking = await _bookingRepository.GetByCodeAsync(code);
+
+            return booking == null ? null : MapToRespDto(booking);
+        }
+
         private static BookingRespDto MapToRespDto(Booking booking)
         {
             return new BookingRespDto
@@ -124,8 +156,11 @@ namespace iEvent.Application.Services
                     TicketTypeId = bt.TicketTypeId,
                     Quantity = bt.Quantity,
                     UnitPrice = (double)bt.UnitPrice
-                }).ToList()
+                }).ToList(),
+                BookingCode = booking.BookingCode
             };
         }
+
+
     }
 }

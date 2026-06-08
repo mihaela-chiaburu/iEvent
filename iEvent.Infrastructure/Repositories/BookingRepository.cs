@@ -49,5 +49,21 @@ namespace iEvent.Infrastructure.Repositories
             _dbContext.Bookings.Remove(booking);
             await _dbContext.SaveChangesAsync();
         }
+
+        public async Task<List<Booking>> GetByCustomerIdAsync(Guid customerId)
+        {
+            return await _dbContext.Bookings
+                .Include(b => b.BookingTickets)
+                .Where(b => b.CustomerId == customerId)
+                .OrderByDescending(b => b.BookingDate)
+                .ToListAsync();
+        }
+
+        public async Task<Booking?> GetByCodeAsync(string code)
+        {
+            return await _dbContext.Bookings
+                .Include(b => b.BookingTickets)
+                .FirstOrDefaultAsync(b => b.BookingCode == code);
+        }
     }
 }

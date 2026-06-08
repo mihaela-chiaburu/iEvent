@@ -86,5 +86,19 @@ namespace iEvent.WebApi.Controllers
 
             return NoContent();
         }
+
+        [Authorize(Roles = "BookingManager,SuperAdmin")]
+        [HttpGet("code/{code}")]
+        public async Task<ActionResult<BookingRespDto>> GetByCode(string code)
+        {
+            var booking = await _bookingService.GetByCodeAsync(code);
+
+            if (booking == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(booking);
+        }
     }
 }

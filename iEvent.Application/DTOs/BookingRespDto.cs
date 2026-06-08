@@ -13,5 +13,6 @@ namespace iEvent.Application.DTOs
         public BookingStatus Status { get; set; }
         public double TotalPrice { get; set; }
         public List<BookingTicketRespDto> Tickets { get; set; } = new();
+        public string BookingCode { get; set; } = string.Empty;
     }
 }

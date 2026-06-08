@@ -33,5 +33,9 @@ namespace iEvent.Domain.Entities
         public Event? Event { get; set; }
 
         public List<BookingTicket> BookingTickets { get; set; } = new();
+
+        [Required]
+        [StringLength(20)]
+        public string BookingCode { get; set; } = string.Empty;
     }
 }
