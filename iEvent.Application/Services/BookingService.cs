@@ -140,6 +140,39 @@ namespace iEvent.Application.Services
             return booking == null ? null : MapToRespDto(booking);
         }
 
+        public async Task<bool> MarkPaidAsync(Guid id)
+        {
+            var booking = await _bookingRepository.GetByIdAsync(id);
+            if (booking == null) return false;
+
+            booking.Status = BookingStatus.Paid;
+            await _bookingRepository.UpdateAsync(booking);
+
+            return true;
+        }
+
+        public async Task<bool> MarkUnpaidAsync(Guid id)
+        {
+            var booking = await _bookingRepository.GetByIdAsync(id);
+            if (booking == null) return false;
+
+            booking.Status = BookingStatus.Pending;
+            await _bookingRepository.UpdateAsync(booking);
+
+            return true;
+        }
+
+        public async Task<bool> CancelAsync(Guid id)
+        {
+            var booking = await _bookingRepository.GetByIdAsync(id);
+            if (booking == null) return false;
+
+            booking.Status = BookingStatus.Cancelled;
+            await _bookingRepository.UpdateAsync(booking);
+
+            return true;
+        }
+
         private static BookingRespDto MapToRespDto(Booking booking)
         {
             return new BookingRespDto

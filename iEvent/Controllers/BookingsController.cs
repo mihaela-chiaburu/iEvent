@@ -1,5 +1,6 @@
 using iEvent.Application.DTOs;
 using iEvent.Application.Interfaces.Services;
+using iEvent.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -99,6 +100,48 @@ namespace iEvent.WebApi.Controllers
             }
 
             return Ok(booking);
+        }
+
+        [Authorize(Roles = "BookingManager,SuperAdmin")]
+        [HttpPatch("{id:guid}/mark-paid")]
+        public async Task<IActionResult> MarkPaid(Guid id)
+        {
+            var success = await _bookingService.MarkPaidAsync(id);
+
+            if (!success)
+            {
+                return NotFound();
+            }
+
+            return Ok(new { message = "Booking marked as paid." });
+        }
+
+        [Authorize(Roles = "BookingManager,SuperAdmin")]
+        [HttpPatch("{id:guid}/mark-unpaid")]
+        public async Task<IActionResult> MarkUnpaid(Guid id)
+        {
+            var success = await _bookingService.MarkUnpaidAsync(id);
+
+            if (!success)
+            {
+                return NotFound();
+            }
+
+            return Ok(new { message = "Booking marked as pending." });
+        }
+
+        [Authorize(Roles = "BookingManager,SuperAdmin")]
+        [HttpPatch("{id:guid}/cancel")]
+        public async Task<IActionResult> Cancel(Guid id)
+        {
+            var success = await _bookingService.CancelAsync(id);
+
+            if (!success)
+            {
+                return NotFound();
+            }
+
+            return Ok(new { message = "Booking cancelled." });
         }
     }
 }
