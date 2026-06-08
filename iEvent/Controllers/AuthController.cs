@@ -1,4 +1,5 @@
 ﻿using iEvent.Application.Interfaces.Services;
+using iEvent.Domain.Enums;
 using iEvent.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -14,11 +15,14 @@ namespace iEvent.WebApi.Controllers
     public class AuthController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IUserProfileService _userProfileService;
         private readonly IJwtTokenService _jwtTokenService;
 
-        public AuthController(UserManager<ApplicationUser> userManager, IJwtTokenService jwtTokenService)
+        public AuthController(UserManager<ApplicationUser> userManager, IJwtTokenService jwtTokenService,
+            IUserProfileService userProfileService)
         {
             _userManager = userManager;
+            _userProfileService = userProfileService;
             _jwtTokenService = jwtTokenService;
         }
 
@@ -45,6 +49,8 @@ namespace iEvent.WebApi.Controllers
             }
 
             await _userManager.AddToRoleAsync(user, RoleNames.Customer);
+
+            await _userProfileService.CreateCustomerProfileAsync(user.Id, user.Email!);
 
             return Ok(new { message = "Registered successfully." });
         }
@@ -101,6 +107,7 @@ namespace iEvent.WebApi.Controllers
             }
 
             await _userManager.AddToRoleAsync(user, request.Role);
+            await _userProfileService.SyncProfileAfterRoleChangeAsync(user.Id, user.Email!, request.Role);
 
             return Ok(new { message = "Role updated." });
         }

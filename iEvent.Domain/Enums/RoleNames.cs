@@ -1,4 +1,4 @@
-namespace iEvent.Infrastructure.Identity
+namespace iEvent.Domain.Enums
 {
     public static class RoleNames
     {

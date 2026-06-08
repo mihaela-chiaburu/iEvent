@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace iEvent.WebApi.Controllers
@@ -44,13 +45,20 @@ namespace iEvent.WebApi.Controllers
         [HttpPost]
         public async Task<ActionResult<BookingRespDto>> Create([FromBody] BookingCreateDto dto)
         {
-            var created = await _bookingService.CreateAsync(dto);
-            if (created == null)
+            var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (identityUserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var booking = await _bookingService.CreateAsync(dto, identityUserId);
+            if (booking == null)
             {
                 return BadRequest("Invalid ticket types.");
             }
 
-            return CreatedAtAction(nameof(GetById), new { id = created.BookingId }, created);
+            return CreatedAtAction(nameof(GetById), new { id = booking.BookingId }, booking);
         }
 
         [Authorize(Roles = "BookingManager,SuperAdmin")]

@@ -50,6 +50,10 @@ namespace iEvent.Infrastructure.Persistance
                 .HasForeignKey<Customer>(c => c.IdentityUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Customer>()
+                .HasIndex(c => c.IdentityUserId)
+                .IsUnique();
+
             modelBuilder.Entity<Event>()
                 .HasMany<Booking>()
                 .WithOne(b => b.Event)
@@ -71,13 +75,18 @@ namespace iEvent.Infrastructure.Persistance
             modelBuilder.Entity<AdminUser>()
                 .HasMany(a => a.AuditLogs)
                 .WithOne(l => l.AdminUser)
-                .HasForeignKey(l => l.AdminId);
+                .HasForeignKey(l => l.AdminId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<AdminUser>()
                 .HasOne<ApplicationUser>()
                 .WithOne()
                 .HasForeignKey<AdminUser>(a => a.IdentityUserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<AdminUser>()
+                .HasIndex(a => a.IdentityUserId)
+                .IsUnique();
         }
     }
 }

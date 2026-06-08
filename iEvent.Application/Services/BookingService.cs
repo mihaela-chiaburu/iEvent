@@ -13,12 +13,15 @@ namespace iEvent.Application.Services
     public class BookingService : IBookingService
     {
         private readonly IBookingRepository _bookingRepository;
+        private readonly ICustomerRepository _customerRepository;
         private readonly ITicketTypeRepository _ticketTypeRepository;
 
-        public BookingService(IBookingRepository bookingRepository, ITicketTypeRepository ticketTypeRepository)
+        public BookingService(IBookingRepository bookingRepository, ITicketTypeRepository ticketTypeRepository,
+            ICustomerRepository customerRepository)
         {
             _bookingRepository = bookingRepository;
             _ticketTypeRepository = ticketTypeRepository;
+            _customerRepository = customerRepository;
         }
 
         public async Task<List<BookingRespDto>> GetAllAsync()
@@ -33,7 +36,7 @@ namespace iEvent.Application.Services
             return booking == null ? null : MapToRespDto(booking);
         }
 
-        public async Task<BookingRespDto?> CreateAsync(BookingCreateDto dto)
+        public async Task<BookingRespDto?> CreateAsync(BookingCreateDto dto, string identityUserId)
         {
             var ticketTypeIds = dto.Tickets.Select(t => t.TicketTypeId).ToList();
             var ticketTypes = await _ticketTypeRepository.GetByIdsAsync(ticketTypeIds);
@@ -43,11 +46,18 @@ namespace iEvent.Application.Services
                 return null;
             }
 
+            var customer = await _customerRepository.GetByIdentityUserIdAsync(identityUserId);
+
+            if (customer == null)
+            {
+                return null;
+            }
+
             var booking = new Booking
             {
                 BookingId = Guid.NewGuid(),
-                CustomerId = dto.CustomerId,
                 EventId = dto.EventId,
+                CustomerId = customer.CustomerId,
                 BookingDate = DateTime.UtcNow,
                 Status = BookingStatus.Pending
             };
