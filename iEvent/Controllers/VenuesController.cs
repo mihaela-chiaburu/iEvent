@@ -1,9 +1,10 @@
+using iEvent.Application.DTOs;
+using iEvent.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using iEvent.Application.DTOs;
-using iEvent.Application.Interfaces.Services;
-using Microsoft.AspNetCore.Mvc;
 
 namespace iEvent.Controllers
 {
@@ -18,6 +19,7 @@ namespace iEvent.Controllers
             _venueService = venueService;
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<List<VenueRespDto>>> GetAll()
         {
@@ -25,6 +27,7 @@ namespace iEvent.Controllers
             return Ok(venues);
         }
 
+        [AllowAnonymous]
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<VenueRespDto>> GetById(Guid id)
         {
@@ -37,6 +40,7 @@ namespace iEvent.Controllers
             return Ok(venue);
         }
 
+        [Authorize(Roles = "EventManager,SuperAdmin")]
         [HttpPost]
         public async Task<ActionResult<VenueRespDto>> Create([FromBody] VenueCreateDto dto)
         {
@@ -44,6 +48,7 @@ namespace iEvent.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.VenueId }, created);
         }
 
+        [Authorize(Roles = "EventManager,SuperAdmin")]
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] VenueUpdateDto dto)
         {
@@ -56,6 +61,7 @@ namespace iEvent.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "EventManager,SuperAdmin")]
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {

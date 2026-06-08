@@ -1,9 +1,10 @@
+using iEvent.Application.DTOs;
+using iEvent.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using iEvent.Application.DTOs;
-using iEvent.Application.Interfaces.Services;
-using Microsoft.AspNetCore.Mvc;
 
 namespace iEvent.WebApi.Controllers
 {
@@ -18,6 +19,7 @@ namespace iEvent.WebApi.Controllers
             _bookingService = bookingService;
         }
 
+        [Authorize(Roles = "BookingManager,SuperAdmin")]
         [HttpGet]
         public async Task<ActionResult<List<BookingRespDto>>> GetAll()
         {
@@ -25,6 +27,7 @@ namespace iEvent.WebApi.Controllers
             return Ok(bookings);
         }
 
+        [Authorize(Roles = "BookingManager,SuperAdmin")]
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<BookingRespDto>> GetById(Guid id)
         {
@@ -37,6 +40,7 @@ namespace iEvent.WebApi.Controllers
             return Ok(booking);
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<BookingRespDto>> Create([FromBody] BookingCreateDto dto)
         {
@@ -49,6 +53,7 @@ namespace iEvent.WebApi.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.BookingId }, created);
         }
 
+        [Authorize(Roles = "BookingManager,SuperAdmin")]
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] BookingUpdateDto dto)
         {
@@ -61,6 +66,7 @@ namespace iEvent.WebApi.Controllers
             return NoContent();
         }
 
+        [Authorize]
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {

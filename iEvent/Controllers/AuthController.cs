@@ -22,6 +22,7 @@ namespace iEvent.WebApi.Controllers
             _jwtTokenService = jwtTokenService;
         }
 
+        [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterRequest request)
         {
@@ -48,6 +49,7 @@ namespace iEvent.WebApi.Controllers
             return Ok(new { message = "Registered successfully." });
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest request)
         {

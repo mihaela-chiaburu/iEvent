@@ -1,9 +1,10 @@
+using iEvent.Application.DTOs;
+using iEvent.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using iEvent.Application.DTOs;
-using iEvent.Application.Interfaces.Services;
-using Microsoft.AspNetCore.Mvc;
 
 namespace iEvent.WebApi.Controllers
 {
@@ -18,6 +19,7 @@ namespace iEvent.WebApi.Controllers
             _ticketTypeService = ticketTypeService;
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<List<TicketTypeRespDto>>> GetAll([FromQuery] Guid? EventId)
         {
@@ -25,6 +27,7 @@ namespace iEvent.WebApi.Controllers
             return Ok(ticketTypes);
         }
 
+        [AllowAnonymous]
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<TicketTypeRespDto>> GetById(Guid id)
         {
@@ -37,6 +40,7 @@ namespace iEvent.WebApi.Controllers
             return Ok(ticketType);
         }
 
+        [Authorize(Roles = "EventManager,SuperAdmin")]
         [HttpPost]
         public async Task<ActionResult<TicketTypeRespDto>> Create([FromBody] TicketTypeCreateDto dto)
         {
@@ -44,6 +48,7 @@ namespace iEvent.WebApi.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.TicketTypeId }, created);
         }
 
+        [Authorize(Roles = "EventManager,SuperAdmin")]
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] TicketTypeUpdateDto dto)
         {
@@ -56,6 +61,7 @@ namespace iEvent.WebApi.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "EventManager,SuperAdmin")]
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {

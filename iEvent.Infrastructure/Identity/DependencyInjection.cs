@@ -1,6 +1,7 @@
 ﻿using iEvent.Application.Interfaces.Services;
 using iEvent.Infrastructure.Persistance;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -60,6 +61,35 @@ namespace iEvent.Infrastructure.Identity
                         IssuerSigningKey = signingKey,
                         ValidateIssuerSigningKey = true,
                         RoleClaimType = System.Security.Claims.ClaimTypes.Role,
+                    };
+
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnChallenge = async context =>
+                        {
+                            context.HandleResponse();
+
+                            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                            context.Response.ContentType = "application/json";
+
+                            await context.Response.WriteAsJsonAsync(new
+                            {
+                                StatusCode = 401,
+                                Message = "Authentication required. Please provide a valid JWT token."
+                            });
+                        },
+
+                        OnForbidden = async context =>
+                        {
+                            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                            context.Response.ContentType = "application/json";
+
+                            await context.Response.WriteAsJsonAsync(new
+                            {
+                                StatusCode = 403,
+                                Message = "You do not have permission to access this resource."
+                            });
+                        }
                     };
                 });
 

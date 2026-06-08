@@ -1,6 +1,7 @@
 ﻿using iEvent.Application.DTOs;
 using iEvent.Application.Interfaces.Services;
 using iEvent.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace iEvent.WebApi.Controllers
@@ -14,7 +15,8 @@ namespace iEvent.WebApi.Controllers
         {
             _eventService = eventService;
         }
-        
+
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<List<EventRespDto>>> GetAll([FromQuery] string? city)
         {
@@ -22,6 +24,7 @@ namespace iEvent.WebApi.Controllers
             return Ok(events);
         }
 
+        [AllowAnonymous]
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<EventRespDto>> GetById(Guid id)
         {
@@ -34,6 +37,7 @@ namespace iEvent.WebApi.Controllers
             return Ok(ievent);
         }
 
+        [Authorize(Roles = "EventManager,SuperAdmin")]
         [HttpPost]
         public async Task<ActionResult<EventRespDto>> Create([FromBody] EventCreateDto dto)
         {
@@ -41,6 +45,7 @@ namespace iEvent.WebApi.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.EventId }, created);
         }
 
+        [Authorize(Roles = "EventManager,SuperAdmin")]
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] EventUpdateDto dto)
         {
@@ -53,6 +58,7 @@ namespace iEvent.WebApi.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "EventManager,SuperAdmin")]
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {
