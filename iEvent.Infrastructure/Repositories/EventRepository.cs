@@ -1,5 +1,6 @@
 ﻿using iEvent.Application.Interfaces.Repositories;
 using iEvent.Domain.Entities;
+using iEvent.Domain.Enums;
 using iEvent.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,7 +25,8 @@ namespace iEvent.Infrastructure.Repositories
             await _dbContext.SaveChangesAsync();
         }
 
-        public Task<List<Event>> GetAllAsync(string? city)
+        public async Task<List<Event>> GetAllAsync(string? city, Guid? venueId, EventCategory? category, 
+            DateTime? fromDate, DateTime? toDate)
         {
             var query = _dbContext.Events
                 .AsNoTracking()
@@ -33,10 +35,34 @@ namespace iEvent.Infrastructure.Repositories
 
             if (!string.IsNullOrWhiteSpace(city))
             {
-                query = query.Where(e => e.Venue != null && e.Venue.City == city);
+                query = query.Where(e =>
+                    e.Venue != null &&
+                    e.Venue.City.ToLower().Contains(city.ToLower()));
             }
 
-            return query.ToListAsync();
+            if (venueId.HasValue)
+            {
+                query = query.Where(e => e.VenueId == venueId.Value);
+            }
+
+            if (category.HasValue)
+            {
+                query = query.Where(e => e.Category == category.Value);
+            }
+
+            if (fromDate.HasValue)
+            {
+                query = query.Where(e => e.StartDate >= fromDate.Value);
+            }
+
+            if (toDate.HasValue)
+            {
+                query = query.Where(e => e.StartDate <= toDate.Value);
+            }
+
+            return await query
+                .OrderBy(e => e.StartDate)
+                .ToListAsync();
         }
 
         public Task<Event?> GetByIdAsync(Guid id)

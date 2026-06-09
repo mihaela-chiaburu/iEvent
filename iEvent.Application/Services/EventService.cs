@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using iEvent.Application.DTOs;
+﻿using iEvent.Application.DTOs;
 using iEvent.Application.Interfaces.Repositories;
 using iEvent.Application.Interfaces.Services;
 using iEvent.Domain.Entities;
+using iEvent.Domain.Enums;
 using iEvent.Domain.ValueObjects;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace iEvent.Application.Services
 {
@@ -49,10 +50,11 @@ namespace iEvent.Application.Services
             return true;
         }
 
-        public async Task<List<EventRespDto>> GetAllAsync(string? city)
+        public async Task<List<EventRespDto>> GetAllAsync(string? city, Guid? venueId, EventCategory? category,
+            DateTime? fromDate, DateTime? toDate)
         {
-            var ievent = await _eventRepository.GetAllAsync(city);
-            return ievent.Select(MapToRespDto).ToList();
+            var events = await _eventRepository.GetAllAsync(city, venueId, category, fromDate, toDate);
+            return events.Select(MapToRespDto).ToList();
         }
 
         public async Task<EventRespDto?> GetByIdAsync(Guid id)

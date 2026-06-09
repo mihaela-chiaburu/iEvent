@@ -1,6 +1,7 @@
 ﻿using iEvent.Application.DTOs;
 using iEvent.Application.Interfaces.Services;
 using iEvent.Application.Services;
+using iEvent.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,9 +21,14 @@ namespace iEvent.WebApi.Controllers
 
         [AllowAnonymous]
         [HttpGet]
-        public async Task<ActionResult<List<EventRespDto>>> GetAll([FromQuery] string? city)
+        public async Task<ActionResult<List<EventRespDto>>> GetAll(
+            [FromQuery] string? city,
+            [FromQuery] Guid? venueId,
+            [FromQuery] EventCategory? category,
+            [FromQuery] DateTime? fromDate,
+            [FromQuery] DateTime? toDate)
         {
-            var events = await _eventService.GetAllAsync(city);
+            var events = await _eventService.GetAllAsync(city, venueId, category, fromDate, toDate);
             return Ok(events);
         }
 
