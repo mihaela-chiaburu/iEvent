@@ -68,6 +68,17 @@ if (!builder.Environment.IsEnvironment("DesignTime"))
     builder.Services.AddJwtAuthentication(builder.Configuration);
 }
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AngularApp", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 app.UseAuthentication();
@@ -82,6 +93,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AngularApp");
 
 app.MapControllers();
 
