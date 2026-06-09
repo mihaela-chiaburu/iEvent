@@ -11,9 +11,11 @@ namespace iEvent.WebApi.Controllers
     public class EventsController : Controller
     {
         private readonly IEventService _eventService;
-        public EventsController(IEventService eventService)
+        private readonly ITicketTypeService _ticketTypeService;
+        public EventsController(IEventService eventService, ITicketTypeService ticketTypeService)
         {
             _eventService = eventService;
+            _ticketTypeService = ticketTypeService;
         }
 
         [AllowAnonymous]
@@ -69,6 +71,15 @@ namespace iEvent.WebApi.Controllers
             }
 
             return NoContent();
+        }
+
+        [AllowAnonymous]
+        [HttpGet("{id:guid}/ticket-types")]
+        public async Task<ActionResult<List<TicketTypeRespDto>>> GetTicketTypes(Guid id)
+        {
+            var ticketTypes = await _ticketTypeService.GetAllAsync(id);
+
+            return Ok(ticketTypes);
         }
 
 
