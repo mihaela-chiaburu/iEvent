@@ -29,6 +29,7 @@ namespace iEvent.Application.Services
                 EndDate = dto.EndDate,
                 VenueId = dto.VenueId,
                 ImageUrl = dto.ImageUrl,
+                Category = dto.Category
             };
 
             await _eventRepository.AddAsync(ievent);
@@ -75,6 +76,7 @@ namespace iEvent.Application.Services
             ievent.EndDate = dto.EndDate;
             ievent.VenueId = dto.VenueId;
             ievent.ImageUrl = dto.ImageUrl;
+            ievent.Category = dto.Category;
 
             await _eventRepository.UpdateAsync(ievent);
             return true;
@@ -91,6 +93,7 @@ namespace iEvent.Application.Services
                 EndDate = ievent.EndDate,
                 VenueId = ievent.VenueId,
                 ImageUrl = ievent.ImageUrl,
+                Category = ievent.Category,
             };
         }
     }

@@ -1,4 +1,6 @@
-﻿namespace iEvent.Application.DTOs
+﻿using iEvent.Domain.Enums;
+
+namespace iEvent.Application.DTOs
 {
     public class EventUpdateDto
     {
@@ -8,5 +10,6 @@
         public DateTime EndDate { get; set; }
         public Guid VenueId { get; set; }
         public string? ImageUrl { get; set; }
+        public EventCategory Category { get; set; }
     }
 }

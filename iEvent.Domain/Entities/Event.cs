@@ -1,4 +1,5 @@
-﻿using System;
+﻿using iEvent.Domain.Enums;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -34,5 +35,8 @@ namespace iEvent.Domain.Entities
         public string? ImageUrl { get; set; }
 
         public List<TicketType> Tickets { get; set; } = new();
+
+        [Required]
+        public EventCategory Category { get; set; } = EventCategory.Other;
     }
 }
