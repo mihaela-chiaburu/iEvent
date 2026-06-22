@@ -1,0 +1,40 @@
+<h2>Users Management</h2>
+
+<fieldset class="manager-fieldset">
+    <legend>Create New Manager</legend>
+    <input type="email" [(ngModel)]="newManager.email" placeholder="Email" class="form-input" />
+    <input type="password" [(ngModel)]="newManager.password" placeholder="Password" class="form-input" />
+    <select [(ngModel)]="newManager.role" class="form-select">
+        <option value="EventManager">Event Manager</option>
+        <option value="BookingManager">Booking Manager</option>
+    </select>
+    <button (click)="createManagerAccount()" class="btn-create">Create</button>
+</fieldset>
+
+<h3>Modify User Roles</h3>
+<table class="user-table">
+    <thead>
+        <tr class="table-header-row">
+            <th>Email</th>
+            <th>Current Role</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    @for (u of users(); track u.id) {
+        <tr>
+            <td>{{ u.email }}</td>
+            <td>{{ u.roles && u.roles.length > 0 ? u.roles[0] : 'Niciun rol' }}</td>
+            <td>
+                <select #roleSelect [value]="u.roles && u.roles.length > 0 ? u.roles[0] : 'Customer'">
+                    <option value="Customer">Customer</option>
+                    <option value="EventManager">EventManager</option>
+                    <option value="BookingManager">BookingManager</option>
+                    <option value="SuperAdmin">SuperAdmin</option>
+                </select>
+                <button (click)="changeRole(u.id || '', roleSelect.value)" class="btn-change-role">Change Role</button>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

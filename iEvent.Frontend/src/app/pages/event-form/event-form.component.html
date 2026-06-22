@@ -1,0 +1,41 @@
+<h2>Create New Event</h2>
+<form (ngSubmit)="saveEvent()" class="event-form">
+    <input type="text" [(ngModel)]="eventData.name" name="name" placeholder="Event Name" required />
+    <textarea [(ngModel)]="eventData.description" name="description" placeholder="Description"></textarea>
+    <input type="datetime-local" [(ngModel)]="eventData.startDate" name="startDate" required />
+    <input type="datetime-local" [(ngModel)]="eventData.endDate" name="endDate" required />
+    
+    <label for="venueSelect">Venue:</label>
+    <select [(ngModel)]="eventData.venueId" name="venueId" id="venueSelect" required>
+        <option value="">-- Select Location --</option>
+        @for (v of venues(); track v.venueId) {
+            <option [value]="v.venueId">{{ v.name }} - {{ v.city }}</option>
+        }
+    </select>
+
+    <hr class="form-divider" />
+    <h3>Configure Tickets</h3>
+    
+    <div class="radio-group">
+        <input type="radio" id="exist" name="tMode" [(ngModel)]="ticketMode" value="existing">
+        <label for="exist">Choose Existing Type</label>
+        <input type="radio" id="new" name="tMode" [(ngModel)]="ticketMode" value="new" class="radio-secondary">
+        <label for="new">Create New Type</label>
+    </div>
+
+    @if (ticketMode === 'existing') {
+        <select [(ngModel)]="selectedTicketTypeId" name="selTicket">
+            <option value="">-- Select Existing Ticket Type --</option>
+            @for (t of globalTicketTypes(); track t.ticketTypeId) {
+                <option [value]="t.ticketTypeId">{{ t.name }}</option>
+            }
+        </select>
+    } @else {
+        <input type="text" [(ngModel)]="newTicketName" name="newTName" placeholder="Name (ex: VIP, Standard)" />
+    }
+
+    <input type="number" [(ngModel)]="ticketPrice" name="tPrice" placeholder="Ticket Price" />
+    <input type="number" [(ngModel)]="ticketQty" name="tQty" placeholder="Initial Available Quantity" />
+
+    <button type="submit" class="btn-submit">Save Event</button>
+</form>

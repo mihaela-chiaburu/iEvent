@@ -1,0 +1,21 @@
+<h2>Book a Ticket</h2>
+<form (ngSubmit)="confirmBooking()" class="booking-form">
+    
+    <label for="ticketType">Select Ticket Type:</label>
+    <select [(ngModel)]="selectedTicketTypeId" name="ticketType" id="ticketType" required>
+    @for (t of ticketTypes(); track t.ticketTypeId) {
+        <option [value]="t.ticketTypeId">{{ t.name }} - {{ t.price }} MDL (Disp: {{ t.quantityAvailable }})</option>
+    }
+    </select>
+
+    <label for="qty">Quantity:</label>
+    <input type="number" [(ngModel)]="quantity" name="qty" id="qty" min="1" required />
+
+    <label for="payment">Payment Method:</label>
+    <select [(ngModel)]="paymentMethod" name="payment" id="payment">
+        <option [value]="0">Online</option>
+        <option [value]="1">Cash at venue</option>
+    </select>
+
+    <button type="submit" class="btn-finalize">Finalize Booking</button>
+</form>

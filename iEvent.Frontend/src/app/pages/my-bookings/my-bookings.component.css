@@ -1,0 +1,34 @@
+.booking-card {
+    border: 1px solid #aaa;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+}
+
+.edit-panel {
+    margin: 10px 0;
+    background-color: #eee;
+    padding: 10px;
+}
+
+.edit-panel .btn-save {
+    margin-left: 10px;
+}
+
+.btn-edit {
+    background-color: orange;
+    color: white;
+    margin-right: 10px;
+}
+
+.btn-delete {
+    background-color: red;
+    color: white;
+}
+
+button {
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}

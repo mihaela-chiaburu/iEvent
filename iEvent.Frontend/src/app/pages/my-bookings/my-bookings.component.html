@@ -1,0 +1,24 @@
+<h2>My Bookings</h2>
+@for (b of bookings(); track b.bookingId) {
+    <div class="booking-card">
+        <p><strong>Booking Code:</strong> {{ b.bookingCode }}</p>
+        <p>Date: {{ b.bookingDate | slice:0:10 }} | Total: {{ b.totalPrice }}</p>
+        <p>Status: {{ b.status === 0 ? 'Pending' : 'Confirmed' }}</p>
+        
+        @if (editingBookingId() === b.bookingId) {
+            <div class="edit-panel">
+                <label>Change Status (Simulation Edit):</label>
+                <select [(ngModel)]="b.status">
+                    <option [value]="0">Pending</option>
+                    <option [value]="1">Cancelled</option>
+                </select>
+                <button (click)="saveEdit(b)" class="btn-save">Save</button>
+                <button (click)="editingBookingId.set(null)">Cancel</button>
+            </div>
+        } @else {
+            <button (click)="editingBookingId.set(b.bookingId)" class="btn-edit">Edit</button>
+        }
+
+        <button (click)="cancelBooking(b.bookingId)" class="btn-delete">Delete / Cancel</button>
+    </div>
+}

@@ -1,0 +1,62 @@
+.panel-container {
+    display: flex;
+    gap: 30px;
+}
+
+.bookings-column {
+    flex: 2;
+}
+
+.stock-sidebar {
+    flex: 1;
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-left: 2px solid #ccc;
+}
+
+.booking-card {
+    border: 1px solid #777;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
+
+.stock-item {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed #ccc;
+}
+
+.stock-input {
+    width: 70px;
+    padding: 3px;
+}
+
+.btn {
+    margin-right: 5px;
+    padding: 4px 10px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.btn-paid {
+    background-color: green;
+    color: white;
+}
+
+.btn-unpaid {
+    background-color: red;
+    color: white;
+}
+
+.btn-details {
+    background-color: blue;
+    color: white;
+    margin-right: 0; 
+}
+
+.btn-update {
+    background-color: orange;
+    color: black;
+}

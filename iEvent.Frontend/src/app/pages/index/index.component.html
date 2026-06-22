@@ -1,0 +1,7 @@
+@if (auth.currentUser()) {
+    <h1>Hello, {{ auth.currentUser()?.role }}!</h1>
+    <p>{{ auth.currentUser()?.email }}</p>
+} @else {
+    <h1>Welcome to iEvent!</h1>
+    <p>Auth in order to access the platform.</p>
+}

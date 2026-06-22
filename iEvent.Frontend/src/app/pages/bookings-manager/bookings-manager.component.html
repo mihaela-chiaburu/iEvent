@@ -1,0 +1,28 @@
+<h2>Booking Manager Panel</h2>
+
+<div class="panel-container">
+    <div class="bookings-column">
+        <h3>All Bookings</h3>
+        @for (b of allBookings(); track b.bookingId) {
+            <div class="booking-card">
+                <p><strong>Code:</strong> {{ b.bookingCode }} | Client ID: {{ b.customerId }}</p>
+                <p>Total: {{ b.totalPrice }} MDL | Status: {{ b.status }}</p>
+                <button (click)="markAsPaid(b.bookingId)" class="btn btn-paid">Mark Paid</button>
+                <button (click)="markAsUnpaid(b.bookingId)" class="btn btn-unpaid">Mark Unpaid</button>
+                <button (click)="viewDetails(b.bookingId)" class="btn btn-details">Details</button>
+            </div>
+        }
+    </div>
+
+    <div class="stock-sidebar">
+        <h3>Update Ticket Stock</h3>
+        @for (t of ticketTypes(); track t.ticketTypeId) {
+            <div class="stock-item">
+                <p><strong>{{ t.name }}</strong></p>
+                <p>Current Stock: {{ t.quantityAvailable }}</p>
+                <input type="number" [(ngModel)]="t.quantityAvailable" class="stock-input" />
+                <button (click)="updateStock(t)" class="btn btn-update">Update</button>
+            </div>
+        }
+    </div>
+</div>

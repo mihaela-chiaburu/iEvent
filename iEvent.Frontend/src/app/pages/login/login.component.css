@@ -1,0 +1,14 @@
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    max-width: 300px;
+    gap: 10px;
+}
+
+.btn-submit {
+    padding: 8px;
+    background-color: blue;
+    color: white;
+    border: none; 
+    cursor: pointer;
+}

@@ -1,0 +1,22 @@
+<div class="events-header">
+    <h2>Events</h2>
+    @if (auth.currentUser()?.role === 'EventManager' || auth.currentUser()?.role === 'SuperAdmin') {
+        <button routerLink="/event-form" class="btn btn-add">Add New Event</button>
+    }
+</div>
+
+<div class="events-grid">
+    @for (ev of events(); track ev.eventId) {
+        <div class="event-card">
+            <h3>{{ ev.name }}</h3>
+            <p>{{ ev.description }}</p>
+            <small class="event-date">Date: {{ ev.startDate | slice:0:10 }}</small>
+            
+            <div class="event-actions">
+                @if (auth.currentUser()?.role === 'Customer') {
+                    <button [routerLink]="['/book-ticket', ev.eventId]" class="btn btn-book">Book a ticket</button>
+                }
+            </div>
+        </div>
+    }
+</div>

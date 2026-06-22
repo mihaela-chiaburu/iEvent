@@ -1,0 +1,18 @@
+<h2>Venues</h2>
+
+@if (auth.currentUser()?.role === 'EventManager' || auth.currentUser()?.role === 'SuperAdmin') {
+    <fieldset class="venue-fieldset">
+        <legend>Create New Venue</legend>
+        <input type="text" [(ngModel)]="newVenue.name" placeholder="Name" />
+        <input type="text" [(ngModel)]="newVenue.city" placeholder="City" />
+        <input type="text" [(ngModel)]="newVenue.address" placeholder="Address" />
+        <input type="number" [(ngModel)]="newVenue.capacity" placeholder="Capacity" />
+        <button (click)="addVenue()" class="btn-add">Add</button>
+    </fieldset>
+}
+
+<ul class="venue-list">
+    @for (v of venues(); track v.venueId) {
+        <li><strong>{{ v.name }}</strong> - {{ v.city }}, {{ v.address }} (Capacity: {{ v.capacity }})</li>
+    }
+</ul>

@@ -1,0 +1,47 @@
+
+.manager-fieldset {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.form-input,
+.form-select {
+    margin-right: 5px;
+}
+
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #ddd;
+}
+
+.user-table th, 
+.user-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.table-header-row {
+    background-color: #eee;
+}
+
+.btn-create {
+    background-color: green;
+    color: white;
+    padding: 3px 10px;
+    cursor: pointer;
+    border: none;
+    border-radius: 3px;
+}
+
+.btn-change-role {
+    margin-left: 5px;
+    background-color: orange;
+    padding: 3px 10px;
+    cursor: pointer;
+    border: none;
+    border-radius: 3px;
+}
