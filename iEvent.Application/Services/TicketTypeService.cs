@@ -32,13 +32,22 @@ namespace iEvent.Application.Services
 
         public async Task<TicketTypeRespDto> CreateAsync(TicketTypeCreateDto dto)
         {
+            if (dto.AvailableFrom.HasValue && dto.AvailableUntil.HasValue &&
+                dto.AvailableFrom > dto.AvailableUntil)
+            {
+                throw new ArgumentException("AvailableFrom must be earlier than AvailableUntil.");
+            }
+
             var ticketType = new TicketType
             {
                 TicketTypeId = Guid.NewGuid(),
                 EventId = dto.EventId,
                 Name = dto.Name,
                 Price = (decimal)dto.Price,
-                QuantityAvailable = dto.QuantityAvailable
+                QuantityAvailable = dto.QuantityAvailable,
+                Icon = dto.Icon,
+                AvailableFrom = dto.AvailableFrom,
+                AvailableUntil = dto.AvailableUntil
             };
 
             await _ticketTypeRepository.AddAsync(ticketType);
@@ -47,6 +56,12 @@ namespace iEvent.Application.Services
 
         public async Task<bool> UpdateAsync(Guid id, TicketTypeUpdateDto dto)
         {
+            if (dto.AvailableFrom.HasValue && dto.AvailableUntil.HasValue &&
+                 dto.AvailableFrom > dto.AvailableUntil)
+            {
+                throw new ArgumentException("AvailableFrom must be earlier than AvailableUntil.");
+            }
+
             var ticketType = await _ticketTypeRepository.GetByIdAsync(id);
             if (ticketType == null)
             {
@@ -57,6 +72,9 @@ namespace iEvent.Application.Services
             ticketType.Name = dto.Name;
             ticketType.Price = (decimal)dto.Price;
             ticketType.QuantityAvailable = dto.QuantityAvailable;
+            ticketType.Icon = dto.Icon;
+            ticketType.AvailableFrom = dto.AvailableFrom;
+            ticketType.AvailableUntil = dto.AvailableUntil;
 
             await _ticketTypeRepository.UpdateAsync(ticketType);
             return true;
@@ -81,8 +99,11 @@ namespace iEvent.Application.Services
                 TicketTypeId = ticketType.TicketTypeId,
                 EventId = ticketType.EventId,
                 Name = ticketType.Name,
-                Price = (double)ticketType.Price,
-                QuantityAvailable = ticketType.QuantityAvailable
+                Price = ticketType.Price,
+                QuantityAvailable = ticketType.QuantityAvailable,
+                Icon = ticketType.Icon,
+                AvailableFrom = ticketType.AvailableFrom,
+                AvailableUntil = ticketType.AvailableUntil
             };
         }
     }
