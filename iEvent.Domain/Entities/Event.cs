@@ -19,12 +19,6 @@ namespace iEvent.Domain.Entities
         [StringLength(1000)]
         public string Description { get; set; } = string.Empty;
 
-        //[Required]
-        //public DateTime StartDate { get; set; }
-
-        //[Required]
-        //public DateTime EndDate { get; set; }
-
         [Required]
         public Guid VenueId { get; set; }
 
@@ -40,5 +34,7 @@ namespace iEvent.Domain.Entities
         public EventCategory Category { get; set; } = EventCategory.Other;
 
         public List<EventDate> EventDates { get; set; } = new();
+
+        public List<EventImage> Images { get; set; } = new();
     }
 }

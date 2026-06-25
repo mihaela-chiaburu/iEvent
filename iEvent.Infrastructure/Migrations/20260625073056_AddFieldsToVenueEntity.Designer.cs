@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using iEvent.Infrastructure.Persistance;
 
@@ -11,9 +12,11 @@ using iEvent.Infrastructure.Persistance;
 namespace iEvent.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260625073056_AddFieldsToVenueEntity")]
+    partial class AddFieldsToVenueEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -362,30 +365,6 @@ namespace iEvent.Infrastructure.Migrations
                     b.HasIndex("EventId");
 
                     b.ToTable("EventDates");
-                });
-
-            modelBuilder.Entity("iEvent.Domain.Entities.EventImage", b =>
-                {
-                    b.Property<Guid>("ImageId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("EventId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.HasKey("ImageId");
-
-                    b.HasIndex("EventId");
-
-                    b.ToTable("EventImages");
                 });
 
             modelBuilder.Entity("iEvent.Domain.Entities.EventTimeSlot", b =>
@@ -737,17 +716,6 @@ namespace iEvent.Infrastructure.Migrations
                     b.Navigation("Event");
                 });
 
-            modelBuilder.Entity("iEvent.Domain.Entities.EventImage", b =>
-                {
-                    b.HasOne("iEvent.Domain.Entities.Event", "Event")
-                        .WithMany("Images")
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Event");
-                });
-
             modelBuilder.Entity("iEvent.Domain.Entities.EventTimeSlot", b =>
                 {
                     b.HasOne("iEvent.Domain.Entities.EventDate", "EventDate")
@@ -835,8 +803,6 @@ namespace iEvent.Infrastructure.Migrations
             modelBuilder.Entity("iEvent.Domain.Entities.Event", b =>
                 {
                     b.Navigation("EventDates");
-
-                    b.Navigation("Images");
 
                     b.Navigation("Tickets");
                 });

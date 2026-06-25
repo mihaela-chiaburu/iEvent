@@ -21,6 +21,8 @@ namespace iEvent.Application.Services
 
         public async Task<EventRespDto> CreateAsync(EventCreateDto dto)
         {
+            var newEventId = Guid.NewGuid();
+
             var ievent = new Event
             {
                 EventId = Guid.NewGuid(),
@@ -39,7 +41,14 @@ namespace iEvent.Application.Services
                     }).ToList(),
                 VenueId = dto.VenueId,
                 ImageUrl = dto.ImageUrl,
-                Category = dto.Category
+                Category = dto.Category,
+                Images = dto.Images.Select(i => new EventImage
+                {
+                    ImageId = Guid.NewGuid(),
+                    EventId = newEventId,
+                    Url = i.Url,
+                    SortOrder = i.SortOrder
+                }).ToList()
             };
 
             await _eventRepository.AddAsync(ievent);
@@ -97,6 +106,13 @@ namespace iEvent.Application.Services
                     EndTime = t.EndTime
                 }).ToList()
             }).ToList();
+            ievent.Images = dto.Images.Select(i => new EventImage
+            {
+                ImageId = Guid.NewGuid(),
+                EventId = ievent.EventId,
+                Url = i.Url,
+                SortOrder = i.SortOrder
+            }).ToList();
 
             await _eventRepository.UpdateAsync(ievent);
             return true;
@@ -126,6 +142,14 @@ namespace iEvent.Application.Services
                                 StartTime = ts.StartTime,
                                 EndTime = ts.EndTime
                             }).ToList()
+                    }).ToList(),
+                Images = ievent.Images
+                    .OrderBy(i => i.SortOrder)
+                    .Select(i => new EventImageRespDto
+                    {
+                        ImageId = i.ImageId,
+                        Url = i.Url,
+                        SortOrder = i.SortOrder
                     }).ToList()
             };
         }

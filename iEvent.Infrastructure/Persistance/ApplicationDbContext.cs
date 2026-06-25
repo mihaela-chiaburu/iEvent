@@ -19,6 +19,7 @@ namespace iEvent.Infrastructure.Persistance
         public DbSet<EventTimeSlot> EventTimeSlots { get; set; }
         public DbSet<VenueFacility> VenueFacilities { get; set; }
         public DbSet<VenueImage> VenueImages { get; set; }
+        public DbSet<EventImage> EventImages { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -126,6 +127,12 @@ namespace iEvent.Infrastructure.Persistance
                 .HasMany(v => v.Images)
                 .WithOne(i => i.Venue)
                 .HasForeignKey(i => i.VenueId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Event>()
+                .HasMany(e => e.Images)
+                .WithOne(i => i.Event)
+                .HasForeignKey(i => i.EventId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

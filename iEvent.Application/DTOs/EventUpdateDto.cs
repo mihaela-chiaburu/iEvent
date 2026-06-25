@@ -10,5 +10,6 @@ namespace iEvent.Application.DTOs
         public Guid VenueId { get; set; }
         public string? ImageUrl { get; set; }
         public EventCategory Category { get; set; }
+        public List<EventImageCreateDto> Images { get; set; } = new();
     }
 }

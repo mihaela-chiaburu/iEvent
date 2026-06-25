@@ -31,6 +31,7 @@ namespace iEvent.Infrastructure.Repositories
             var query = _dbContext.Events
                 .AsNoTracking()
                 .Include(e => e.Venue)
+                .Include(e => e.Images)
                 .Include(e => e.EventDates).ThenInclude(ed => ed.TimeSlots)
                 .AsQueryable();
 
@@ -68,7 +69,7 @@ namespace iEvent.Infrastructure.Repositories
 
         public Task<Event?> GetByIdAsync(Guid id)
         {
-            return _dbContext.Events.Include(e => e.Venue)
+            return _dbContext.Events.Include(e => e.Venue).Include(e => e.Images)
                     .Include(e => e.EventDates).ThenInclude(ed => ed.TimeSlots) 
                     .FirstOrDefaultAsync(e => e.EventId == id);
         }
