@@ -26,8 +26,17 @@ namespace iEvent.Application.Services
                 EventId = Guid.NewGuid(),
                 Name = dto.Name,
                 Description = dto.Description,
-                StartDate = dto.StartDate,
-                EndDate = dto.EndDate,
+                EventDates = dto.EventDates.Select(d => new EventDate
+                    {
+                        EventDateId = Guid.NewGuid(),
+                        Date = d.Date,
+                        TimeSlots = d.TimeSlots.Select(ts => new EventTimeSlot
+                            {
+                                TimeSlotId = Guid.NewGuid(),
+                                StartTime = ts.StartTime,
+                                EndTime = ts.EndTime
+                            }).ToList()
+                    }).ToList(),
                 VenueId = dto.VenueId,
                 ImageUrl = dto.ImageUrl,
                 Category = dto.Category
@@ -51,7 +60,7 @@ namespace iEvent.Application.Services
         }
 
         public async Task<List<EventRespDto>> GetAllAsync(string? city, Guid? venueId, EventCategory? category,
-            DateTime? fromDate, DateTime? toDate)
+            DateOnly? fromDate, DateOnly? toDate)
         {
             var events = await _eventRepository.GetAllAsync(city, venueId, category, fromDate, toDate);
             return events.Select(MapToRespDto).ToList();
@@ -60,7 +69,6 @@ namespace iEvent.Application.Services
         public async Task<EventRespDto?> GetByIdAsync(Guid id)
         {
             var ievent = await _eventRepository.GetByIdAsync(id);
-
             return ievent == null ? null : MapToRespDto(ievent);
         }
 
@@ -74,11 +82,21 @@ namespace iEvent.Application.Services
 
             ievent.Name = dto.Name;
             ievent.Description = dto.Description;
-            ievent.StartDate = dto.StartDate;
-            ievent.EndDate = dto.EndDate;
             ievent.VenueId = dto.VenueId;
             ievent.ImageUrl = dto.ImageUrl;
             ievent.Category = dto.Category;
+            ievent.EventDates = dto.EventDates.Select(d => new EventDate
+            {
+                EventDateId = Guid.NewGuid(),
+                EventId = ievent.EventId,
+                Date = d.Date,
+                TimeSlots = d.TimeSlots.Select(t => new EventTimeSlot
+                {
+                    TimeSlotId = Guid.NewGuid(),
+                    StartTime = t.StartTime,
+                    EndTime = t.EndTime
+                }).ToList()
+            }).ToList();
 
             await _eventRepository.UpdateAsync(ievent);
             return true;
@@ -91,11 +109,24 @@ namespace iEvent.Application.Services
                 EventId = ievent.EventId,
                 Name = ievent.Name,
                 Description = ievent.Description,
-                StartDate = ievent.StartDate,
-                EndDate = ievent.EndDate,
                 VenueId = ievent.VenueId,
                 ImageUrl = ievent.ImageUrl,
                 Category = ievent.Category,
+                EventDates = ievent.EventDates
+                    .OrderBy(ed => ed.Date) 
+                    .Select(ed => new EventDateRespDto
+                    {
+                        EventDateId = ed.EventDateId,
+                        Date = ed.Date,
+                        TimeSlots = ed.TimeSlots
+                            .OrderBy(ts => ts.StartTime) 
+                            .Select(ts => new EventTimeSlotRespDto
+                            {
+                                TimeSlotId = ts.TimeSlotId,
+                                StartTime = ts.StartTime,
+                                EndTime = ts.EndTime
+                            }).ToList()
+                    }).ToList()
             };
         }
     }

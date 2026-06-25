@@ -15,6 +15,8 @@ namespace iEvent.Infrastructure.Persistance
         public DbSet<BookingTicket> BookingTickets { get; set; }
         public DbSet<AdminUser> AdminUsers { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<EventDate> EventDates { get; set; }
+        public DbSet<EventTimeSlot> EventTimeSlots { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -87,6 +89,30 @@ namespace iEvent.Infrastructure.Persistance
             modelBuilder.Entity<AdminUser>()
                 .HasIndex(a => a.IdentityUserId)
                 .IsUnique();
+
+            modelBuilder.Entity<Event>()
+                .HasMany(e => e.EventDates)
+                .WithOne(ed => ed.Event)
+                .HasForeignKey(ed => ed.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<EventDate>()
+                .HasMany(ed => ed.TimeSlots)
+                .WithOne(ts => ts.EventDate)
+                .HasForeignKey(ts => ts.EventDateId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<EventDate>()
+                .Property(ed => ed.Date)
+                .HasColumnType("date");
+
+            modelBuilder.Entity<EventTimeSlot>()
+                .Property(ts => ts.StartTime)
+                .HasColumnType("time");
+
+            modelBuilder.Entity<EventTimeSlot>()
+                .Property(ts => ts.EndTime)
+                .HasColumnType("time");
         }
     }
 }

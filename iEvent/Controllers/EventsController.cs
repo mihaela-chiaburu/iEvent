@@ -25,8 +25,8 @@ namespace iEvent.WebApi.Controllers
             [FromQuery] string? city,
             [FromQuery] Guid? venueId,
             [FromQuery] EventCategory? category,
-            [FromQuery] DateTime? fromDate,
-            [FromQuery] DateTime? toDate)
+            [FromQuery] DateOnly? fromDate,
+            [FromQuery] DateOnly? toDate)
         {
             var events = await _eventService.GetAllAsync(city, venueId, category, fromDate, toDate);
             return Ok(events);

@@ -8,8 +8,7 @@ namespace iEvent.Application.DTOs
         public Guid EventId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+        public List<EventDateRespDto> EventDates { get; set; } = new();
         public Guid VenueId { get; set; }
         public string? ImageUrl { get; set; }
         public EventCategory Category { get; set; }

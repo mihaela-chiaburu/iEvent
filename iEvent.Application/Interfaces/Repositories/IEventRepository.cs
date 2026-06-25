@@ -5,7 +5,7 @@ namespace iEvent.Application.Interfaces.Repositories
 {
     public interface IEventRepository
     {
-        Task<List<Event>> GetAllAsync(string? city, Guid? venueId, EventCategory? category, DateTime? fromDate, DateTime? toDate);
+        Task<List<Event>> GetAllAsync(string? city, Guid? venueId, EventCategory? category, DateOnly? fromDate, DateOnly? toDate);
         Task<Event?> GetByIdAsync(Guid id);
         Task AddAsync(Event ievent);
         Task UpdateAsync(Event ievent);

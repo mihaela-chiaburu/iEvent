@@ -25,12 +25,13 @@ namespace iEvent.Infrastructure.Repositories
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<List<Event>> GetAllAsync(string? city, Guid? venueId, EventCategory? category, 
-            DateTime? fromDate, DateTime? toDate)
+        public async Task<List<Event>> GetAllAsync(string? city, Guid? venueId, EventCategory? category,
+            DateOnly? fromDate, DateOnly? toDate)
         {
             var query = _dbContext.Events
                 .AsNoTracking()
                 .Include(e => e.Venue)
+                .Include(e => e.EventDates).ThenInclude(ed => ed.TimeSlots)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(city))
@@ -52,22 +53,24 @@ namespace iEvent.Infrastructure.Repositories
 
             if (fromDate.HasValue)
             {
-                query = query.Where(e => e.StartDate >= fromDate.Value);
+                query = query.Where(e => e.EventDates.Any(ed => ed.Date >= fromDate.Value));
             }
 
             if (toDate.HasValue)
             {
-                query = query.Where(e => e.StartDate <= toDate.Value);
+                query = query.Where(e => e.EventDates.Any(ed => ed.Date <= toDate.Value));
             }
 
             return await query
-                .OrderBy(e => e.StartDate)
+                .OrderBy(e => e.EventDates.OrderBy(ed => ed.Date).Select(ed => ed.Date).FirstOrDefault())
                 .ToListAsync();
         }
 
         public Task<Event?> GetByIdAsync(Guid id)
         {
-            return _dbContext.Events.FirstOrDefaultAsync(e => e.EventId == id);
+            return _dbContext.Events.Include(e => e.Venue)
+                    .Include(e => e.EventDates).ThenInclude(ed => ed.TimeSlots) 
+                    .FirstOrDefaultAsync(e => e.EventId == id);
         }
 
         public async Task UpdateAsync(Event ievent)
