@@ -41,8 +41,34 @@ namespace iEvent.Application.Services
                 Address = dto.Address,
                 City = dto.City,
                 Capacity = dto.Capacity,
-                MapLocation = new MapLocation(dto.Latitude, dto.Longitude)
+                Description = dto.Description,
+                Phone = dto.Phone,
+                Email = dto.Email,
+                MapLocation = new MapLocation(dto.Latitude, dto.Longitude),
+                Facilities = new List<VenueFacility>(),
+                Images = new List<VenueImage>()
             };
+
+            var venueId = venue.VenueId;
+
+            venue.Facilities = dto.Facilities?
+                .Select(f => new VenueFacility
+                {
+                    FacilityId = Guid.NewGuid(),
+                    VenueId = venueId,
+                    Name = f.Name
+                })
+                .ToList() ?? new List<VenueFacility>();
+
+            venue.Images = dto.Images?
+                .Select(i => new VenueImage
+                {
+                    ImageId = Guid.NewGuid(),
+                    VenueId = venueId,
+                    Url = i.Url,
+                    SortOrder = i.SortOrder
+                })
+                .ToList() ?? new List<VenueImage>();
 
             await _venueRepository.AddAsync(venue);
 
@@ -61,7 +87,25 @@ namespace iEvent.Application.Services
             venue.Address = dto.Address;
             venue.City = dto.City;
             venue.Capacity = dto.Capacity;
+            venue.Description = dto.Description;
+            venue.Phone = dto.Phone;
+            venue.Email = dto.Email;
             venue.MapLocation = new MapLocation(dto.Latitude, dto.Longitude);
+
+            venue.Facilities = dto.Facilities.Select(f => new VenueFacility
+            {
+                FacilityId = Guid.NewGuid(),
+                VenueId = venue.VenueId,
+                Name = f.Name
+            }).ToList();
+
+            venue.Images = dto.Images.Select(i => new VenueImage
+            {
+                ImageId = Guid.NewGuid(),
+                VenueId = venue.VenueId,
+                Url = i.Url,
+                SortOrder = i.SortOrder
+            }).ToList();
 
             await _venueRepository.UpdateAsync(venue);
             return true;
@@ -88,8 +132,25 @@ namespace iEvent.Application.Services
                 Address = venue.Address,
                 City = venue.City,
                 Capacity = venue.Capacity,
+                Description = venue.Description,
+                Phone = venue.Phone,
+                Email = venue.Email,
                 Latitude = venue.MapLocation.Latitude,
-                Longitude = venue.MapLocation.Longitude
+                Longitude = venue.MapLocation.Longitude,
+                Facilities = venue.Facilities.Select(f => new VenueFacilityRespDto
+                {
+                    FacilityId = f.FacilityId,
+                    Name = f.Name
+                }).ToList(),
+
+                Images = venue.Images
+                    .OrderBy(i => i.SortOrder) 
+                    .Select(i => new VenueImageRespDto
+                    {
+                        ImageId = i.ImageId,
+                        Url = i.Url,
+                        SortOrder = i.SortOrder
+                    }).ToList()
             };
         }
     }

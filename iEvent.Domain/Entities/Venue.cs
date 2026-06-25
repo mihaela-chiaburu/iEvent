@@ -28,6 +28,19 @@ namespace iEvent.Domain.Entities
         [Required]
         public MapLocation MapLocation { get; set; } = new(0, 0);
 
+        [StringLength(2000)]
+        public string? Description { get; set; }
+
+        [Phone]
+        [StringLength(30)]
+        public string? Phone { get; set; }
+
+        [EmailAddress]
+        [StringLength(200)]
+        public string? Email { get; set; }
+
         public List<Event> Events { get; set; } = new();
+        public List<VenueFacility> Facilities { get; set; } = new();
+        public List<VenueImage> Images { get; set; } = new();
     }
 }

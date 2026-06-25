@@ -19,12 +19,13 @@ namespace iEvent.Infrastructure.Repositories
 
         public Task<List<Venue>> GetAllAsync()
         {
-            return _dbContext.Venues.AsNoTracking().ToListAsync();
+            return _dbContext.Venues.AsNoTracking().Include(v => v.Facilities).Include(v => v.Images).ToListAsync();
         }
 
         public Task<Venue?> GetByIdAsync(Guid id)
         {
-            return _dbContext.Venues.FirstOrDefaultAsync(v => v.VenueId == id);
+            return _dbContext.Venues.Include(v => v.Facilities).Include(v => v.Images)
+                            .FirstOrDefaultAsync(v => v.VenueId == id);
         }
 
         public async Task AddAsync(Venue venue)

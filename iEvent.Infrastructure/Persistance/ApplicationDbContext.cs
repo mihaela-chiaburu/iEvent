@@ -17,6 +17,8 @@ namespace iEvent.Infrastructure.Persistance
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<EventDate> EventDates { get; set; }
         public DbSet<EventTimeSlot> EventTimeSlots { get; set; }
+        public DbSet<VenueFacility> VenueFacilities { get; set; }
+        public DbSet<VenueImage> VenueImages { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -113,6 +115,18 @@ namespace iEvent.Infrastructure.Persistance
             modelBuilder.Entity<EventTimeSlot>()
                 .Property(ts => ts.EndTime)
                 .HasColumnType("time");
+
+            modelBuilder.Entity<Venue>()
+                .HasMany(v => v.Facilities)
+                .WithOne(f => f.Venue)
+                .HasForeignKey(f => f.VenueId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Venue>()
+                .HasMany(v => v.Images)
+                .WithOne(i => i.Venue)
+                .HasForeignKey(i => i.VenueId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
