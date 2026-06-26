@@ -148,5 +148,63 @@ namespace iEvent.Application.Services
                     }).ToList()
             };
         }
+
+        public async Task<EventRespDto> CreateDraftAsync()
+        {
+            var ev = new Event
+            {
+                EventId = Guid.NewGuid(),
+                Name = "",
+                Description = "",
+                VenueId = null,
+                Category = EventCategory.Other,
+                IsDraft = true,
+                Images = new List<EventImage>(),
+                EventDates = new List<EventDate>()
+            };
+
+            await _eventRepository.AddAsync(ev);
+
+            return MapToRespDto(ev);
+        }
+
+        public async Task<bool> PatchAsync(Guid id, EventPatchDto dto)
+        {
+            var ev = await _eventRepository.GetByIdAsync(id);
+            if (ev == null) return false;
+
+            if (dto.Name != null)
+                ev.Name = dto.Name;
+
+            if (dto.Description != null)
+                ev.Description = dto.Description;
+
+            if (dto.VenueId.HasValue)
+                ev.VenueId = dto.VenueId.Value;
+
+            if (dto.ImageUrl != null)
+                ev.ImageUrl = dto.ImageUrl;
+
+            await _eventRepository.UpdateAsync(ev);
+            return true;
+        }
+
+        public async Task<bool> PublishAsync(Guid id)
+        {
+            var ev = await _eventRepository.GetByIdAsync(id);
+            if (ev == null) return false;
+
+            if (string.IsNullOrEmpty(ev.Name))
+                throw new Exception("Name required");
+
+            if (!ev.VenueId.HasValue)
+                throw new Exception("Venue required");
+
+            if (!ev.EventDates.Any())
+                throw new Exception("Dates required");
+
+            await _eventRepository.UpdateAsync(ev);
+            return true;
+        }
     }
 }

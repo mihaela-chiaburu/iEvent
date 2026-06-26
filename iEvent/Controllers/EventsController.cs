@@ -88,6 +88,37 @@ namespace iEvent.WebApi.Controllers
             return Ok(ticketTypes);
         }
 
+        [Authorize(Roles = "EventManager,SuperAdmin")]
+        [HttpPost("draft")]
+        public async Task<ActionResult<EventRespDto>> CreateDraft()
+        {
+            var created = await _eventService.CreateDraftAsync();
+            return Ok(created);
+        }
+
+        [Authorize(Roles = "EventManager,SuperAdmin")]
+        [HttpPatch("{id:guid}")]
+        public async Task<IActionResult> Patch(Guid id, [FromBody] EventPatchDto dto)
+        {
+            var updated = await _eventService.PatchAsync(id, dto);
+
+            if (!updated)
+                return NotFound();
+
+            return NoContent();
+        }
+
+        [Authorize(Roles = "EventManager,SuperAdmin")]
+        [HttpPost("{id:guid}/publish")]
+        public async Task<IActionResult> Publish(Guid id)
+        {
+            var result = await _eventService.PublishAsync(id);
+
+            if (!result)
+                return NotFound();
+
+            return NoContent();
+        }
 
     }
 }

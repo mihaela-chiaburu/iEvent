@@ -1,15 +1,16 @@
+using CloudinaryDotNet;
+using iEvent.Application.DTOs;
 using iEvent.Application.Interfaces.Repositories;
+using iEvent.Application.Interfaces.Services;
 using iEvent.Application.Services;
 using iEvent.Infrastructure.Identity;
 using iEvent.Infrastructure.Persistance;
 using iEvent.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
-using iEvent.Application.Interfaces.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -43,6 +44,25 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("Cloudinary"));
+builder.Services.AddScoped<Cloudinary>(sp =>
+{
+    var settings = sp.GetRequiredService<IOptions<CloudinarySettings>>().Value;
+
+    var account = new Account(
+        settings.CloudName,
+        settings.ApiKey,
+        settings.ApiSecret
+    );
+
+    return new Cloudinary(account);
+});
+
+builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+
+builder.Services.AddScoped<IEventImageRepository, EventImageRepository>();
+builder.Services.AddScoped<IEventImageService, EventImageService>();
 
 builder.Services.AddScoped<IVenueRepository, VenueRepository>();
 builder.Services.AddScoped<IVenueService, VenueService>();

@@ -19,8 +19,7 @@ namespace iEvent.Domain.Entities
         [StringLength(1000)]
         public string Description { get; set; } = string.Empty;
 
-        [Required]
-        public Guid VenueId { get; set; }
+        public Guid? VenueId { get; set; }
 
         [ForeignKey(nameof(VenueId))]
         public Venue? Venue { get; set; }
@@ -36,5 +35,6 @@ namespace iEvent.Domain.Entities
         public List<EventDate> EventDates { get; set; } = new();
 
         public List<EventImage> Images { get; set; } = new();
+        public bool IsDraft { get; set; } = true;
     }
 }

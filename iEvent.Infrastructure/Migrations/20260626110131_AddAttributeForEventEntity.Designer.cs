@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using iEvent.Infrastructure.Persistance;
 
@@ -11,9 +12,11 @@ using iEvent.Infrastructure.Persistance;
 namespace iEvent.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260626110131_AddAttributeForEventEntity")]
+    partial class AddAttributeForEventEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -346,7 +349,7 @@ namespace iEvent.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<Guid?>("VenueId")
+                    b.Property<Guid>("VenueId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("EventId");
@@ -738,7 +741,9 @@ namespace iEvent.Infrastructure.Migrations
                 {
                     b.HasOne("iEvent.Domain.Entities.Venue", "Venue")
                         .WithMany("Events")
-                        .HasForeignKey("VenueId");
+                        .HasForeignKey("VenueId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Venue");
                 });

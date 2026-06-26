@@ -9,7 +9,7 @@ namespace iEvent.Application.DTOs
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public List<EventDateRespDto> EventDates { get; set; } = new();
-        public Guid VenueId { get; set; }
+        public Guid? VenueId { get; set; }
         public string? ImageUrl { get; set; }
         public EventCategory Category { get; set; }
         public List<EventImageRespDto> Images { get; set; } = new();
