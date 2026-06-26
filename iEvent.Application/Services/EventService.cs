@@ -3,11 +3,6 @@ using iEvent.Application.Interfaces.Repositories;
 using iEvent.Application.Interfaces.Services;
 using iEvent.Domain.Entities;
 using iEvent.Domain.Enums;
-using iEvent.Domain.ValueObjects;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace iEvent.Application.Services
 {

@@ -45,5 +45,14 @@ namespace iEvent.Domain.Entities
 
         [Required]
         public DateTime ExpiresAt { get; set; }
+
+        [Required]
+        public Guid BookingTimeSlotId { get; set; }
+
+        [ForeignKey(nameof(BookingTimeSlotId))]
+        public EventTimeSlot? BookingTimeSlot { get; set; }
+
+        [Range(0, 10000000)]
+        public decimal AdminFee { get; set; }
     }
 }

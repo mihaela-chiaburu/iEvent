@@ -134,6 +134,12 @@ namespace iEvent.Infrastructure.Persistance
                 .WithOne(i => i.Event)
                 .HasForeignKey(i => i.EventId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Booking>()
+                .HasOne(b => b.BookingTimeSlot)
+                .WithMany()
+                .HasForeignKey(b => b.BookingTimeSlotId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

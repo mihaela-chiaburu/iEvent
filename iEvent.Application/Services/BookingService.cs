@@ -82,6 +82,7 @@ namespace iEvent.Application.Services
             {
                 BookingId = Guid.NewGuid(),
                 EventId = dto.EventId,
+                BookingTimeSlotId = dto.BookingTimeSlotId,
                 CustomerId = customer.CustomerId,
                 BookingDate = DateTime.UtcNow,
                 Status = BookingStatus.Pending,
@@ -114,8 +115,9 @@ namespace iEvent.Application.Services
                 booking.BookingTickets.Add(bookingTicket);
             }
 
-            booking.TotalPrice = booking.BookingTickets
-                .Sum(bt => bt.UnitPrice * bt.Quantity);
+            booking.TotalPrice = booking.BookingTickets.Sum(bt => bt.UnitPrice * bt.Quantity);
+
+            booking.AdminFee = Math.Round(booking.TotalPrice * 0.02m, 2);
 
             await _bookingRepository.AddAsync(booking);
 
@@ -341,6 +343,8 @@ namespace iEvent.Application.Services
                 BookingId = booking.BookingId,
                 CustomerId = booking.CustomerId,
                 EventId = booking.EventId,
+                BookingTimeSlotId = booking.BookingTimeSlotId,
+                AdminFee = (double)booking.AdminFee,
                 BookingDate = booking.BookingDate,
                 Status = booking.Status,
                 TotalPrice = (double)booking.TotalPrice,

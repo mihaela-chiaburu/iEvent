@@ -7,6 +7,7 @@ namespace iEvent.Application.DTOs
     public class BookingCreateDto
     {
         public Guid EventId { get; set; }
+        public Guid BookingTimeSlotId { get; set; }
         public List<BookingTicketCreateDto> Tickets { get; set; } = new();
         public PaymentMethod PaymentMethod { get; set; }
     }
