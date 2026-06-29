@@ -92,6 +92,11 @@ namespace iEvent.Application.Services
             return true;
         }
 
+        public async Task<List<string>> GetUniqueNamesAsync()
+        {
+            return await _ticketTypeRepository.GetUniqueNamesAsync();
+        }
+
         private static TicketTypeRespDto MapToRespDto(TicketType ticketType)
         {
             return new TicketTypeRespDto

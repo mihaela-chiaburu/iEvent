@@ -61,5 +61,14 @@ namespace iEvent.Infrastructure.Repositories
             _dbContext.TicketTypes.Remove(ticketType);
             await _dbContext.SaveChangesAsync();
         }
+
+        public async Task<List<string>> GetUniqueNamesAsync()
+        {
+            return await _dbContext.TicketTypes
+                .Select(t => t.Name)
+                .Distinct()
+                .OrderBy(name => name) 
+                .ToListAsync();
+        }
     }
 }

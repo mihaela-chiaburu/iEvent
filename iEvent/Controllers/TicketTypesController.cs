@@ -73,5 +73,13 @@ namespace iEvent.WebApi.Controllers
 
             return NoContent();
         }
+
+        [Authorize(Roles = "EventManager,SuperAdmin")]
+        [HttpGet("names")]
+        public async Task<ActionResult<List<string>>> GetUniqueNames()
+        {
+            var names = await _ticketTypeService.GetUniqueNamesAsync();
+            return Ok(names);
+        }
     }
 }

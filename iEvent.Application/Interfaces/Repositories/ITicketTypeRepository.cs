@@ -13,5 +13,6 @@ namespace iEvent.Application.Interfaces.Repositories
         Task AddAsync(TicketType ticketType);
         Task UpdateAsync(TicketType ticketType);
         Task DeleteAsync(TicketType ticketType);
+        Task<List<string>> GetUniqueNamesAsync();
     }
 }
