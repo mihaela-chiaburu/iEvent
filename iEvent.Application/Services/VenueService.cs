@@ -124,6 +124,12 @@ namespace iEvent.Application.Services
             return true;
         }
 
+        public async Task<List<VenueRespDto>> GetPopularAsync(int take = 10)
+        {
+            var venues = await _venueRepository.GetPopularAsync(take);
+            return venues.Select(MapToRespDto).ToList();
+        }
+
         private static VenueRespDto MapToRespDto(Venue venue)
         {
             return new VenueRespDto

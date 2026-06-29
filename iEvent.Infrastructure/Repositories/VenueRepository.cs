@@ -29,6 +29,16 @@ namespace iEvent.Infrastructure.Repositories
                             .FirstOrDefaultAsync(v => v.VenueId == id);
         }
 
+        public async Task<List<Venue>> GetPopularAsync(int take = 10)
+        {
+            return await _dbContext.Venues
+                .AsNoTracking()
+                .Include(v => v.Facilities).Include(v => v.Events).Include(v => v.Images)
+                .OrderByDescending(v => v.Events.Count(e => !e.IsDraft))
+                .Take(take)
+                .ToListAsync();
+        }
+
         public async Task AddAsync(Venue venue)
         {
             _dbContext.Venues.Add(venue);

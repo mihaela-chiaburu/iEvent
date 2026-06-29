@@ -1,7 +1,8 @@
+using iEvent.Application.DTOs;
+using iEvent.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using iEvent.Application.DTOs;
 
 namespace iEvent.Application.Interfaces.Services
 {
@@ -12,6 +13,7 @@ namespace iEvent.Application.Interfaces.Services
         Task<VenueRespDto> CreateAsync(VenueCreateDto dto);
         Task<bool> UpdateAsync(Guid id, VenueUpdateDto dto);
         Task<bool> DeleteAsync(Guid id);
+        Task<List<VenueRespDto>> GetPopularAsync(int take);
 
         Task<VenueRespDto> CreateDraftAsync();
         Task<bool> PatchAsync(Guid id, VenuePatchDto dto);

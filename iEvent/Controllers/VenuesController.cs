@@ -41,6 +41,14 @@ namespace iEvent.Controllers
             return Ok(venue);
         }
 
+        [HttpGet("popular")]
+        [AllowAnonymous]
+        public async Task<ActionResult<List<VenueRespDto>>> GetPopular()
+        {
+            var venues = await _venueService.GetPopularAsync(10);
+            return Ok(venues);
+        }
+
         [Authorize(Roles = "EventManager,SuperAdmin")]
         [HttpPost]
         public async Task<ActionResult<VenueRespDto>> Create([FromBody] VenueCreateDto dto)
