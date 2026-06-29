@@ -39,6 +39,8 @@ namespace iEvent.Domain.Entities
         [StringLength(200)]
         public string? Email { get; set; }
 
+        public bool IsDraft { get; set; } = true;
+
         public List<Event> Events { get; set; } = new();
         public List<VenueFacility> Facilities { get; set; } = new();
         public List<VenueImage> Images { get; set; } = new();

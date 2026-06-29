@@ -64,6 +64,9 @@ builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IEventImageRepository, EventImageRepository>();
 builder.Services.AddScoped<IEventImageService, EventImageService>();
 
+builder.Services.AddScoped<IVenueImageRepository, VenueImageRepository>();
+builder.Services.AddScoped<IVenueImageService, VenueImageService>();
+
 builder.Services.AddScoped<IVenueRepository, VenueRepository>();
 builder.Services.AddScoped<IVenueService, VenueService>();
 

@@ -1,5 +1,6 @@
 using iEvent.Application.DTOs;
 using iEvent.Application.Interfaces.Services;
+using iEvent.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -70,6 +71,38 @@ namespace iEvent.Controllers
             {
                 return NotFound();
             }
+
+            return NoContent();
+        }
+
+        [Authorize(Roles = "EventManager,SuperAdmin")]
+        [HttpPost("draft")]
+        public async Task<ActionResult<VenueRespDto>> CreateDraft()
+        {
+            var created = await _venueService.CreateDraftAsync();
+            return Ok(created);
+        }
+
+        [Authorize(Roles = "EventManager,SuperAdmin")]
+        [HttpPatch("{id:guid}")]
+        public async Task<IActionResult> Patch(Guid id, [FromBody] VenuePatchDto dto)
+        {
+            var updated = await _venueService.PatchAsync(id, dto);
+
+            if (!updated)
+                return NotFound();
+
+            return NoContent();
+        }
+
+        [Authorize(Roles = "EventManager,SuperAdmin")]
+        [HttpPost("{id:guid}/publish")]
+        public async Task<IActionResult> Publish(Guid id)
+        {
+            var result = await _venueService.PublishAsync(id);
+
+            if (!result)
+                return NotFound();
 
             return NoContent();
         }

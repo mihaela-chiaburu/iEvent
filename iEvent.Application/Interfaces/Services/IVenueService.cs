@@ -12,5 +12,9 @@ namespace iEvent.Application.Interfaces.Services
         Task<VenueRespDto> CreateAsync(VenueCreateDto dto);
         Task<bool> UpdateAsync(Guid id, VenueUpdateDto dto);
         Task<bool> DeleteAsync(Guid id);
+
+        Task<VenueRespDto> CreateDraftAsync();
+        Task<bool> PatchAsync(Guid id, VenuePatchDto dto);
+        Task<bool> PublishAsync(Guid id);
     }
 }

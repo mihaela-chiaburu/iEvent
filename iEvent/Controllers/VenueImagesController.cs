@@ -5,29 +5,29 @@ using Microsoft.AspNetCore.Mvc;
 namespace iEvent.WebApi.Controllers
 {
     [ApiController]
-    [Route("api/events/{eventId:guid}/images")]
-    public class EventImagesController : ControllerBase
+    [Route("api/venues/{venueId:guid}/images")]
+    public class VenueImagesController : ControllerBase
     {
-        private readonly IEventImageService _EventImageService;
+        private readonly IVenueImageService _venueImageService;
 
-        public EventImagesController(IEventImageService EventImageService)
+        public VenueImagesController(IVenueImageService service)
         {
-            _EventImageService = EventImageService;
+            _venueImageService = service;
         }
 
         [AllowAnonymous]
         [HttpGet]
-        public async Task<IActionResult> Get(Guid eventId)
+        public async Task<IActionResult> Get(Guid venueId)
         {
-            var images = await _EventImageService.GetByEventIdAsync(eventId);
+            var images = await _venueImageService.GetByVenueIdAsync(venueId);
             return Ok(images);
         }
 
         [Authorize(Roles = "EventManager,SuperAdmin")]
         [HttpPost]
-        public async Task<IActionResult> Upload(Guid eventId, [FromForm] List<IFormFile> files)
+        public async Task<IActionResult> Upload(Guid venueId, [FromForm] List<IFormFile> files)
         {
-            var urls = await _EventImageService.UploadAsync(eventId, files);
+            var urls = await _venueImageService.UploadAsync(venueId, files);
             return Ok(new { urls });
         }
 
@@ -35,7 +35,7 @@ namespace iEvent.WebApi.Controllers
         [HttpDelete("{imageId:guid}")]
         public async Task<IActionResult> Delete(Guid imageId)
         {
-            var result = await _EventImageService.DeleteAsync(imageId);
+            var result = await _venueImageService.DeleteAsync(imageId);
 
             if (!result)
                 return NotFound();
