@@ -8,8 +8,8 @@ namespace iEvent.Application.Interfaces.Services
 {
     public interface IUserProfileService
     {
-        Task CreateCustomerProfileAsync( string identityUserId, string email);
-        Task CreateAdminProfileAsync(string identityUserId, string email);
-        Task SyncProfileAfterRoleChangeAsync( string identityUserId, string email, string role);
+        Task CreateCustomerProfileAsync(string identityUserId, string email, string Name, string? phoneNumber);
+        Task CreateAdminProfileAsync(string identityUserId, string email, string Name, string? phoneNumber);
+        Task SyncProfileAfterRoleChangeAsync(string identityUserId, string email, string name, string? phoneNumber, string role);
     }
 }

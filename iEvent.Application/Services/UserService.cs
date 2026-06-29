@@ -47,11 +47,11 @@ namespace iEvent.Application.Services
         public async Task<IdentityResultDto> CreateManagerAsync(AdminUserCreateDto request)
         {
             var validManagerRoles = new HashSet<string>
-            {
-                RoleNames.EventManager,
-                RoleNames.BookingManager,
-                RoleNames.SuperAdmin
-            };
+    {
+        RoleNames.EventManager,
+        RoleNames.BookingManager,
+        RoleNames.SuperAdmin
+    };
 
             var roleString = request.Role.ToString();
 
@@ -66,13 +66,21 @@ namespace iEvent.Application.Services
                 return new IdentityResultDto(false, new[] { "User already exists." });
             }
 
-            var result = await _userRepository.CreateUserWithRoleAsync(request.Email, request.Password, roleString);
+            var result = await _userRepository.CreateUserWithRoleAsync(request.Email, request.Password,
+                roleString, request.PhoneNumber
+            );
+
             if (!result.Succeeded)
             {
                 return result;
             }
 
-            await _userProfileService.CreateAdminProfileAsync(result.CreatedUserId!, request.Email);
+            await _userProfileService.CreateAdminProfileAsync(
+                result.CreatedUserId!,
+                request.Email,
+                request.Name,
+                request.PhoneNumber
+            );
 
             return new IdentityResultDto(true);
         }
@@ -104,7 +112,13 @@ namespace iEvent.Application.Services
                 return result;
             }
 
-            await _userProfileService.SyncProfileAfterRoleChangeAsync(userInfo.Value.Id, userInfo.Value.Email, newRole);
+            await _userProfileService.SyncProfileAfterRoleChangeAsync(
+                userInfo.Value.Id,
+                userInfo.Value.Email,
+                userInfo.Value.Name,
+                userInfo.Value.PhoneNumber,
+                newRole
+            );
 
             return new IdentityResultDto(true);
         }

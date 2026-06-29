@@ -23,7 +23,7 @@ namespace iEvent.Application.Services
             _adminUserRepository = adminUserRepository;
         }
 
-        public async Task CreateCustomerProfileAsync(string identityUserId, string email)
+        public async Task CreateCustomerProfileAsync(string identityUserId, string email, string name, string? phoneNumber)
         {
             var exists = await _customerRepository
                 .ExistsByIdentityUserIdAsync(identityUserId);
@@ -38,13 +38,14 @@ namespace iEvent.Application.Services
                 CustomerId = Guid.NewGuid(),
                 IdentityUserId = identityUserId,
                 Email = email,
-                Name = email
+                Name = name,
+                PhoneNumber = phoneNumber
             };
 
             await _customerRepository.AddAsync(customer);
         }
 
-        public async Task CreateAdminProfileAsync(string identityUserId, string email)
+        public async Task CreateAdminProfileAsync(string identityUserId, string email, string name, string? phoneNumber)
         {
             var exists = await _adminUserRepository
                 .ExistsByIdentityUserIdAsync(identityUserId);
@@ -59,24 +60,22 @@ namespace iEvent.Application.Services
                 AdminId = Guid.NewGuid(),
                 IdentityUserId = identityUserId,
                 Email = email,
-                Name = email
+                Name = name,
+                PhoneNumber = phoneNumber
             };
 
             await _adminUserRepository.AddAsync(admin);
         }
 
-        public async Task SyncProfileAfterRoleChangeAsync(
-            string identityUserId,
-            string email,
-            string role)
+        public async Task SyncProfileAfterRoleChangeAsync(string identityUserId, string email, string name, string? phoneNumber, string role)
         {
             if (role == RoleNames.Customer)
             {
-                await CreateCustomerProfileAsync(identityUserId, email);
+                await CreateCustomerProfileAsync(identityUserId, email, name, role);
             }
             else
             {
-                await CreateAdminProfileAsync(identityUserId, email);
+                await CreateAdminProfileAsync(identityUserId, email, name, role);
             }
         }
     }

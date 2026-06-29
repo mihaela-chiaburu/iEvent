@@ -52,7 +52,7 @@ namespace iEvent.Infrastructure.Repositories
             foreach (var user in users)
             {
                 var roles = await _userManager.GetRolesAsync(user);
-                result.Add(new UserRespDto(user.Id, user.Email ?? string.Empty, roles));
+                result.Add(new UserRespDto(user.Id, user.Email ?? string.Empty, user.UserName ?? string.Empty, user.PhoneNumber, roles));
             }
 
             return new PagedResult<UserRespDto> { Items = result, TotalCount = total };
@@ -64,7 +64,7 @@ namespace iEvent.Infrastructure.Repositories
             return user != null;
         }
 
-        public async Task<IdentityResultDto> CreateUserWithRoleAsync(string email, string password, string role)
+        public async Task<IdentityResultDto> CreateUserWithRoleAsync(string email, string password, string role, string? PhoneNumber)
         {
             var user = new ApplicationUser
             {
@@ -116,11 +116,17 @@ namespace iEvent.Infrastructure.Repositories
             return new IdentityResultDto(true);
         }
 
-        public async Task<(string Id, string Email)?> GetUserBasicInfoAsync(string userId)
+        public async Task<(string Id, string Email, string Name, string? PhoneNumber)?> GetUserBasicInfoAsync(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null) return null;
-            return (user.Id, user.Email ?? string.Empty);
+
+            return (
+                user.Id,
+                user.Email ?? string.Empty,
+                user.UserName ?? string.Empty, 
+                user.PhoneNumber
+            );
         }
     }
 }

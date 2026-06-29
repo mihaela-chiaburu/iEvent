@@ -40,7 +40,8 @@ namespace iEvent.WebApi.Controllers
             var user = new ApplicationUser
             {
                 Email = request.Email,
-                UserName = request.Email
+                UserName = request.Email,
+                PhoneNumber = request.PhoneNumber 
             };
 
             var result = await _userManager.CreateAsync(user, request.Password);
@@ -51,7 +52,12 @@ namespace iEvent.WebApi.Controllers
 
             await _userManager.AddToRoleAsync(user, RoleNames.Customer);
 
-            await _userProfileService.CreateCustomerProfileAsync(user.Id, user.Email!);
+            await _userProfileService.CreateCustomerProfileAsync(
+                user.Id,
+                user.Email!,
+                request.UserName,
+                request.PhoneNumber
+            );
 
             return Ok(new { message = "Registered successfully." });
         }
