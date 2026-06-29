@@ -113,6 +113,12 @@ namespace iEvent.Application.Services
             return true;
         }
 
+        public async Task<List<EventRespDto>> GetEventsByVenueIdAsync(Guid venueId)
+        {
+            var events = await _eventRepository.GetEventsByVenueIdAsync(venueId);
+            return events.Select(MapToRespDto).ToList();
+        }
+
         private static EventRespDto MapToRespDto(Event ievent)
         {
             return new EventRespDto

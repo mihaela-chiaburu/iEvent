@@ -14,10 +14,12 @@ namespace iEvent.Controllers
     public class VenuesController : ControllerBase
     {
         private readonly IVenueService _venueService;
+        private readonly IEventService _eventService;
 
-        public VenuesController(IVenueService venueService)
+        public VenuesController(IVenueService venueService, IEventService eventService)
         {
             _venueService = venueService;
+            _eventService = eventService;
         }
 
         [AllowAnonymous]
@@ -113,6 +115,14 @@ namespace iEvent.Controllers
                 return NotFound();
 
             return NoContent();
+        }
+
+        [HttpGet("{id:guid}/events")]
+        [AllowAnonymous]
+        public async Task<ActionResult<List<EventRespDto>>> GetEvents(Guid id)
+        {
+            var events = await _eventService.GetEventsByVenueIdAsync(id);
+            return Ok(events);
         }
     }
 }

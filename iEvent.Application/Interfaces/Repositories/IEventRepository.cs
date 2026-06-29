@@ -10,5 +10,7 @@ namespace iEvent.Application.Interfaces.Repositories
         Task AddAsync(Event ievent);
         Task UpdateAsync(Event ievent);
         Task DeleteAsync(Event ievent);
+        Task<List<Event>> GetEventsByVenueIdAsync(Guid venueId);
+
     }
 }

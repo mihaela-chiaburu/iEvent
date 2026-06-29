@@ -79,5 +79,12 @@ namespace iEvent.Infrastructure.Repositories
             _dbContext.Events.Update(ievent);
             await _dbContext.SaveChangesAsync();
         }
+
+        public async Task<List<Event>> GetEventsByVenueIdAsync(Guid venueId)
+        {
+            return await _dbContext.Events
+                .Where(e => e.VenueId == venueId)
+                .ToListAsync();
+        }
     }
 }
