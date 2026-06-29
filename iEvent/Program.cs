@@ -3,6 +3,7 @@ using iEvent.Application.DTOs;
 using iEvent.Application.Interfaces.Repositories;
 using iEvent.Application.Interfaces.Services;
 using iEvent.Application.Services;
+using iEvent.Infrastructure.ExternalServices;
 using iEvent.Infrastructure.Identity;
 using iEvent.Infrastructure.Persistance;
 using iEvent.Infrastructure.Repositories;

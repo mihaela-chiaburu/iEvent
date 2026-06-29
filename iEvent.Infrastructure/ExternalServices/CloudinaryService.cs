@@ -3,14 +3,8 @@ using CloudinaryDotNet.Actions;
 using iEvent.Application.DTOs;
 using iEvent.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace iEvent.Application.Services
+namespace iEvent.Infrastructure.ExternalServices
 {
     public class CloudinaryService : ICloudinaryService
     {
