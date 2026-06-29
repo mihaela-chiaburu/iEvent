@@ -16,7 +16,7 @@ namespace iEvent.Application.Interfaces.Services
         Task<bool> UpdateAsync(Guid id, EventUpdateDto dto);
         Task<bool> DeleteAsync(Guid id);
         Task<List<EventRespDto>> GetEventsByVenueIdAsync(Guid venueId);
-
+        Task<List<EventRespDto>> GetPopularEventsAsync(int count);
 
         Task<EventRespDto> CreateDraftAsync();
         Task<bool> PatchAsync(Guid id, EventPatchDto dto);

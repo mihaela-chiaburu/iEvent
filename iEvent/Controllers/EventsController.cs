@@ -120,5 +120,13 @@ namespace iEvent.WebApi.Controllers
             return NoContent();
         }
 
+        [AllowAnonymous]
+        [HttpGet("popular")]
+        public async Task<ActionResult<List<EventRespDto>>> GetPopular()
+        {
+            var popularEvents = await _eventService.GetPopularEventsAsync(4);
+            return Ok(popularEvents);
+        }
+
     }
 }

@@ -86,5 +86,16 @@ namespace iEvent.Infrastructure.Repositories
                 .Where(e => e.VenueId == venueId)
                 .ToListAsync();
         }
+
+        public async Task<List<Event>> GetPopularEventsAsync(int count)
+        {
+            return await _dbContext.Events
+                .Where(e => !e.IsDraft)
+                .Include(e => e.EventDates)
+                    .ThenInclude(ed => ed.TimeSlots)
+                .Include(e => e.Images)
+                .Take(count)
+                .ToListAsync();
+        }
     }
 }

@@ -119,6 +119,12 @@ namespace iEvent.Application.Services
             return events.Select(MapToRespDto).ToList();
         }
 
+        public async Task<List<EventRespDto>> GetPopularEventsAsync(int count)
+        {
+            var events = await _eventRepository.GetPopularEventsAsync(count);
+            return events.Select(MapToRespDto).ToList();
+        }
+
         private static EventRespDto MapToRespDto(Event ievent)
         {
             return new EventRespDto

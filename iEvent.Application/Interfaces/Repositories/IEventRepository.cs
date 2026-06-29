@@ -11,6 +11,7 @@ namespace iEvent.Application.Interfaces.Repositories
         Task UpdateAsync(Event ievent);
         Task DeleteAsync(Event ievent);
         Task<List<Event>> GetEventsByVenueIdAsync(Guid venueId);
+        Task<List<Event>> GetPopularEventsAsync(int count);
 
     }
 }
