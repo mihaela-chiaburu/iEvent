@@ -1,11 +1,8 @@
 ﻿using iEvent.Application.DTOs;
 using iEvent.Application.Interfaces.Services;
 using iEvent.Domain.Enums;
-using iEvent.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace iEvent.WebApi.Controllers;
 
@@ -14,114 +11,50 @@ namespace iEvent.WebApi.Controllers;
 [Authorize(Roles = RoleNames.SuperAdmin)]
 public class UsersController : ControllerBase
 {
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly IUserProfileService _userProfileService;
+    private readonly IUserService _userService;
 
-    public UsersController(UserManager<ApplicationUser> userManager, IUserProfileService userProfileService)
+    public UsersController(IUserService userService)
     {
-        _userManager = userManager;
-        _userProfileService = userProfileService;
+        _userService = userService;
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<UserRespDto>>> GetAll()
+    public async Task<ActionResult<PagedResult<UserRespDto>>> GetAll( [FromQuery] string? search,
+        [FromQuery] string? filterByRole,
+        [FromQuery] string? filterByStatus,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
     {
-        var users = await _userManager.Users.ToListAsync();
-
-        var result = new List<UserRespDto>();
-
-        foreach (var user in users)
-        {
-            var roles = await _userManager.GetRolesAsync(user);
-
-            result.Add(new UserRespDto(
-                user.Id,
-                user.Email ?? string.Empty,
-                roles));
-        }
-
+        var result = await _userService.GetPaginatedUsersAsync(search, filterByRole, filterByStatus, page, pageSize);
         return Ok(result);
     }
 
     [HttpPost("create-manager")]
-    public async Task<IActionResult> CreateManager(CreateManagerRequest request)
+    public async Task<IActionResult> CreateManager([FromBody] AdminUserCreateDto request)
     {
-        var validManagerRoles = new HashSet<string>
-        {
-            RoleNames.EventManager,
-            RoleNames.BookingManager,
-            RoleNames.SuperAdmin
-        };
+        var result = await _userService.CreateManagerAsync(request);
 
-        if (!validManagerRoles.Contains(request.Role))
-        {
-            return BadRequest(new { message = "Invalid manager role." });
-        }
-
-        var existing = await _userManager.FindByEmailAsync(request.Email);
-        if (existing != null)
-        {
-            return Conflict(new { message = "User already exists." });
-        }
-
-        var user = new ApplicationUser
-        {
-            Email = request.Email,
-            UserName = request.Email
-        };
-
-        var result = await _userManager.CreateAsync(user, request.Password);
         if (!result.Succeeded)
         {
-            return BadRequest(new
-            {
-                errors = result.Errors.Select(e => e.Description)
-            });
+            return BadRequest(new { errors = result.Errors });
         }
 
-        await _userManager.AddToRoleAsync(user, request.Role);
-
-        await _userProfileService.CreateAdminProfileAsync(
-            user.Id,
-            user.Email!);
-
-        return Ok(new { message = "Manager created successfully." });
+        return StatusCode(201, new { message = "Manager created successfully." });
     }
 
     [HttpPut("{id}/role")]
-    public async Task<IActionResult> UpdateRole(
-        string id,
-        UpdateUserRoleRequest request)
+    public async Task<IActionResult> UpdateRole(string id, [FromBody] UpdateUserRoleRequest request)
     {
-        var validRoles = new HashSet<string>
-        {
-            RoleNames.SuperAdmin,
-            RoleNames.EventManager,
-            RoleNames.BookingManager,
-            RoleNames.Customer
-        };
+        var result = await _userService.UpdateUserRoleAsync(id, request.Role);
 
-        if (!validRoles.Contains(request.Role))
+        if (!result.Succeeded)
         {
-            return BadRequest(new { message = "Invalid role." });
+            if (result.Errors != null && result.Errors.Contains("User not found."))
+            {
+                return NotFound();
+            }
+            return BadRequest(new { errors = result.Errors });
         }
-
-        var user = await _userManager.FindByIdAsync(id);
-        if (user == null)
-        {
-            return NotFound();
-        }
-
-        var currentRoles = await _userManager.GetRolesAsync(user);
-
-        if (currentRoles.Any())
-        {
-            await _userManager.RemoveFromRolesAsync(user, currentRoles);
-        }
-
-        await _userManager.AddToRoleAsync(user, request.Role);
-
-        await _userProfileService.SyncProfileAfterRoleChangeAsync(user.Id, user.Email!, request.Role);
 
         return Ok(new { message = "User role updated successfully." });
     }
