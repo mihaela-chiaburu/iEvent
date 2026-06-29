@@ -9,5 +9,7 @@ namespace iEvent.Application.Interfaces.Repositories
         Task<IdentityResultDto> CreateUserWithRoleAsync(string email, string password, string role, string? PhoneNumber);
         Task<IdentityResultDto> UpdateUserRoleAsync(string userId, string newRole);
         Task<(string Id, string Email, string Name, string? PhoneNumber)?> GetUserBasicInfoAsync(string userId);
+        Task<IdentityResultDto> LockUserAsync(string userId, DateTimeOffset until);
+        Task<IdentityResultDto> UnlockUserAsync(string userId);
     }
 }

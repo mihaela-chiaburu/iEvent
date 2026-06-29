@@ -58,4 +58,36 @@ public class UsersController : ControllerBase
 
         return Ok(new { message = "User role updated successfully." });
     }
+
+    [HttpPatch("{id}/lock")]
+    public async Task<IActionResult> LockUser(string id)
+    {
+        var result = await _userService.LockUserAsync(id);
+        if (!result.Succeeded)
+        {
+            if (result.Errors != null && result.Errors.Contains("User not found."))
+            {
+                return NotFound(new { message = "User not found." });
+            }
+            return BadRequest(new { errors = result.Errors });
+        }
+
+        return Ok(new { message = "User has been locked successfully." });
+    }
+
+    [HttpPatch("{id}/unlock")]
+    public async Task<IActionResult> UnlockUser(string id)
+    {
+        var result = await _userService.UnlockUserAsync(id);
+        if (!result.Succeeded)
+        {
+            if (result.Errors != null && result.Errors.Contains("User not found."))
+            {
+                return NotFound(new { message = "User not found." });
+            }
+            return BadRequest(new { errors = result.Errors });
+        }
+
+        return Ok(new { message = "User has been unlocked successfully." });
+    }
 }

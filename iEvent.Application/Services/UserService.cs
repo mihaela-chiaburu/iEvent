@@ -122,5 +122,16 @@ namespace iEvent.Application.Services
 
             return new IdentityResultDto(true);
         }
+
+        public async Task<IdentityResultDto> LockUserAsync(string userId)
+        {
+            var lockoutEnd = DateTimeOffset.UtcNow.AddYears(100);
+            return await _userRepository.LockUserAsync(userId, lockoutEnd);
+        }
+
+        public async Task<IdentityResultDto> UnlockUserAsync(string userId)
+        {
+            return await _userRepository.UnlockUserAsync(userId);
+        }
     }
 }

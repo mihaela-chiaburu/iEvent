@@ -13,5 +13,7 @@ namespace iEvent.Application.Interfaces.Services
                                                         string? filterByStatus, int page, int pageSize);
         Task<IdentityResultDto> CreateManagerAsync(AdminUserCreateDto request);
         Task<IdentityResultDto> UpdateUserRoleAsync(string userId, string newRole);
+        Task<IdentityResultDto> LockUserAsync(string userId);
+        Task<IdentityResultDto> UnlockUserAsync(string userId);
     }
 }

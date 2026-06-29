@@ -128,5 +128,43 @@ namespace iEvent.Infrastructure.Repositories
                 user.PhoneNumber
             );
         }
+
+        public async Task<IdentityResultDto> LockUserAsync(string userId, DateTimeOffset until)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return new IdentityResultDto(false, new[] { "User not found." });
+            }
+
+            await _userManager.SetLockoutEnabledAsync(user, true);
+
+            var result = await _userManager.SetLockoutEndDateAsync(user, until);
+            if (!result.Succeeded)
+            {
+                return new IdentityResultDto(false, result.Errors.Select(e => e.Description));
+            }
+
+            await _userManager.UpdateSecurityStampAsync(user);
+
+            return new IdentityResultDto(true);
+        }
+
+        public async Task<IdentityResultDto> UnlockUserAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return new IdentityResultDto(false, new[] { "User not found." });
+            }
+
+            var result = await _userManager.SetLockoutEndDateAsync(user, null);
+            if (!result.Succeeded)
+            {
+                return new IdentityResultDto(false, result.Errors.Select(e => e.Description));
+            }
+
+            return new IdentityResultDto(true);
+        }
     }
 }
