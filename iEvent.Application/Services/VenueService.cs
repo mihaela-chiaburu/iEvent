@@ -138,6 +138,7 @@ namespace iEvent.Application.Services
                 Email = venue.Email,
                 Latitude = venue.MapLocation.Latitude,
                 Longitude = venue.MapLocation.Longitude,
+                EventCount = venue.Events.Count(e => !e.IsDraft),
                 Facilities = venue.Facilities.Select(f => new VenueFacilityRespDto
                 {
                     FacilityId = f.FacilityId,

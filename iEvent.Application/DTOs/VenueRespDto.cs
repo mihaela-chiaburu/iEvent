@@ -16,6 +16,7 @@ namespace iEvent.Application.DTOs
         public string? Description { get; set; }
         public string? Phone { get; set; }
         public string? Email { get; set; }
+        public int EventCount { get; set; }
         public List<VenueFacilityRespDto> Facilities { get; set; } = new();
         public List<VenueImageRespDto> Images { get; set; } = new();
     }
