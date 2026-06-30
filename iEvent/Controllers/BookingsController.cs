@@ -191,5 +191,29 @@ namespace iEvent.WebApi.Controllers
 
             return NoContent();
         }
+
+        [Authorize(Roles = "BookingManager,SuperAdmin")]
+        [HttpPost("{id:guid}/tickets")]
+        public async Task<IActionResult> AddTicket(Guid id, [FromBody] BookingTicketAddDto dto)
+        {
+            try
+            {
+                var success = await _bookingService.AddTicketToBookingAsync(id, dto);
+                if (!success)
+                {
+                    return BadRequest("Could not add ticket to booking.");
+                }
+
+                return NoContent(); 
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message); 
+            }
+        }
     }
 }

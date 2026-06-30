@@ -422,5 +422,53 @@ namespace iEvent.Application.Services
             await _bookingRepository.UpdateAsync(booking);
             return true;
         }
+
+        public async Task<bool> AddTicketToBookingAsync(Guid bookingId, BookingTicketAddDto dto)
+        {
+            var booking = await _bookingRepository.GetByIdAsync(bookingId);
+            if (booking == null)
+            {
+                throw new KeyNotFoundException($"Booking with id {bookingId} not found.");
+            }
+
+            var ticketType = await _ticketTypeRepository.GetByIdAsync(dto.TicketTypeId);
+            if (ticketType == null)
+            {
+                throw new KeyNotFoundException($"Ticket type with ID {dto.TicketTypeId} doesn't exist.");
+            }
+
+            if (dto.Quantity > ticketType.QuantityAvailable)
+            {
+                throw new ArgumentException($"Insufficient stock for the ticket '{ticketType.Name}'. Available: {ticketType.QuantityAvailable}, Requested: {dto.Quantity}");
+            }
+
+            ticketType.QuantityAvailable -= dto.Quantity;
+
+            var existingTicket = booking.BookingTickets.FirstOrDefault(bt => bt.TicketTypeId == dto.TicketTypeId);
+
+            if (existingTicket != null)
+            {
+                existingTicket.Quantity += dto.Quantity;
+            }
+            else
+            {
+                var newBookingTicket = new BookingTicket
+                {
+                    BookingTicketId = Guid.NewGuid(),
+                    BookingId = booking.BookingId,
+                    TicketTypeId = dto.TicketTypeId,
+                    Quantity = dto.Quantity,
+                    UnitPrice = ticketType.Price
+                };
+
+                booking.BookingTickets.Add(newBookingTicket);
+            }
+
+            booking.TotalPrice = booking.BookingTickets.Sum(bt => bt.UnitPrice * bt.Quantity);
+            booking.AdminFee = Math.Round(booking.TotalPrice * 0.02m, 2);
+
+            await _bookingRepository.UpdateAsync(booking);
+            return true;
+        }
     }
 }

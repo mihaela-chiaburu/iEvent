@@ -15,10 +15,10 @@ namespace iEvent.Application.Interfaces.Services
         Task<bool> DeleteAsync(Guid id);
         Task<BookingRespDto?> GetByCodeAsync(string code);
         Task<bool> UpdateTicketQuantityAsync(Guid bookingId, Guid bookingTicketId, int newQuantity);
+        Task<bool> AddTicketToBookingAsync(Guid bookingId, BookingTicketAddDto dto);
         Task<bool> MarkPaidAsync(Guid id);
         Task<bool> MarkUnpaidAsync(Guid id);
         Task<bool> CancelAsync(Guid id);
-
         Task<PaymentSimulationRespDto?> SimulatePaymentAsync(Guid bookingId, bool shouldSucceed);
     }
 }

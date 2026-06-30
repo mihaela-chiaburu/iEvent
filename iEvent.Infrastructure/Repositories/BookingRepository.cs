@@ -40,7 +40,39 @@ namespace iEvent.Infrastructure.Repositories
 
         public async Task UpdateAsync(Booking booking)
         {
-            _dbContext.Bookings.Update(booking);
+            _dbContext.ChangeTracker.Clear();
+
+            _dbContext.Bookings.Attach(booking);
+            _dbContext.Entry(booking).State = EntityState.Modified;
+
+            foreach (var ticket in booking.BookingTickets)
+            {
+                var existsInDb = _dbContext.BookingTickets
+                    .Any(bt => bt.BookingTicketId == ticket.BookingTicketId);
+
+                if (!existsInDb)
+                {
+                    _dbContext.Entry(ticket).State = EntityState.Added;
+                }
+                else
+                {
+                    _dbContext.Entry(ticket).State = EntityState.Modified;
+                }
+            }
+
+            var modifiedTicketTypes = _dbContext.ChangeTracker
+                .Entries<TicketType>()
+                .Where(e => e.State == EntityState.Modified || e.State == EntityState.Detached);
+
+            foreach (var entry in modifiedTicketTypes)
+            {
+                if (entry.State == EntityState.Detached)
+                {
+                    _dbContext.TicketTypes.Attach(entry.Entity);
+                    entry.State = EntityState.Modified;
+                }
+            }
+
             await _dbContext.SaveChangesAsync();
         }
 
