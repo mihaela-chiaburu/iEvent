@@ -1,6 +1,7 @@
 ﻿using iEvent.Application.DTOs;
 using iEvent.Application.Interfaces.Repositories;
 using iEvent.Infrastructure.Identity;
+using iEvent.Infrastructure.Persistance;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,10 +10,12 @@ namespace iEvent.Infrastructure.Repositories
     public class UserRepository : IUserRepository
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ApplicationDbContext _dbContext;
 
-        public UserRepository(UserManager<ApplicationUser> userManager)
+        public UserRepository(UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext)
         {
             _userManager = userManager;
+            _dbContext = dbContext;
         }
 
         public async Task<PagedResult<UserRespDto>> GetUsersAsync(UserFilterDto filter)
@@ -48,11 +51,26 @@ namespace iEvent.Infrastructure.Repositories
                 .Take(filter.PageSize)
                 .ToListAsync();
 
+            var userIds = users.Select(u => u.Id).ToList();
+            var customersMap = await _dbContext.Customers
+                .Where(c => userIds.Contains(c.IdentityUserId!))
+                .ToDictionaryAsync(c => c.IdentityUserId!, c => c.CustomerId); 
+
             var result = new List<UserRespDto>();
             foreach (var user in users)
             {
                 var roles = await _userManager.GetRolesAsync(user);
-                result.Add(new UserRespDto(user.Id, user.Email ?? string.Empty, user.UserName ?? string.Empty, user.PhoneNumber, roles));
+
+                customersMap.TryGetValue(user.Id, out var customerId);
+
+                result.Add(new UserRespDto(
+                    user.Id,
+                    customerId != Guid.Empty ? customerId : null, 
+                    user.Email ?? string.Empty,
+                    user.UserName ?? string.Empty,
+                    user.PhoneNumber,
+                    roles.ToList()
+                ));
             }
 
             return new PagedResult<UserRespDto> { Items = result, TotalCount = total };

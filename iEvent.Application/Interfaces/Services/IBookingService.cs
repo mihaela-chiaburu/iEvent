@@ -11,6 +11,7 @@ namespace iEvent.Application.Interfaces.Services
         Task<BookingRespDto?> GetByIdAsync(Guid id);
         Task<List<BookingRespDto>> GetMyBookingsAsync(string identityUserId);
         Task<BookingRespDto?> CreateAsync(BookingCreateDto dto, string identityUserId);
+        Task<BookingRespDto?> CreateByManagerAsync(BookingByManagerDto dto);
         Task<bool> UpdateAsync(Guid id, BookingUpdateDto dto);
         Task<bool> DeleteAsync(Guid id);
         Task<BookingRespDto?> GetByCodeAsync(string code);

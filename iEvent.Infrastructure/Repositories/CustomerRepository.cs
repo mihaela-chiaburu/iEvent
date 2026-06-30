@@ -19,6 +19,11 @@ namespace iEvent.Infrastructure.Repositories
             _context = context;
         }
 
+        public async Task<Customer?> GetByIdAsync(Guid customerId)
+        {
+            return await _context.Customers.FindAsync(customerId);
+        }
+
         public async Task<bool> ExistsByIdentityUserIdAsync(string identityUserId)
         {
             return await _context.Customers

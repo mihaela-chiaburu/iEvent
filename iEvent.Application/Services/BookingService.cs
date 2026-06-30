@@ -134,6 +134,109 @@ namespace iEvent.Application.Services
             return MapToRespDto(booking);
         }
 
+        public async Task<BookingRespDto?> CreateByManagerAsync(BookingByManagerDto dto)
+        {
+            if (dto.Tickets == null || !dto.Tickets.Any())
+                throw new ArgumentException("No tickets provided.");
+
+            if (dto.Tickets.Any(t => t.Quantity <= 0))
+                throw new ArgumentException("Ticket quantity must be greater than 0.");
+
+            var ievent = await _eventRepository.GetByIdAsync(dto.EventId);
+            if (ievent == null)
+                throw new KeyNotFoundException($"Event with ID {dto.EventId} was not found.");
+
+            var timeSlotExists = ievent.EventDates
+                .SelectMany(ed => ed.TimeSlots)
+                .Any(ts => ts.TimeSlotId == dto.BookingTimeSlotId);
+
+            if (!timeSlotExists) return null;
+
+            Guid finalCustomerId;
+
+            if (dto.CustomerId.HasValue)
+            {
+                var existingCustomer = await _customerRepository.GetByIdAsync(dto.CustomerId.Value);
+                if (existingCustomer == null)
+                    throw new KeyNotFoundException($"Customer with ID {dto.CustomerId.Value} not found.");
+
+                finalCustomerId = existingCustomer.CustomerId;
+            }
+            else if (dto.NewCustomer != null)
+            {
+                if (string.IsNullOrWhiteSpace(dto.NewCustomer.Name) || string.IsNullOrWhiteSpace(dto.NewCustomer.Email))
+                    throw new ArgumentException("For a new customer, Name and Email are required.");
+
+                var newCustomer = new Customer
+                {
+                    CustomerId = Guid.NewGuid(),
+                    Name = dto.NewCustomer.Name,
+                    Email = dto.NewCustomer.Email,
+                    PhoneNumber = dto.NewCustomer.Phone,
+                    IdentityUserId = string.Empty
+                };
+
+                await _customerRepository.AddAsync(newCustomer);
+                finalCustomerId = newCustomer.CustomerId;
+            }
+            else
+            {
+                throw new ArgumentException("You must either provide an existing CustomerId or complete NewCustomer details.");
+            }
+
+            var ticketTypeIds = dto.Tickets.Select(t => t.TicketTypeId).Distinct().ToList();
+            var ticketTypes = await _ticketTypeRepository.GetByIdsAsync(ticketTypeIds);
+
+            if (ticketTypes.Count != ticketTypeIds.Count)
+                throw new KeyNotFoundException("One or more ticket types were not found.");
+
+            var expirationTime = dto.PaymentMethod == PaymentMethod.CashAtVenue
+                ? DateTime.UtcNow.AddHours(2)
+                : DateTime.UtcNow.AddMinutes(10);
+
+            var booking = new Booking
+            {
+                BookingId = Guid.NewGuid(),
+                EventId = dto.EventId,
+                BookingTimeSlotId = dto.BookingTimeSlotId,
+                CustomerId = finalCustomerId,
+                BookingDate = DateTime.UtcNow,
+                Status = BookingStatus.Pending,
+                BookingCode = $"MGR-{DateTime.UtcNow:yyyyMMdd}-{Random.Shared.Next(1000, 9999)}",
+                PaymentMethod = dto.PaymentMethod,
+                PaidAt = null,
+                ExpiresAt = expirationTime,
+            };
+
+            foreach (var ticket in dto.Tickets)
+            {
+                var ticketType = ticketTypes.First(t => t.TicketTypeId == ticket.TicketTypeId);
+
+                if (ticket.Quantity > ticketType.QuantityAvailable)
+                    throw new ArgumentException($"Insufficient stock for '{ticketType.Name}'. Available: {ticketType.QuantityAvailable}");
+
+                ticketType.QuantityAvailable -= ticket.Quantity;
+
+                var bookingTicket = new BookingTicket
+                {
+                    BookingTicketId = Guid.NewGuid(),
+                    BookingId = booking.BookingId,
+                    TicketTypeId = ticketType.TicketTypeId,
+                    Quantity = ticket.Quantity,
+                    UnitPrice = ticketType.Price
+                };
+
+                booking.BookingTickets.Add(bookingTicket);
+            }
+
+            booking.TotalPrice = booking.BookingTickets.Sum(bt => bt.UnitPrice * bt.Quantity);
+            booking.AdminFee = Math.Round(booking.TotalPrice * 0.02m, 2);
+
+            await _bookingRepository.AddAsync(booking);
+
+            return MapToRespDto(booking);
+        }
+
         public async Task<PagedResultDto<BookingRespDto>> GetAllAsync(BookingFilterDto filter)
         {
             var (bookings, totalCount) = await _bookingRepository.GetPagedAsync(filter);

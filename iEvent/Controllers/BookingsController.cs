@@ -81,6 +81,31 @@ namespace iEvent.WebApi.Controllers
         }
 
         [Authorize(Roles = "BookingManager,SuperAdmin")]
+        [HttpPost("by-manager")]
+        public async Task<ActionResult<BookingRespDto>> CreateByManager([FromBody] BookingByManagerDto dto)
+        {
+            try
+            {
+                var booking = await _bookingService.CreateByManagerAsync(dto);
+
+                if (booking == null)
+                {
+                    return BadRequest("Invalid TimeSlot or Event combination.");
+                }
+
+                return CreatedAtAction(nameof(GetById), new { id = booking.BookingId }, booking);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [Authorize(Roles = "BookingManager,SuperAdmin")]
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] BookingUpdateDto dto)
         {
