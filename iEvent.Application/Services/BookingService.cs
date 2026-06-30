@@ -15,13 +15,15 @@ namespace iEvent.Application.Services
         private readonly IBookingRepository _bookingRepository;
         private readonly ICustomerRepository _customerRepository;
         private readonly ITicketTypeRepository _ticketTypeRepository;
+        private readonly IEventRepository _eventRepository;
 
         public BookingService(IBookingRepository bookingRepository, ITicketTypeRepository ticketTypeRepository,
-            ICustomerRepository customerRepository)
+            ICustomerRepository customerRepository, IEventRepository eventRepository)
         {
             _bookingRepository = bookingRepository;
             _ticketTypeRepository = ticketTypeRepository;
             _customerRepository = customerRepository;
+            _eventRepository = eventRepository;
         }
 
         public async Task<List<BookingRespDto>> GetAllAsync()
@@ -53,6 +55,21 @@ namespace iEvent.Application.Services
             if (dto.Tickets.Any(t => t.Quantity <= 0))
             {
                 return null;
+            }
+
+            var ievent = await _eventRepository.GetByIdAsync(dto.EventId);
+            if (ievent == null)
+            {
+                return null; 
+            }
+
+            var timeSlotExistsAndBelongsToEvent = ievent.EventDates
+                .SelectMany(ed => ed.TimeSlots)
+                .Any(ts => ts.TimeSlotId == dto.BookingTimeSlotId);
+
+            if (!timeSlotExistsAndBelongsToEvent)
+            {
+                return null; 
             }
 
             var ticketTypeIds = dto.Tickets
@@ -116,7 +133,6 @@ namespace iEvent.Application.Services
             }
 
             booking.TotalPrice = booking.BookingTickets.Sum(bt => bt.UnitPrice * bt.Quantity);
-
             booking.AdminFee = Math.Round(booking.TotalPrice * 0.02m, 2);
 
             await _bookingRepository.AddAsync(booking);
