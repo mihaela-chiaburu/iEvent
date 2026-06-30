@@ -39,10 +39,10 @@ namespace iEvent.WebApi.Controllers
 
         [Authorize(Roles = "BookingManager,SuperAdmin")]
         [HttpGet]
-        public async Task<ActionResult<List<BookingRespDto>>> GetAll()
+        public async Task<ActionResult<PagedResultDto<BookingRespDto>>> GetAll([FromQuery] BookingFilterDto filter)
         {
-            var bookings = await _bookingService.GetAllAsync();
-            return Ok(bookings);
+            var pagedResult = await _bookingService.GetAllAsync(filter);
+            return Ok(pagedResult);
         }
 
         [Authorize(Roles = "BookingManager,SuperAdmin")]

@@ -1,10 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using iEvent.Application.DTOs;
 using iEvent.Application.Interfaces.Repositories;
 using iEvent.Domain.Entities;
 using iEvent.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace iEvent.Infrastructure.Repositories
 {
@@ -30,6 +31,51 @@ namespace iEvent.Infrastructure.Repositories
             return _dbContext.Bookings
                 .Include(b => b.BookingTickets)
                 .FirstOrDefaultAsync(b => b.BookingId == id);
+        }
+
+        public async Task<(List<Booking> Items, int TotalCount)> GetPagedAsync(BookingFilterDto filter)
+        {
+            var query = _dbContext.Bookings
+                .Include(b => b.BookingTickets)
+                .Include(b => b.Customer)
+                .AsQueryable();
+
+            if (filter.Status.HasValue)
+            {
+                query = query.Where(b => b.Status == filter.Status.Value);
+            }
+
+            if (filter.DateFrom.HasValue)
+            {
+                query = query.Where(b => b.BookingDate >= filter.DateFrom.Value);
+            }
+
+            if (filter.DateTo.HasValue)
+            {
+                query = query.Where(b => b.BookingDate <= filter.DateTo.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.Search))
+            {
+                var searchLower = filter.Search.ToLower();
+                query = query.Where(b =>
+                    b.BookingCode.ToLower().Contains(searchLower) ||
+                    b.Customer!.Name.ToLower().Contains(searchLower) ||
+                    b.Customer.Email.ToLower().Contains(searchLower));
+            }
+
+            var totalCount = await query.CountAsync();
+
+            int page = filter.Page < 1 ? 1 : filter.Page;
+            int pageSize = filter.PageSize < 1 ? 10 : filter.PageSize;
+
+            var items = await query
+                .OrderByDescending(b => b.BookingDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
         }
 
         public async Task AddAsync(Booking booking)

@@ -1,7 +1,8 @@
+using iEvent.Application.DTOs;
+using iEvent.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using iEvent.Domain.Entities;
 
 namespace iEvent.Application.Interfaces.Repositories
 {
@@ -9,6 +10,7 @@ namespace iEvent.Application.Interfaces.Repositories
     {
         Task<List<Booking>> GetAllAsync();
         Task<Booking?> GetByIdAsync(Guid id);
+        Task<(List<Booking> Items, int TotalCount)> GetPagedAsync(BookingFilterDto filter);
         Task AddAsync(Booking booking);
         Task UpdateAsync(Booking booking);
         Task DeleteAsync(Booking booking);

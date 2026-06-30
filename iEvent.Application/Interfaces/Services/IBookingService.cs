@@ -7,7 +7,7 @@ namespace iEvent.Application.Interfaces.Services
 {
     public interface IBookingService
     {
-        Task<List<BookingRespDto>> GetAllAsync();
+        Task<PagedResultDto<BookingRespDto>> GetAllAsync(BookingFilterDto filter);
         Task<BookingRespDto?> GetByIdAsync(Guid id);
         Task<List<BookingRespDto>> GetMyBookingsAsync(string identityUserId);
         Task<BookingRespDto?> CreateAsync(BookingCreateDto dto, string identityUserId);

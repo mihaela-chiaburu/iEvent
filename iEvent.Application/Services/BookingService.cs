@@ -134,6 +134,24 @@ namespace iEvent.Application.Services
             return MapToRespDto(booking);
         }
 
+        public async Task<PagedResultDto<BookingRespDto>> GetAllAsync(BookingFilterDto filter)
+        {
+            var (bookings, totalCount) = await _bookingRepository.GetPagedAsync(filter);
+
+            foreach (var booking in bookings)
+            {
+                await ExpireIfNeededAsync(booking);
+            }
+
+            return new PagedResultDto<BookingRespDto>
+            {
+                Items = bookings.Select(MapToRespDto).ToList(),
+                TotalCount = totalCount,
+                Page = filter.Page,
+                PageSize = filter.PageSize
+            };
+        }
+
         public async Task<bool> UpdateAsync(Guid id, BookingUpdateDto dto)
         {
             var booking = await _bookingRepository.GetByIdAsync(id);
