@@ -13,5 +13,7 @@ namespace iEvent.Application.DTOs
         public string? ImageUrl { get; set; }
         public EventCategory Category { get; set; }
         public List<EventImageRespDto> Images { get; set; } = new();
+        public decimal MinTicketPrice { get; set; }
+        public List<DateOnly> AllDates { get; set; } = new();
     }
 }

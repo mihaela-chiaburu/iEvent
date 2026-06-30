@@ -1,4 +1,5 @@
-﻿using iEvent.Application.Interfaces.Repositories;
+﻿using iEvent.Application.DTOs;
+using iEvent.Application.Interfaces.Repositories;
 using iEvent.Domain.Entities;
 using iEvent.Domain.Enums;
 using iEvent.Infrastructure.Persistance;
@@ -25,46 +26,67 @@ namespace iEvent.Infrastructure.Repositories
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<List<Event>> GetAllAsync(string? city, Guid? venueId, EventCategory? category,
-            DateOnly? fromDate, DateOnly? toDate)
+        public async Task<PagedResult<Event>> GetAllAsync(EventQueryDto query)
         {
-            var query = _dbContext.Events
-                .AsNoTracking()
-                .Include(e => e.Venue)
+            var dbQuery = _dbContext.Events
+                .Where(e => !e.IsDraft) 
+                .Include(e => e.EventDates)
+                    .ThenInclude(ed => ed.TimeSlots)
                 .Include(e => e.Images)
-                .Include(e => e.EventDates).ThenInclude(ed => ed.TimeSlots)
+                .Include(e => e.Tickets) 
                 .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(city))
+            if (!string.IsNullOrWhiteSpace(query.City))
             {
-                query = query.Where(e =>
-                    e.Venue != null &&
-                    e.Venue.City.ToLower().Contains(city.ToLower()));
+                dbQuery = dbQuery.Where(e => e.Venue != null && e.Venue.City.Contains(query.City));
+            }
+            if (query.VenueId.HasValue)
+            {
+                dbQuery = dbQuery.Where(e => e.VenueId == query.VenueId);
+            }
+            if (query.Category.HasValue)
+            {
+                dbQuery = dbQuery.Where(e => e.Category == query.Category);
+            }
+            if (query.FromDate.HasValue)
+            {
+                dbQuery = dbQuery.Where(e => e.EventDates.Any(d => d.Date >= query.FromDate));
+            }
+            if (query.ToDate.HasValue)
+            {
+                dbQuery = dbQuery.Where(e => e.EventDates.Any(d => d.Date <= query.ToDate));
             }
 
-            if (venueId.HasValue)
+            if (query.MinPrice.HasValue)
             {
-                query = query.Where(e => e.VenueId == venueId.Value);
+                dbQuery = dbQuery.Where(e => e.Tickets.Any() && e.Tickets.Min(t => t.Price) >= query.MinPrice.Value);
+            }
+            if (query.MaxPrice.HasValue)
+            {
+                dbQuery = dbQuery.Where(e => e.Tickets.Any() && e.Tickets.Min(t => t.Price) <= query.MaxPrice.Value);
             }
 
-            if (category.HasValue)
+            if (query.SortBy == "date_desc")
             {
-                query = query.Where(e => e.Category == category.Value);
+                dbQuery = dbQuery.OrderByDescending(e => e.EventDates.Min(d => d.Date));
+            }
+            else 
+            {
+                dbQuery = dbQuery.OrderBy(e => e.EventDates.Min(d => d.Date));
             }
 
-            if (fromDate.HasValue)
-            {
-                query = query.Where(e => e.EventDates.Any(ed => ed.Date >= fromDate.Value));
-            }
+            var totalCount = await dbQuery.CountAsync();
 
-            if (toDate.HasValue)
-            {
-                query = query.Where(e => e.EventDates.Any(ed => ed.Date <= toDate.Value));
-            }
-
-            return await query
-                .OrderBy(e => e.EventDates.OrderBy(ed => ed.Date).Select(ed => ed.Date).FirstOrDefault())
+            var items = await dbQuery
+                .Skip((query.Page - 1) * query.PageSize)
+                .Take(query.PageSize)
                 .ToListAsync();
+
+            return new PagedResult<Event>
+            {
+                Items = items,
+                TotalCount = totalCount
+            };
         }
 
         public Task<Event?> GetByIdAsync(Guid id)

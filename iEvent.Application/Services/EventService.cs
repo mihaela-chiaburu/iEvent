@@ -63,11 +63,15 @@ namespace iEvent.Application.Services
             return true;
         }
 
-        public async Task<List<EventRespDto>> GetAllAsync(string? city, Guid? venueId, EventCategory? category,
-            DateOnly? fromDate, DateOnly? toDate)
+        public async Task<PagedResult<EventRespDto>> GetAllAsync(EventQueryDto query)
         {
-            var events = await _eventRepository.GetAllAsync(city, venueId, category, fromDate, toDate);
-            return events.Select(MapToRespDto).ToList();
+            var pagedEvents = await _eventRepository.GetAllAsync(query);
+
+            return new PagedResult<EventRespDto>
+            {
+                TotalCount = pagedEvents.TotalCount,
+                Items = pagedEvents.Items.Select(MapToRespDto).ToList()
+            };
         }
 
         public async Task<EventRespDto?> GetByIdAsync(Guid id)
@@ -127,6 +131,8 @@ namespace iEvent.Application.Services
 
         private static EventRespDto MapToRespDto(Event ievent)
         {
+            var sortedDates = ievent.EventDates.OrderBy(ed => ed.Date).ToList();
+
             return new EventRespDto
             {
                 EventId = ievent.EventId,
@@ -135,21 +141,17 @@ namespace iEvent.Application.Services
                 VenueId = ievent.VenueId,
                 ImageUrl = ievent.ImageUrl,
                 Category = ievent.Category,
-                EventDates = ievent.EventDates
-                    .OrderBy(ed => ed.Date) 
-                    .Select(ed => new EventDateRespDto
-                    {
+                EventDates = sortedDates.Select(ed => new EventDateRespDto
+                {
                         EventDateId = ed.EventDateId,
                         Date = ed.Date,
-                        TimeSlots = ed.TimeSlots
-                            .OrderBy(ts => ts.StartTime) 
-                            .Select(ts => new EventTimeSlotRespDto
-                            {
-                                TimeSlotId = ts.TimeSlotId,
-                                StartTime = ts.StartTime,
-                                EndTime = ts.EndTime
-                            }).ToList()
-                    }).ToList(),
+                        TimeSlots = ed.TimeSlots.OrderBy(ts => ts.StartTime).Select(ts => new EventTimeSlotRespDto
+                        {
+                            TimeSlotId = ts.TimeSlotId,
+                            StartTime = ts.StartTime,
+                            EndTime = ts.EndTime
+                        }).ToList()
+                }).ToList(),
                 Images = ievent.Images
                     .OrderBy(i => i.SortOrder)
                     .Select(i => new EventImageRespDto
@@ -157,7 +159,9 @@ namespace iEvent.Application.Services
                         ImageId = i.ImageId,
                         Url = i.Url,
                         SortOrder = i.SortOrder
-                    }).ToList()
+                    }).ToList(),
+                MinTicketPrice = ievent.Tickets != null && ievent.Tickets.Any() ? ievent.Tickets.Min(t => t.Price) : 0,
+                AllDates = sortedDates.Select(ed => ed.Date).ToList()
             };
         }
 

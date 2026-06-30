@@ -1,11 +1,12 @@
-﻿using iEvent.Domain.Entities;
+﻿using iEvent.Application.DTOs;
+using iEvent.Domain.Entities;
 using iEvent.Domain.Enums;
 
 namespace iEvent.Application.Interfaces.Repositories
 {
     public interface IEventRepository
     {
-        Task<List<Event>> GetAllAsync(string? city, Guid? venueId, EventCategory? category, DateOnly? fromDate, DateOnly? toDate);
+        Task<PagedResult<Event>> GetAllAsync(EventQueryDto query);
         Task<Event?> GetByIdAsync(Guid id);
         Task AddAsync(Event ievent);
         Task UpdateAsync(Event ievent);

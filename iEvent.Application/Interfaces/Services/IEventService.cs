@@ -10,7 +10,7 @@ namespace iEvent.Application.Interfaces.Services
 {
     public interface IEventService
     {
-        Task<List<EventRespDto>> GetAllAsync(string? city, Guid? venueId, EventCategory? category, DateOnly? fromDate, DateOnly? toDate);
+        Task<PagedResult<EventRespDto>> GetAllAsync(EventQueryDto query);
         Task<EventRespDto?> GetByIdAsync(Guid id);
         Task<EventRespDto> CreateAsync(EventCreateDto dto);
         Task<bool> UpdateAsync(Guid id, EventUpdateDto dto);

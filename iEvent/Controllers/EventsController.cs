@@ -21,15 +21,10 @@ namespace iEvent.WebApi.Controllers
 
         [AllowAnonymous]
         [HttpGet]
-        public async Task<ActionResult<List<EventRespDto>>> GetAll(
-            [FromQuery] string? city,
-            [FromQuery] Guid? venueId,
-            [FromQuery] EventCategory? category,
-            [FromQuery] DateOnly? fromDate,
-            [FromQuery] DateOnly? toDate)
+        public async Task<ActionResult<PagedResult<EventRespDto>>> GetAll([FromQuery] EventQueryDto query)
         {
-            var events = await _eventService.GetAllAsync(city, venueId, category, fromDate, toDate);
-            return Ok(events);
+            var pagedResult = await _eventService.GetAllAsync(query);
+            return Ok(pagedResult);
         }
 
         [AllowAnonymous]
