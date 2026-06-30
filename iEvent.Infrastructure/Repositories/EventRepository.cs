@@ -134,5 +134,11 @@ namespace iEvent.Infrastructure.Repositories
                 .Take(count)
                 .ToListAsync();
         }
+
+        public async Task AddEventDatesRangeAsync(List<EventDate> newDates)
+        {
+            await _dbContext.EventDates.AddRangeAsync(newDates);
+            await _dbContext.SaveChangesAsync();
+        }
     }
 }

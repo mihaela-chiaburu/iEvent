@@ -136,5 +136,24 @@ namespace iEvent.WebApi.Controllers
             return Ok(popularEvents);
         }
 
+        [Authorize(Roles = "EventManager,SuperAdmin")]
+        [HttpPost("{id:guid}/dates")]
+        public async Task<IActionResult> AddDates(Guid id, [FromBody] List<EventDateCreateDto> dto)
+        {
+            if (dto == null || !dto.Any())
+            {
+                return BadRequest();
+            }
+
+            var result = await _eventService.AddEventDatesAsync(id, dto);
+
+            if (!result)
+            {
+                return NotFound();
+            }
+
+            return NoContent();
+        }
+
     }
 }

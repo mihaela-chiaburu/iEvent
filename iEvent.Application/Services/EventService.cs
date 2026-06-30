@@ -160,6 +160,35 @@ namespace iEvent.Application.Services
                 }).ToList();
         }
 
+        public async Task<bool> AddEventDatesAsync(Guid id, List<EventDateCreateDto> dto)
+        {
+            var ev = await _eventRepository.GetByIdAsync(id);
+            if (ev == null) return false;
+
+            var newDates = dto.Select(d => new EventDate
+            {
+                EventDateId = Guid.NewGuid(),
+                EventId = ev.EventId,
+                Date = d.Date,
+                TimeSlots = d.TimeSlots.Select(ts => new EventTimeSlot
+                {
+                    TimeSlotId = Guid.NewGuid(),
+                    StartTime = ts.StartTime,
+                    EndTime = ts.EndTime
+                }).ToList()
+            }).ToList();
+
+            await _eventRepository.AddEventDatesRangeAsync(newDates);
+
+            if (ev.IsDraft && !string.IsNullOrEmpty(ev.Name) && ev.VenueId.HasValue)
+            {
+                ev.IsDraft = false;
+                await _eventRepository.UpdateAsync(ev);
+            }
+
+            return true;
+        }
+
         private static EventRespDto MapToRespDto(Event ievent)
         {
             var sortedDates = ievent.EventDates.OrderBy(ed => ed.Date).ToList();
