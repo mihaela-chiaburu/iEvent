@@ -155,5 +155,19 @@ namespace iEvent.WebApi.Controllers
             return NoContent();
         }
 
+        [AllowAnonymous]
+        [HttpGet("{id:guid}/similar")]
+        public async Task<ActionResult<List<EventRespDto>>> GetSimilar(Guid id)
+        {
+            var similarEvents = await _eventService.GetSimilarEventsAsync(id, 4);
+
+            if (similarEvents == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(similarEvents);
+        }
+
     }
 }

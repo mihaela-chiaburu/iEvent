@@ -189,6 +189,32 @@ namespace iEvent.Application.Services
             return true;
         }
 
+        public async Task<List<EventRespDto>?> GetSimilarEventsAsync(Guid id, int count = 4)
+        {
+            var currentEvent = await _eventRepository.GetByIdAsync(id);
+            if (currentEvent == null)
+            {
+                return null;
+            }
+
+            var queryDto = new EventQueryDto
+            {
+                Category = currentEvent.Category,
+                Page = 1,
+                PageSize = count + 1 
+            };
+
+            var allCategorizedEvents = await _eventRepository.GetAllAsync(queryDto);
+
+            var similarEvents = allCategorizedEvents.Items
+                .Where(e => e.EventId != id && !e.IsDraft)
+                .Take(count)
+                .Select(MapToRespDto)
+                .ToList();
+
+            return similarEvents;
+        }
+
         private static EventRespDto MapToRespDto(Event ievent)
         {
             var sortedDates = ievent.EventDates.OrderBy(ed => ed.Date).ToList();

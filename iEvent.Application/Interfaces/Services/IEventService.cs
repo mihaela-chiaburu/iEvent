@@ -19,6 +19,7 @@ namespace iEvent.Application.Interfaces.Services
         Task<List<EventRespDto>> GetPopularEventsAsync(int count);
         Task<List<EventDateRespDto>?> GetEventDatesAsync(Guid id);
         Task<bool> AddEventDatesAsync(Guid id, List<EventDateCreateDto> dto);
+        Task<List<EventRespDto>?> GetSimilarEventsAsync(Guid id, int count = 4);
 
         Task<EventRespDto> CreateDraftAsync();
         Task<bool> PatchAsync(Guid id, EventPatchDto dto);
