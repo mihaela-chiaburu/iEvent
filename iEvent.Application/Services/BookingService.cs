@@ -48,20 +48,14 @@ namespace iEvent.Application.Services
         public async Task<BookingRespDto?> CreateAsync(BookingCreateDto dto, string identityUserId)
         {
             if (dto.Tickets == null || !dto.Tickets.Any())
-            {
-                return null;
-            }
+                throw new ArgumentException("No tickets provided.");
 
             if (dto.Tickets.Any(t => t.Quantity <= 0))
-            {
-                return null;
-            }
+                throw new ArgumentException("Ticket quantity must be greater than 0.");
 
             var ievent = await _eventRepository.GetByIdAsync(dto.EventId);
             if (ievent == null)
-            {
-                return null; 
-            }
+                throw new KeyNotFoundException($"Event with ID {dto.EventId} was not found (it might be a draft or deleted).");
 
             var timeSlotExistsAndBelongsToEvent = ievent.EventDates
                 .SelectMany(ed => ed.TimeSlots)
@@ -81,14 +75,14 @@ namespace iEvent.Application.Services
 
             if (ticketTypes.Count != ticketTypeIds.Count)
             {
-                return null;
+                throw new KeyNotFoundException("One or more ticket types were not found in the database.");
             }
 
             var customer = await _customerRepository.GetByIdentityUserIdAsync(identityUserId);
 
             if (customer == null)
             {
-                return null;
+                throw new KeyNotFoundException($"No Customer profile found associated with the logged in user: (IdentityUserId: {identityUserId}).");
             }
 
             var expirationTime = dto.PaymentMethod == PaymentMethod.CashAtVenue
@@ -115,7 +109,7 @@ namespace iEvent.Application.Services
 
                 if (ticket.Quantity > ticketType.QuantityAvailable)
                 {
-                    return null;
+                    throw new ArgumentException($"Insufficient stock for the ticket '{ticketType.Name}'. Available: {ticketType.QuantityAvailable}, Requested: {ticket.Quantity}");
                 }
 
                 ticketType.QuantityAvailable -= ticket.Quantity;
@@ -405,5 +399,28 @@ namespace iEvent.Application.Services
             await _bookingRepository.UpdateAsync(booking);
         }
 
+        public async Task<bool> UpdateTicketQuantityAsync(Guid bookingId, Guid bookingTicketId, int newQuantity)
+        {
+            var booking = await _bookingRepository.GetByIdAsync(bookingId);
+            if (booking == null)
+            {
+                return false;
+            }
+
+            var ticket = booking.BookingTickets.FirstOrDefault(bt => bt.BookingTicketId == bookingTicketId);
+            if (ticket == null)
+            {
+                return false;
+            }
+
+            ticket.Quantity = newQuantity;
+
+            booking.TotalPrice = booking.BookingTickets.Sum(bt => bt.UnitPrice * bt.Quantity);
+
+            booking.AdminFee = Math.Round(booking.TotalPrice * 0.02m, 2);
+
+            await _bookingRepository.UpdateAsync(booking);
+            return true;
+        }
     }
 }

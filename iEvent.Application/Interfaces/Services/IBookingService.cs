@@ -14,7 +14,7 @@ namespace iEvent.Application.Interfaces.Services
         Task<bool> UpdateAsync(Guid id, BookingUpdateDto dto);
         Task<bool> DeleteAsync(Guid id);
         Task<BookingRespDto?> GetByCodeAsync(string code);
-
+        Task<bool> UpdateTicketQuantityAsync(Guid bookingId, Guid bookingTicketId, int newQuantity);
         Task<bool> MarkPaidAsync(Guid id);
         Task<bool> MarkUnpaidAsync(Guid id);
         Task<bool> CancelAsync(Guid id);

@@ -63,19 +63,21 @@ namespace iEvent.WebApi.Controllers
         public async Task<ActionResult<BookingRespDto>> Create([FromBody] BookingCreateDto dto)
         {
             var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (identityUserId == null) return Unauthorized();
 
-            if (identityUserId == null)
+            try
             {
-                return Unauthorized();
+                var booking = await _bookingService.CreateAsync(dto, identityUserId);
+                return CreatedAtAction(nameof(GetById), new { id = booking!.BookingId }, booking);
             }
-
-            var booking = await _bookingService.CreateAsync(dto, identityUserId);
-            if (booking == null)
+            catch (KeyNotFoundException ex)
             {
-                return BadRequest("Invalid ticket types.");
+                return NotFound(ex.Message); 
             }
-
-            return CreatedAtAction(nameof(GetById), new { id = booking.BookingId }, booking);
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [Authorize(Roles = "BookingManager,SuperAdmin")]
@@ -174,6 +176,20 @@ namespace iEvent.WebApi.Controllers
             }
 
             return Ok(result);
+        }
+
+        [Authorize(Roles = "BookingManager,SuperAdmin")]
+        [HttpPatch("{id:guid}/tickets/{ticketId:guid}")]
+        public async Task<IActionResult> UpdateTicketQuantity(Guid id, Guid ticketId, [FromBody] BookingTicketUpdateQuantityDto dto)
+        {
+            var success = await _bookingService.UpdateTicketQuantityAsync(id, ticketId, dto.NewQuantity);
+
+            if (!success)
+            {
+                return NotFound("Booking or Ticket not found.");
+            }
+
+            return NoContent();
         }
     }
 }
