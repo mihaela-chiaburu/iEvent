@@ -83,6 +83,19 @@ namespace iEvent.WebApi.Controllers
             return Ok(ticketTypes);
         }
 
+        [AllowAnonymous]
+        [HttpGet("{id:guid}/dates")]
+        public async Task<ActionResult<List<EventDateRespDto>>> GetDates(Guid id)
+        {
+            var dates = await _eventService.GetEventDatesAsync(id);
+            if (dates == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(dates);
+        }
+
         [Authorize(Roles = "EventManager,SuperAdmin")]
         [HttpPost("draft")]
         public async Task<ActionResult<EventRespDto>> CreateDraft()

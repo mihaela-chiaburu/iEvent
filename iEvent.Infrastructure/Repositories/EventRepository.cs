@@ -68,11 +68,11 @@ namespace iEvent.Infrastructure.Repositories
 
             if (query.SortBy == "date_desc")
             {
-                dbQuery = dbQuery.OrderByDescending(e => e.EventDates.Min(d => d.Date));
+                dbQuery = dbQuery.OrderByDescending(e => e.EventDates.Any() ? e.EventDates.Min(d => d.Date) : DateOnly.MaxValue);
             }
-            else 
+            else
             {
-                dbQuery = dbQuery.OrderBy(e => e.EventDates.Min(d => d.Date));
+                dbQuery = dbQuery.OrderBy(e => e.EventDates.Any() ? e.EventDates.Min(d => d.Date) : DateOnly.MinValue);
             }
 
             var totalCount = await dbQuery.CountAsync();
@@ -91,14 +91,29 @@ namespace iEvent.Infrastructure.Repositories
 
         public Task<Event?> GetByIdAsync(Guid id)
         {
-            return _dbContext.Events.Include(e => e.Venue).Include(e => e.Images)
-                    .Include(e => e.EventDates).ThenInclude(ed => ed.TimeSlots) 
-                    .FirstOrDefaultAsync(e => e.EventId == id);
+            return _dbContext.Events.Include(e => e.EventDates).ThenInclude(ed => ed.TimeSlots)
+                .Include(e => e.Venue).Include(e => e.Images)
+                .FirstOrDefaultAsync(e => e.EventId == id);
         }
 
         public async Task UpdateAsync(Event ievent)
         {
-            _dbContext.Events.Update(ievent);
+            //_dbContext.Events.Update(ievent);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task UpdateEventDatesAsync(Guid eventId, List<EventDate> newDates)
+        {
+            var oldTimeSlots = _dbContext.EventTimeSlots
+                .Where(ts => _dbContext.EventDates.Where(ed => ed.EventId == eventId).Select(ed => ed.EventDateId).Contains(ts.EventDateId));
+            _dbContext.EventTimeSlots.RemoveRange(oldTimeSlots);
+
+            var oldDates = _dbContext.EventDates.Where(ed => ed.EventId == eventId);
+            _dbContext.EventDates.RemoveRange(oldDates);
+
+            await _dbContext.SaveChangesAsync();
+
+            await _dbContext.EventDates.AddRangeAsync(newDates);
             await _dbContext.SaveChangesAsync();
         }
 

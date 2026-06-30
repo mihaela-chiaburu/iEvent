@@ -10,6 +10,7 @@ namespace iEvent.Application.Interfaces.Repositories
         Task<Event?> GetByIdAsync(Guid id);
         Task AddAsync(Event ievent);
         Task UpdateAsync(Event ievent);
+        Task UpdateEventDatesAsync(Guid eventId, List<EventDate> newDates);
         Task DeleteAsync(Event ievent);
         Task<List<Event>> GetEventsByVenueIdAsync(Guid venueId);
         Task<List<Event>> GetPopularEventsAsync(int count);
