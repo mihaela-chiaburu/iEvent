@@ -169,5 +169,31 @@ namespace iEvent.WebApi.Controllers
             return Ok(similarEvents);
         }
 
+        [AllowAnonymous]
+        [HttpGet("by-category")]
+        public async Task<ActionResult<List<EventRespDto>>> GetPreviewByCategory([FromQuery] string category)
+        {
+            if (string.IsNullOrEmpty(category))
+            {
+                return BadRequest("Category is required.");
+            }
+
+            var events = await _eventService.GetPreviewByCategoryAsync(category, 4);
+            return Ok(events);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("by-city")]
+        public async Task<ActionResult<List<EventRespDto>>> GetPreviewByCity([FromQuery] string city)
+        {
+            if (string.IsNullOrEmpty(city))
+            {
+                return BadRequest("City is required.");
+            }
+
+            var events = await _eventService.GetPreviewByCityAsync(city, 4);
+            return Ok(events);
+        }
+
     }
 }

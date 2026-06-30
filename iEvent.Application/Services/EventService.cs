@@ -215,6 +215,41 @@ namespace iEvent.Application.Services
             return similarEvents;
         }
 
+        public async Task<List<EventRespDto>> GetPreviewByCategoryAsync(string category, int count = 4)
+        {
+            var queryDto = new EventQueryDto
+            {
+                Category = Enum.TryParse<EventCategory>(category, true, out var parsedCategory) ? parsedCategory : null,
+                Page = 1,
+                PageSize = 20
+            };
+
+            var result = await _eventRepository.GetAllAsync(queryDto);
+
+            return result.Items
+                .Where(e => !e.IsDraft)
+                .Take(count)
+                .Select(MapToRespDto)
+                .ToList();
+        }
+
+        public async Task<List<EventRespDto>> GetPreviewByCityAsync(string city, int count = 4)
+        {
+            var queryDto = new EventQueryDto
+            {
+                Page = 1,
+                PageSize = 50 
+            };
+
+            var result = await _eventRepository.GetAllAsync(queryDto);
+
+            return result.Items
+                .Where(e => !e.IsDraft && e.Venue != null && e.Venue.City.Equals(city, StringComparison.OrdinalIgnoreCase))
+                .Take(count)
+                .Select(MapToRespDto)
+                .ToList();
+        }
+
         private static EventRespDto MapToRespDto(Event ievent)
         {
             var sortedDates = ievent.EventDates.OrderBy(ed => ed.Date).ToList();

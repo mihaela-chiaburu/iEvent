@@ -20,6 +20,8 @@ namespace iEvent.Application.Interfaces.Services
         Task<List<EventDateRespDto>?> GetEventDatesAsync(Guid id);
         Task<bool> AddEventDatesAsync(Guid id, List<EventDateCreateDto> dto);
         Task<List<EventRespDto>?> GetSimilarEventsAsync(Guid id, int count = 4);
+        Task<List<EventRespDto>> GetPreviewByCategoryAsync(string category, int count = 4);
+        Task<List<EventRespDto>> GetPreviewByCityAsync(string city, int count = 4);
 
         Task<EventRespDto> CreateDraftAsync();
         Task<bool> PatchAsync(Guid id, EventPatchDto dto);

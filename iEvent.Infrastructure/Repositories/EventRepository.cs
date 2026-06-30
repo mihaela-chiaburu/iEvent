@@ -34,6 +34,7 @@ namespace iEvent.Infrastructure.Repositories
                     .ThenInclude(ed => ed.TimeSlots)
                 .Include(e => e.Images)
                 .Include(e => e.Tickets) 
+                .Include(e => e.Venue)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(query.City))
