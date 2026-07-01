@@ -23,5 +23,6 @@ namespace iEvent.Application.Interfaces.Services
         Task<PaymentSimulationRespDto?> SimulatePaymentAsync(Guid bookingId, bool shouldSucceed);
         Task<BookingCollectAtVenueRespDto?> CollectAtVenueAsync(Guid id, BookingCollectAtVenueDto dto, string identityUserId);
         Task<BookingQrCodeRespDto?> GetQrCodeAsync(Guid id);
+        Task<byte[]?> GenerateTicketPdfAsync(Guid id);
     }
 }

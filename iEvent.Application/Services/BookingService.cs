@@ -4,7 +4,9 @@ using iEvent.Application.Interfaces.Services;
 using iEvent.Domain.Entities;
 using iEvent.Domain.Enums;
 using QRCoder;
-using System.Drawing;
+using QuestPDF.Infrastructure;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
 
 namespace iEvent.Application.Services
 {
@@ -658,6 +660,54 @@ namespace iEvent.Application.Services
                     QrCodeBase64 = $"data:image/png;base64,{base64String}"
                 };
             }
+        }
+
+        public async Task<byte[]?> GenerateTicketPdfAsync(Guid id)
+        {
+            var booking = await _bookingRepository.GetByIdAsync(id); 
+            if (booking == null) return null;
+
+            byte[] qrCodeBytes;
+            using (var qrGenerator = new QRCodeGenerator())
+            using (var qrCodeData = qrGenerator.CreateQrCode(booking.BookingCode, QRCodeGenerator.ECCLevel.Q))
+            using (var qrCode = new PngByteQRCode(qrCodeData))
+            {
+                qrCodeBytes = qrCode.GetGraphic(10);
+            }
+
+            QuestPDF.Settings.License = LicenseType.Community;
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A6); 
+                    page.Margin(2, Unit.Centimetre);
+                    page.PageColor(Colors.White);
+
+                    page.Header().Text($"Ticket: {booking.BookingCode}")
+                        .SemiBold().FontSize(16).FontColor(Colors.Blue.Medium);
+
+                    page.Content().PaddingVertical(1, Unit.Centimetre).Column(column =>
+                    {
+                        column.Spacing(10);
+
+                        column.Item().Text($"Booking Date: {booking.BookingDate:dd.MM.yyyy HH:mm}");
+                        column.Item().Text($"Total payed: {booking.TotalPrice} Lei").Bold();
+
+                        column.Item().AlignCenter().Width(100).Image(qrCodeBytes);
+                    });
+
+                    page.Footer().AlignCenter().Text(x =>
+                    {
+                        x.CurrentPageNumber();
+                        x.Span(" / ");
+                        x.TotalPages();
+                    });
+                });
+            });
+
+            return document.GeneratePdf();
         }
     }
 }

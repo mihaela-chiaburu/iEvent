@@ -274,5 +274,19 @@ namespace iEvent.WebApi.Controllers
 
             return Ok(result);
         }
+
+        [Authorize]
+        [HttpGet("{id:guid}/pdf")]
+        public async Task<IActionResult> GetTicketPdf(Guid id)
+        {
+            var pdfBytes = await _bookingService.GenerateTicketPdfAsync(id);
+
+            if (pdfBytes == null)
+            {
+                return NotFound($"Booking with ID {id} was not found.");
+            }
+
+            return File(pdfBytes, "application/pdf", $"Ticket-{id}.pdf");
+        }
     }
 }
