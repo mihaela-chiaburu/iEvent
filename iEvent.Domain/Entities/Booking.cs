@@ -54,5 +54,13 @@ namespace iEvent.Domain.Entities
 
         [Range(0, 10000000)]
         public decimal AdminFee { get; set; }
+
+        public Guid? CollectedById { get; set; }
+
+        [ForeignKey(nameof(CollectedById))]
+        public AdminUser? CollectedBy { get; set; }
+
+        [Range(0, 10000000)]
+        public decimal? CollectedAmount { get; set; }
     }
 }

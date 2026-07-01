@@ -16,14 +16,16 @@ namespace iEvent.Application.Services
         private readonly ICustomerRepository _customerRepository;
         private readonly ITicketTypeRepository _ticketTypeRepository;
         private readonly IEventRepository _eventRepository;
+        private readonly IAdminUserRepository _adminUserRepository;
 
         public BookingService(IBookingRepository bookingRepository, ITicketTypeRepository ticketTypeRepository,
-            ICustomerRepository customerRepository, IEventRepository eventRepository)
+            ICustomerRepository customerRepository, IEventRepository eventRepository, IAdminUserRepository adminUserRepository)
         {
             _bookingRepository = bookingRepository;
             _ticketTypeRepository = ticketTypeRepository;
             _customerRepository = customerRepository;
             _eventRepository = eventRepository;
+            _adminUserRepository = adminUserRepository;
         }
 
         public async Task<List<BookingRespDto>> GetAllAsync()
@@ -590,6 +592,53 @@ namespace iEvent.Application.Services
 
             await _bookingRepository.UpdateAsync(booking);
             return true;
+        }
+
+        public async Task<BookingCollectAtVenueRespDto?> CollectAtVenueAsync(Guid id, BookingCollectAtVenueDto dto, string identityUserId)
+        {
+            var booking = await _bookingRepository.GetByIdAsync(id);
+            if (booking == null) return null;
+
+            if (booking.Status == BookingStatus.Cancelled || booking.Status == BookingStatus.Expired)
+                throw new InvalidOperationException($"Cannot collect money for a booking with status {booking.Status}.");
+
+            if (booking.Status == BookingStatus.Paid)
+                throw new InvalidOperationException("This booking is already paid.");
+
+            var expectedTotal = booking.TotalPrice + booking.AdminFee;
+            if (dto.Amount < expectedTotal)
+                throw new ArgumentException($"The collected amount ({dto.Amount}) is less than the required total ({expectedTotal}).");
+
+            var admin = await _adminUserRepository.GetByIdentityUserIdAsync(identityUserId);
+            if (admin == null)
+                throw new KeyNotFoundException($"No Admin profile found associated with IdentityUserId: {identityUserId}.");
+
+            booking.Status = BookingStatus.Paid;
+            booking.PaidAt = dto.CollectedAt;
+            booking.CollectedById = admin.AdminId;
+            booking.CollectedAmount = dto.Amount;
+
+            await _bookingRepository.UpdateAsync(booking);
+
+            var baseDto = MapToRespDto(booking);
+
+            return new BookingCollectAtVenueRespDto
+            {
+                BookingId = baseDto.BookingId,
+                CustomerId = baseDto.CustomerId,
+                EventId = baseDto.EventId,
+                BookingTimeSlotId = baseDto.BookingTimeSlotId,
+                AdminFee = baseDto.AdminFee,
+                BookingDate = baseDto.BookingDate,
+                Status = baseDto.Status,
+                TotalPrice = baseDto.TotalPrice,
+                Tickets = baseDto.Tickets,
+                BookingCode = baseDto.BookingCode,
+                PaymentMethod = baseDto.PaymentMethod,
+                PaidAt = baseDto.PaidAt,
+                CollectedById = admin.AdminId,
+                CollectedAmount = (double)dto.Amount
+            };
         }
     }
 }

@@ -21,5 +21,6 @@ namespace iEvent.Application.Interfaces.Services
         Task<bool> MarkUnpaidAsync(Guid id);
         Task<bool> CancelAsync(Guid id);
         Task<PaymentSimulationRespDto?> SimulatePaymentAsync(Guid bookingId, bool shouldSucceed);
+        Task<BookingCollectAtVenueRespDto?> CollectAtVenueAsync(Guid id, BookingCollectAtVenueDto dto, string identityUserId);
     }
 }

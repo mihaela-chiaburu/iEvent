@@ -30,5 +30,11 @@ namespace iEvent.Infrastructure.Repositories
             _context.AdminUsers.Add(adminUser);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<AdminUser?> GetByIdentityUserIdAsync(string identityUserId)
+        {
+            return await _context.AdminUsers
+                .FirstOrDefaultAsync(a => a.IdentityUserId == identityUserId);
+        }
     }
 }

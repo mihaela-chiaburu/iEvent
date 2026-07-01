@@ -240,5 +240,25 @@ namespace iEvent.WebApi.Controllers
                 return BadRequest(ex.Message); 
             }
         }
+
+        [Authorize(Roles = "BookingManager,SuperAdmin")]
+        [HttpPatch("{id:guid}/collect-at-venue")]
+        public async Task<ActionResult<BookingCollectAtVenueRespDto>> CollectAtVenue(Guid id, [FromBody] BookingCollectAtVenueDto dto)
+        {
+            var managerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (managerId == null) return Unauthorized();
+
+            try
+            {
+                var result = await _bookingService.CollectAtVenueAsync(id, dto, managerId);
+                if (result == null) return NotFound($"Booking with ID {id} was not found.");
+
+                return Ok(result);
+            }
+            catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }
