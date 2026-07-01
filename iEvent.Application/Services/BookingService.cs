@@ -1,12 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using iEvent.Application.DTOs;
 using iEvent.Application.Interfaces.Repositories;
 using iEvent.Application.Interfaces.Services;
 using iEvent.Domain.Entities;
 using iEvent.Domain.Enums;
+using QRCoder;
+using System.Drawing;
 
 namespace iEvent.Application.Services
 {
@@ -639,6 +637,27 @@ namespace iEvent.Application.Services
                 CollectedById = admin.AdminId,
                 CollectedAmount = (double)dto.Amount
             };
+        }
+
+        public async Task<BookingQrCodeRespDto?> GetQrCodeAsync(Guid id)
+        {
+            var booking = await _bookingRepository.GetByIdAsync(id);
+            if (booking == null) return null;
+
+            using (var qrGenerator = new QRCodeGenerator())
+            using (var qrCodeData = qrGenerator.CreateQrCode(booking.BookingCode, QRCodeGenerator.ECCLevel.Q))
+            using (var qrCode = new PngByteQRCode(qrCodeData))
+            {
+                byte[] qrCodeAsPngByteArr = qrCode.GetGraphic(20);
+
+                string base64String = Convert.ToBase64String(qrCodeAsPngByteArr);
+
+                return new BookingQrCodeRespDto
+                {
+                    BookingCode = booking.BookingCode,
+                    QrCodeBase64 = $"data:image/png;base64,{base64String}"
+                };
+            }
         }
     }
 }

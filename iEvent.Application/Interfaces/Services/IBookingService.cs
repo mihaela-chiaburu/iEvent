@@ -22,5 +22,6 @@ namespace iEvent.Application.Interfaces.Services
         Task<bool> CancelAsync(Guid id);
         Task<PaymentSimulationRespDto?> SimulatePaymentAsync(Guid bookingId, bool shouldSucceed);
         Task<BookingCollectAtVenueRespDto?> CollectAtVenueAsync(Guid id, BookingCollectAtVenueDto dto, string identityUserId);
+        Task<BookingQrCodeRespDto?> GetQrCodeAsync(Guid id);
     }
 }

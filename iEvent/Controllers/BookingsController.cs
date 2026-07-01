@@ -260,5 +260,19 @@ namespace iEvent.WebApi.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        [Authorize] 
+        [HttpGet("{id:guid}/qr")]
+        public async Task<ActionResult<BookingQrCodeRespDto>> GetBookingQrCode(Guid id)
+        {
+            var result = await _bookingService.GetQrCodeAsync(id);
+
+            if (result == null)
+            {
+                return NotFound($"Booking with ID {id} was not found.");
+            }
+
+            return Ok(result);
+        }
     }
 }
