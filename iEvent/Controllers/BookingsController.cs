@@ -1,4 +1,5 @@
 using iEvent.Application.DTOs;
+using iEvent.Application.DTOs.Booking;
 using iEvent.Application.Interfaces.Services;
 using iEvent.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;

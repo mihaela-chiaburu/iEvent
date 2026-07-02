@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using iEvent.Application.DTOs;
+using iEvent.Application.DTOs.Booking;
 
 namespace iEvent.Application.Interfaces.Services
 {

@@ -1,4 +1,5 @@
-using iEvent.Application.DTOs;
+using iEvent.Application.DTOs.Event;
+using iEvent.Application.DTOs.Venue;
 using iEvent.Application.Interfaces.Services;
 using iEvent.Application.Services;
 using Microsoft.AspNetCore.Authorization;

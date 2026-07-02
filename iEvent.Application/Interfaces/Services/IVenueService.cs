@@ -1,4 +1,4 @@
-using iEvent.Application.DTOs;
+using iEvent.Application.DTOs.Venue;
 using iEvent.Domain.Entities;
 using System;
 using System.Collections.Generic;

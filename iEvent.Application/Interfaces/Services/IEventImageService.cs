@@ -1,4 +1,4 @@
-﻿using iEvent.Application.DTOs;
+﻿using iEvent.Application.DTOs.Event;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;

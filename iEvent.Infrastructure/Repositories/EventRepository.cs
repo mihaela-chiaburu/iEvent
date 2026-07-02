@@ -1,4 +1,5 @@
 ﻿using iEvent.Application.DTOs;
+using iEvent.Application.DTOs.Event;
 using iEvent.Application.Interfaces.Repositories;
 using iEvent.Domain.Entities;
 using iEvent.Domain.Enums;

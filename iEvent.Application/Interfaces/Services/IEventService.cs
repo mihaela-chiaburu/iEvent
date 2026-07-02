@@ -1,4 +1,5 @@
 ﻿using iEvent.Application.DTOs;
+using iEvent.Application.DTOs.Event;
 using iEvent.Domain.Enums;
 using System;
 using System.Collections.Generic;

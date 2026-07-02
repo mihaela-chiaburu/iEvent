@@ -1,4 +1,4 @@
-using iEvent.Application.DTOs;
+using iEvent.Application.DTOs.Tickets;
 using iEvent.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

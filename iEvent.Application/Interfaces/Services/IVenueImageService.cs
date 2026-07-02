@@ -1,4 +1,4 @@
-﻿using iEvent.Application.DTOs;
+﻿using iEvent.Application.DTOs.Venue;
 using Microsoft.AspNetCore.Http;
 
 namespace iEvent.Application.Interfaces.Services

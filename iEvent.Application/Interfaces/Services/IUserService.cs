@@ -1,4 +1,5 @@
 ﻿using iEvent.Application.DTOs;
+using iEvent.Application.DTOs.Admin;
 using System;
 using System.Collections.Generic;
 using System.Linq;

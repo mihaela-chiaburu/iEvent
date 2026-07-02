@@ -1,4 +1,6 @@
 ﻿using iEvent.Application.DTOs;
+using iEvent.Application.DTOs.Event;
+using iEvent.Application.DTOs.Tickets;
 using iEvent.Application.Interfaces.Services;
 using iEvent.Application.Services;
 using iEvent.Domain.Enums;
@@ -9,7 +11,7 @@ namespace iEvent.WebApi.Controllers
 {
     [ApiController]
     [Route("api/events")]
-    public class EventsController : Controller
+    public class EventsController : ControllerBase
     {
         private readonly IEventService _eventService;
         private readonly ITicketTypeService _ticketTypeService;

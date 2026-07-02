@@ -7,6 +7,7 @@ using QRCoder;
 using QuestPDF.Infrastructure;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
+using iEvent.Application.DTOs.Booking;
 
 namespace iEvent.Application.Services
 {

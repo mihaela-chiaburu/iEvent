@@ -1,4 +1,4 @@
-using iEvent.Application.DTOs;
+using iEvent.Application.DTOs.Booking;
 using iEvent.Application.Interfaces.Repositories;
 using iEvent.Domain.Entities;
 using iEvent.Infrastructure.Persistance;
