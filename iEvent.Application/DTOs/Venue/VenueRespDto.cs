@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace iEvent.Application.DTOs.Venue
+﻿namespace iEvent.Application.DTOs.Venue
 {
     public class VenueRespDto
     {

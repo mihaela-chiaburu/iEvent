@@ -1,5 +1,6 @@
-﻿using iEvent.Application.DTOs;
+﻿using iEvent.Application.DTOs.Common;
 using iEvent.Application.DTOs.Event;
+using iEvent.Application.Exceptions;
 using iEvent.Application.Interfaces.Repositories;
 using iEvent.Application.Interfaces.Services;
 using iEvent.Domain.Entities;
@@ -17,11 +18,11 @@ namespace iEvent.Application.Services
 
         public async Task<EventRespDto> CreateAsync(EventCreateDto dto)
         {
-            var newEventId = Guid.NewGuid();
+            var eventId = Guid.NewGuid();
 
             var ievent = new Event
             {
-                EventId = Guid.NewGuid(),
+                EventId = eventId,
                 Name = dto.Name,
                 Description = dto.Description,
                 EventDates = dto.EventDates.Select(d => new EventDate
@@ -41,7 +42,7 @@ namespace iEvent.Application.Services
                 Images = dto.Images.Select(i => new EventImage
                 {
                     ImageId = Guid.NewGuid(),
-                    EventId = newEventId,
+                    EventId = eventId,
                     Url = i.Url,
                     SortOrder = i.SortOrder
                 }).ToList()
@@ -52,41 +53,47 @@ namespace iEvent.Application.Services
             return MapToRespDto(ievent);
         }
 
-        public async Task<bool> DeleteAsync(Guid id)
+        public async Task DeleteAsync(Guid id)
         {
             var ievent = await _eventRepository.GetByIdAsync(id);
             if (ievent == null)
             {
-                return false;
+                throw new NotFoundException($"Event with ID {id} was not found.");
             }
 
             await _eventRepository.DeleteAsync(ievent);
-            return true;
         }
 
-        public async Task<PagedResult<EventRespDto>> GetAllAsync(EventQueryDto query)
+        public async Task<PagedResultDto<EventRespDto>> GetAllAsync(EventQueryDto query)
         {
             var pagedEvents = await _eventRepository.GetAllAsync(query);
 
-            return new PagedResult<EventRespDto>
+            return new PagedResultDto<EventRespDto>
             {
                 TotalCount = pagedEvents.TotalCount,
+                Page = pagedEvents.Page,
+                PageSize = pagedEvents.PageSize,
                 Items = pagedEvents.Items.Select(MapToRespDto).ToList()
             };
         }
 
-        public async Task<EventRespDto?> GetByIdAsync(Guid id)
-        {
-            var ievent = await _eventRepository.GetByIdAsync(id);
-            return ievent == null ? null : MapToRespDto(ievent);
-        }
-
-        public async Task<bool> UpdateAsync(Guid id, EventUpdateDto dto)
+        public async Task<EventRespDto> GetByIdAsync(Guid id)
         {
             var ievent = await _eventRepository.GetByIdAsync(id);
             if (ievent == null)
             {
-                return false;
+                throw new NotFoundException($"Event with ID {id} was not found.");
+            }
+
+            return MapToRespDto(ievent);
+        }
+
+        public async Task UpdateAsync(Guid id, EventUpdateDto dto)
+        {
+            var ievent = await _eventRepository.GetByIdAsync(id);
+            if (ievent == null)
+            {
+                throw new NotFoundException($"Event with ID {id} was not found.");
             }
 
             ievent.Name = dto.Name;
@@ -121,7 +128,6 @@ namespace iEvent.Application.Services
             }).ToList();
 
             await _eventRepository.UpdateAsync(ievent);
-            return true;
         }
 
         public async Task<List<EventRespDto>> GetEventsByVenueIdAsync(Guid venueId)
@@ -136,12 +142,12 @@ namespace iEvent.Application.Services
             return events.Select(MapToRespDto).ToList();
         }
 
-        public async Task<List<EventDateRespDto>?> GetEventDatesAsync(Guid id)
+        public async Task<List<EventDateRespDto>> GetEventDatesAsync(Guid id)
         {
             var ievent = await _eventRepository.GetByIdAsync(id);
             if (ievent == null)
             {
-                return null;
+                throw new NotFoundException($"Event with ID {id} was not found.");
             }
 
             return ievent.EventDates
@@ -161,10 +167,13 @@ namespace iEvent.Application.Services
                 }).ToList();
         }
 
-        public async Task<bool> AddEventDatesAsync(Guid id, List<EventDateCreateDto> dto)
+        public async Task AddEventDatesAsync(Guid id, List<EventDateCreateDto> dto)
         {
             var ev = await _eventRepository.GetByIdAsync(id);
-            if (ev == null) return false;
+            if (ev == null)
+            {
+                throw new NotFoundException($"Event with ID {id} was not found.");
+            }
 
             var newDates = dto.Select(d => new EventDate
             {
@@ -187,15 +196,14 @@ namespace iEvent.Application.Services
                 await _eventRepository.UpdateAsync(ev);
             }
 
-            return true;
         }
 
-        public async Task<List<EventRespDto>?> GetSimilarEventsAsync(Guid id, int count = 4)
+        public async Task<List<EventRespDto>> GetSimilarEventsAsync(Guid id, int count = 4)
         {
             var currentEvent = await _eventRepository.GetByIdAsync(id);
             if (currentEvent == null)
             {
-                return null;
+                throw new NotFoundException($"Event with ID {id} was not found.");
             }
 
             var queryDto = new EventQueryDto
@@ -222,33 +230,26 @@ namespace iEvent.Application.Services
             {
                 Category = Enum.TryParse<EventCategory>(category, true, out var parsedCategory) ? parsedCategory : null,
                 Page = 1,
-                PageSize = 20
+                PageSize = count
             };
 
             var result = await _eventRepository.GetAllAsync(queryDto);
 
-            return result.Items
-                .Where(e => !e.IsDraft)
-                .Take(count)
-                .Select(MapToRespDto)
-                .ToList();
+            return result.Items.Select(MapToRespDto).ToList();
         }
 
         public async Task<List<EventRespDto>> GetPreviewByCityAsync(string city, int count = 4)
         {
             var queryDto = new EventQueryDto
             {
+                City = city,
                 Page = 1,
-                PageSize = 50 
+                PageSize = count
             };
 
             var result = await _eventRepository.GetAllAsync(queryDto);
 
-            return result.Items
-                .Where(e => !e.IsDraft && e.Venue != null && e.Venue.City.Equals(city, StringComparison.OrdinalIgnoreCase))
-                .Take(count)
-                .Select(MapToRespDto)
-                .ToList();
+            return result.Items.Select(MapToRespDto).ToList();
         }
 
         private static EventRespDto MapToRespDto(Event ievent)
@@ -306,10 +307,13 @@ namespace iEvent.Application.Services
             return MapToRespDto(ev);
         }
 
-        public async Task<bool> PatchAsync(Guid id, EventPatchDto dto)
+        public async Task PatchAsync(Guid id, EventPatchDto dto)
         {
             var ev = await _eventRepository.GetByIdAsync(id);
-            if (ev == null) return false;
+            if (ev == null)
+            {
+                throw new NotFoundException($"Event with ID {id} was not found.");
+            }
 
             if (dto.Name != null) ev.Name = dto.Name;
             if (dto.Description != null) ev.Description = dto.Description;
@@ -344,27 +348,31 @@ namespace iEvent.Application.Services
                 await _eventRepository.UpdateAsync(ev);
             }
 
-            return true;
         }
 
-        public async Task<bool> PublishAsync(Guid id)
+        public async Task PublishAsync(Guid id)
         {
             var ev = await _eventRepository.GetByIdAsync(id);
-            if (ev == null) return false;
+            if (ev == null)
+            {
+                throw new NotFoundException($"Event with ID {id} was not found.");
+            }
 
-            if (string.IsNullOrEmpty(ev.Name))
-                throw new Exception("Name required");
+            if (string.IsNullOrWhiteSpace(ev.Name))
+                throw new InvalidOperationException("Event name is required before publishing.");
 
             if (!ev.VenueId.HasValue)
-                throw new Exception("Venue required");
+                throw new InvalidOperationException("Event venue is required before publishing.");
+
+            if (string.IsNullOrWhiteSpace(ev.Description))
+                throw new InvalidOperationException("Event description is required before publishing.");
 
             if (!ev.EventDates.Any())
-                throw new Exception("Dates required");
+                throw new InvalidOperationException("At least one event date is required before publishing.");
 
             ev.IsDraft = false;
 
             await _eventRepository.UpdateAsync(ev);
-            return true;
         }
     }
 }

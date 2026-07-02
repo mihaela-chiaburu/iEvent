@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using iEvent.Domain.ValueObjects;
 
 namespace iEvent.Domain.Entities

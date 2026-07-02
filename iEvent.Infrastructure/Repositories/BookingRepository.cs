@@ -3,9 +3,6 @@ using iEvent.Application.Interfaces.Repositories;
 using iEvent.Domain.Entities;
 using iEvent.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace iEvent.Infrastructure.Repositories
 {
@@ -21,8 +18,8 @@ namespace iEvent.Infrastructure.Repositories
         public Task<List<Booking>> GetAllAsync()
         {
             return _dbContext.Bookings
-                .Include(b => b.BookingTickets)
                 .AsNoTracking()
+                .Include(b => b.BookingTickets)
                 .ToListAsync();
         }
 
@@ -36,6 +33,7 @@ namespace iEvent.Infrastructure.Repositories
         public async Task<(List<Booking> Items, int TotalCount)> GetPagedAsync(BookingFilterDto filter)
         {
             var query = _dbContext.Bookings
+                .AsNoTracking()
                 .Include(b => b.BookingTickets)
                 .Include(b => b.Customer)
                 .AsQueryable();
@@ -59,9 +57,9 @@ namespace iEvent.Infrastructure.Repositories
             {
                 var searchLower = filter.Search.ToLower();
                 query = query.Where(b =>
-                    b.BookingCode.ToLower().Contains(searchLower) ||
-                    b.Customer!.Name.ToLower().Contains(searchLower) ||
-                    b.Customer.Email.ToLower().Contains(searchLower));
+                    EF.Functions.Like(b.BookingCode.ToLower(), $"%{searchLower}%") ||
+                    EF.Functions.Like(b.Customer!.Name.ToLower(), $"%{searchLower}%") ||
+                    EF.Functions.Like(b.Customer.Email.ToLower(), $"%{searchLower}%"));
             }
 
             var totalCount = await query.CountAsync();
@@ -86,39 +84,6 @@ namespace iEvent.Infrastructure.Repositories
 
         public async Task UpdateAsync(Booking booking)
         {
-            _dbContext.ChangeTracker.Clear();
-
-            _dbContext.Bookings.Attach(booking);
-            _dbContext.Entry(booking).State = EntityState.Modified;
-
-            foreach (var ticket in booking.BookingTickets)
-            {
-                var existsInDb = _dbContext.BookingTickets
-                    .Any(bt => bt.BookingTicketId == ticket.BookingTicketId);
-
-                if (!existsInDb)
-                {
-                    _dbContext.Entry(ticket).State = EntityState.Added;
-                }
-                else
-                {
-                    _dbContext.Entry(ticket).State = EntityState.Modified;
-                }
-            }
-
-            var modifiedTicketTypes = _dbContext.ChangeTracker
-                .Entries<TicketType>()
-                .Where(e => e.State == EntityState.Modified || e.State == EntityState.Detached);
-
-            foreach (var entry in modifiedTicketTypes)
-            {
-                if (entry.State == EntityState.Detached)
-                {
-                    _dbContext.TicketTypes.Attach(entry.Entity);
-                    entry.State = EntityState.Modified;
-                }
-            }
-
             await _dbContext.SaveChangesAsync();
         }
 
@@ -131,6 +96,7 @@ namespace iEvent.Infrastructure.Repositories
         public async Task<List<Booking>> GetByCustomerIdAsync(Guid customerId)
         {
             return await _dbContext.Bookings
+                .AsNoTracking()
                 .Include(b => b.BookingTickets)
                 .Where(b => b.CustomerId == customerId)
                 .OrderByDescending(b => b.BookingDate)
@@ -140,6 +106,7 @@ namespace iEvent.Infrastructure.Repositories
         public async Task<Booking?> GetByCodeAsync(string code)
         {
             return await _dbContext.Bookings
+                .AsNoTracking()
                 .Include(b => b.BookingTickets)
                 .FirstOrDefaultAsync(b => b.BookingCode == code);
         }

@@ -1,20 +1,15 @@
-﻿using iEvent.Application.DTOs;
-using iEvent.Application.DTOs.Admin;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using iEvent.Application.DTOs.Admin;
+using iEvent.Application.DTOs.Common;
+using iEvent.Application.DTOs.User;
 
 namespace iEvent.Application.Interfaces.Services
 {
     public interface IUserService
     {
-        Task<PagedResult<UserRespDto>> GetPaginatedUsersAsync(string? search, string? filterByRole, 
-                                                        string? filterByStatus, int page, int pageSize);
-        Task<IdentityResultDto> CreateManagerAsync(AdminUserCreateDto request);
-        Task<IdentityResultDto> UpdateUserRoleAsync(string userId, string newRole);
-        Task<IdentityResultDto> LockUserAsync(string userId);
-        Task<IdentityResultDto> UnlockUserAsync(string userId);
+        Task<PagedResultDto<UserRespDto>> GetPaginatedUsersAsync(UserFilterDto filter);
+        Task CreateManagerAsync(AdminUserCreateDto request);
+        Task UpdateUserRoleAsync(string userId, string newRole);
+        Task LockUserAsync(string userId);
+        Task UnlockUserAsync(string userId);
     }
 }

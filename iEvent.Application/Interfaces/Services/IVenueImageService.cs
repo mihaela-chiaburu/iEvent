@@ -1,11 +1,11 @@
-﻿using iEvent.Application.DTOs.Venue;
-using Microsoft.AspNetCore.Http;
+﻿using iEvent.Application.DTOs.Common;
+using iEvent.Application.DTOs.Venue;
 
 namespace iEvent.Application.Interfaces.Services
 {
     public interface IVenueImageService
     {
-        Task<List<string>> UploadAsync(Guid venueId, List<IFormFile> files);
+        Task<List<string>> UploadAsync(Guid venueId, List<FileUploadDto> files);
         Task<List<VenueImageRespDto>> GetByVenueIdAsync(Guid venueId);
         Task<bool> DeleteAsync(Guid imageId);
     }

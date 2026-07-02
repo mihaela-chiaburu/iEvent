@@ -1,13 +1,9 @@
 using iEvent.Application.DTOs.Venue;
+using iEvent.Application.Exceptions;
 using iEvent.Application.Interfaces.Repositories;
 using iEvent.Application.Interfaces.Services;
 using iEvent.Domain.Entities;
-using iEvent.Domain.Enums;
 using iEvent.Domain.ValueObjects;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace iEvent.Application.Services
 {
@@ -27,10 +23,15 @@ namespace iEvent.Application.Services
             return venues.Select(MapToRespDto).ToList();
         }
 
-        public async Task<VenueRespDto?> GetByIdAsync(Guid id)
+        public async Task<VenueRespDto> GetByIdAsync(Guid id)
         {
             var venue = await _venueRepository.GetByIdAsync(id);
-            return venue == null ? null : MapToRespDto(venue);
+            if (venue == null)
+            {
+                throw new NotFoundException($"Venue with ID {id} was not found.");
+            }
+
+            return MapToRespDto(venue);
         }
 
         public async Task<VenueRespDto> CreateAsync(VenueCreateDto dto)
@@ -76,12 +77,12 @@ namespace iEvent.Application.Services
             return MapToRespDto(venue);
         }
 
-        public async Task<bool> UpdateAsync(Guid id, VenueUpdateDto dto)
+        public async Task UpdateAsync(Guid id, VenueUpdateDto dto)
         {
             var venue = await _venueRepository.GetByIdAsync(id);
             if (venue == null)
             {
-                return false;
+                throw new NotFoundException($"Venue with ID {id} was not found.");
             }
 
             venue.Name = dto.Name;
@@ -109,19 +110,17 @@ namespace iEvent.Application.Services
             }).ToList();
 
             await _venueRepository.UpdateAsync(venue);
-            return true;
         }
 
-        public async Task<bool> DeleteAsync(Guid id)
+        public async Task DeleteAsync(Guid id)
         {
             var venue = await _venueRepository.GetByIdAsync(id);
             if (venue == null)
             {
-                return false;
+                throw new NotFoundException($"Venue with ID {id} was not found.");
             }
 
             await _venueRepository.DeleteAsync(venue);
-            return true;
         }
 
         public async Task<List<VenueRespDto>> GetPopularAsync(int take = 10)
@@ -186,10 +185,13 @@ namespace iEvent.Application.Services
             return MapToRespDto(venue);
         }
 
-        public async Task<bool> PatchAsync(Guid id, VenuePatchDto dto)
+        public async Task PatchAsync(Guid id, VenuePatchDto dto)
         {
             var ven = await _venueRepository.GetByIdAsync(id);
-            if (ven == null) return false;
+            if (ven == null)
+            {
+                throw new NotFoundException($"Venue with ID {id} was not found.");
+            }
 
             if (dto.Name != null)
                 ven.Name = dto.Name;
@@ -200,11 +202,11 @@ namespace iEvent.Application.Services
             if (dto.City != null)
                 ven.City = dto.City;
 
-            if (dto.Capacity != 0)
-                ven.Capacity = dto.Capacity;
+            if (dto.Capacity.HasValue)
+                ven.Capacity = dto.Capacity.Value;
 
-            if (dto.Latitude != 0 && dto.Longitude != 0)
-                ven.MapLocation = new MapLocation(dto.Latitude, dto.Longitude);
+            if (dto.Latitude.HasValue && dto.Longitude.HasValue)
+                ven.MapLocation = new MapLocation(dto.Latitude.Value, dto.Longitude.Value);
 
             if (dto.Description != null)
                 ven.Description = dto.Description;
@@ -216,21 +218,31 @@ namespace iEvent.Application.Services
                 ven.Email = dto.Email;
 
             await _venueRepository.UpdateAsync(ven);
-            return true;
         }
 
-        public async Task<bool> PublishAsync(Guid id)
+        public async Task PublishAsync(Guid id)
         {
             var ev = await _venueRepository.GetByIdAsync(id);
-            if (ev == null) return false;
+            if (ev == null)
+            {
+                throw new NotFoundException($"Venue with ID {id} was not found.");
+            }
 
-            if (string.IsNullOrEmpty(ev.Name))
-                throw new Exception("Name required");
+            if (string.IsNullOrWhiteSpace(ev.Name))
+                throw new InvalidOperationException("Venue name is required before publishing.");
 
-            //restu validarilor tot treb
+            if (string.IsNullOrWhiteSpace(ev.Address))
+                throw new InvalidOperationException("Venue address is required before publishing.");
+
+            if (string.IsNullOrWhiteSpace(ev.City))
+                throw new InvalidOperationException("Venue city is required before publishing.");
+
+            if (ev.Capacity <= 0)
+                throw new InvalidOperationException("Venue capacity must be greater than zero before publishing.");
+
+            ev.IsDraft = false;
 
             await _venueRepository.UpdateAsync(ev);
-            return true;
         }
     }
 }

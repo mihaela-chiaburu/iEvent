@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using iEvent.Application.DTOs.Tickets;
+using iEvent.Application.Exceptions;
 using iEvent.Application.Interfaces.Repositories;
 using iEvent.Application.Interfaces.Services;
 using iEvent.Domain.Entities;
@@ -24,10 +21,15 @@ namespace iEvent.Application.Services
             return ticketTypes.Select(MapToRespDto).ToList();
         }
 
-        public async Task<TicketTypeRespDto?> GetByIdAsync(Guid id)
+        public async Task<TicketTypeRespDto> GetByIdAsync(Guid id)
         {
             var ticketType = await _ticketTypeRepository.GetByIdAsync(id);
-            return ticketType == null ? null : MapToRespDto(ticketType);
+            if (ticketType == null)
+            {
+                throw new NotFoundException($"Ticket type with ID {id} was not found.");
+            }
+
+            return MapToRespDto(ticketType);
         }
 
         public async Task<TicketTypeRespDto> CreateAsync(TicketTypeCreateDto dto)
@@ -35,7 +37,7 @@ namespace iEvent.Application.Services
             if (dto.AvailableFrom.HasValue && dto.AvailableUntil.HasValue &&
                 dto.AvailableFrom > dto.AvailableUntil)
             {
-                throw new ArgumentException("AvailableFrom must be earlier than AvailableUntil.");
+                throw new ValidationException("AvailableFrom must be earlier than AvailableUntil.");
             }
 
             var ticketType = new TicketType
@@ -54,18 +56,18 @@ namespace iEvent.Application.Services
             return MapToRespDto(ticketType);
         }
 
-        public async Task<bool> UpdateAsync(Guid id, TicketTypeUpdateDto dto)
+        public async Task UpdateAsync(Guid id, TicketTypeUpdateDto dto)
         {
             if (dto.AvailableFrom.HasValue && dto.AvailableUntil.HasValue &&
                  dto.AvailableFrom > dto.AvailableUntil)
             {
-                throw new ArgumentException("AvailableFrom must be earlier than AvailableUntil.");
+                throw new ValidationException("AvailableFrom must be earlier than AvailableUntil.");
             }
 
             var ticketType = await _ticketTypeRepository.GetByIdAsync(id);
             if (ticketType == null)
             {
-                return false;
+                throw new NotFoundException($"Ticket type with ID {id} was not found.");
             }
 
             ticketType.EventId = dto.EventId;
@@ -77,19 +79,17 @@ namespace iEvent.Application.Services
             ticketType.AvailableUntil = dto.AvailableUntil;
 
             await _ticketTypeRepository.UpdateAsync(ticketType);
-            return true;
         }
 
-        public async Task<bool> DeleteAsync(Guid id)
+        public async Task DeleteAsync(Guid id)
         {
             var ticketType = await _ticketTypeRepository.GetByIdAsync(id);
             if (ticketType == null)
             {
-                return false;
+                throw new NotFoundException($"Ticket type with ID {id} was not found.");
             }
 
             await _ticketTypeRepository.DeleteAsync(ticketType);
-            return true;
         }
 
         public async Task<List<string>> GetUniqueNamesAsync()

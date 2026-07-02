@@ -2,12 +2,6 @@
 using iEvent.Application.Interfaces.Services;
 using iEvent.Domain.Entities;
 using iEvent.Domain.Enums;
-using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace iEvent.Application.Services
 {
@@ -71,11 +65,11 @@ namespace iEvent.Application.Services
         {
             if (role == RoleNames.Customer)
             {
-                await CreateCustomerProfileAsync(identityUserId, email, name, role);
+                await CreateCustomerProfileAsync(identityUserId, email, name, phoneNumber);
             }
             else
             {
-                await CreateAdminProfileAsync(identityUserId, email, name, role);
+                await CreateAdminProfileAsync(identityUserId, email, name, phoneNumber);
             }
         }
     }

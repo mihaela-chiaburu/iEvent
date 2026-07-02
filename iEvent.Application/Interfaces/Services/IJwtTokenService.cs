@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace iEvent.Application.Interfaces.Services
 {
     public interface IJwtTokenService

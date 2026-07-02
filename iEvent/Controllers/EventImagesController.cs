@@ -1,4 +1,5 @@
-﻿using iEvent.Application.Interfaces.Services;
+﻿using iEvent.Application.DTOs.Common;
+using iEvent.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,7 +28,21 @@ namespace iEvent.WebApi.Controllers
         [HttpPost]
         public async Task<IActionResult> Upload(Guid eventId, [FromForm] List<IFormFile> files)
         {
-            var urls = await _EventImageService.UploadAsync(eventId, files);
+            var uploads = new List<FileUploadDto>();
+
+            foreach (var file in files)
+            {
+                await using var stream = new MemoryStream();
+                await file.CopyToAsync(stream);
+
+                uploads.Add(new FileUploadDto
+                {
+                    Content = stream.ToArray(),
+                    FileName = file.FileName
+                });
+            }
+
+            var urls = await _EventImageService.UploadAsync(eventId, uploads);
             return Ok(new { urls });
         }
 

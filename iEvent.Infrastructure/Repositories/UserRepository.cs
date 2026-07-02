@@ -1,4 +1,5 @@
-﻿using iEvent.Application.DTOs;
+﻿using iEvent.Application.DTOs.Common;
+using iEvent.Application.DTOs.User;
 using iEvent.Application.Interfaces.Repositories;
 using iEvent.Infrastructure.Identity;
 using iEvent.Infrastructure.Persistance;
@@ -18,9 +19,9 @@ namespace iEvent.Infrastructure.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task<PagedResult<UserRespDto>> GetUsersAsync(UserFilterDto filter)
+        public async Task<PagedResultDto<UserRespDto>> GetUsersAsync(UserFilterDto filter)
         {
-            var query = _userManager.Users.AsQueryable();
+            var query = _userManager.Users.AsNoTracking().AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(filter.Search))
             {
@@ -73,13 +74,31 @@ namespace iEvent.Infrastructure.Repositories
                 ));
             }
 
-            return new PagedResult<UserRespDto> { Items = result, TotalCount = total };
+            return new PagedResultDto<UserRespDto> { Items = result, TotalCount = total, Page = filter.Page, PageSize = filter.PageSize };
         }
 
         public async Task<bool> ExistsByEmailAsync(string email)
         {
             var user = await _userManager.FindByEmailAsync(email);
             return user != null;
+        }
+
+        public async Task<(string Id, string Email, string? PhoneNumber, IList<string> Roles)?> ValidateCredentialsAsync(string email, string password)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return null;
+            }
+
+            var validPassword = await _userManager.CheckPasswordAsync(user, password);
+            if (!validPassword)
+            {
+                return null;
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            return (user.Id, user.Email ?? string.Empty, user.PhoneNumber, roles);
         }
 
         public async Task<IdentityResultDto> CreateUserWithRoleAsync(string email, string password, string role, string? PhoneNumber)

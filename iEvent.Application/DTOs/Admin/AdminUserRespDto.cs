@@ -1,4 +1,3 @@
-using System;
 using iEvent.Domain.Enums;
 
 namespace iEvent.Application.DTOs.Admin

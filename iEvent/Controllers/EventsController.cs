@@ -1,9 +1,7 @@
-﻿using iEvent.Application.DTOs;
+﻿using iEvent.Application.DTOs.Common;
 using iEvent.Application.DTOs.Event;
 using iEvent.Application.DTOs.Tickets;
 using iEvent.Application.Interfaces.Services;
-using iEvent.Application.Services;
-using iEvent.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,7 +21,7 @@ namespace iEvent.WebApi.Controllers
 
         [AllowAnonymous]
         [HttpGet]
-        public async Task<ActionResult<PagedResult<EventRespDto>>> GetAll([FromQuery] EventQueryDto query)
+        public async Task<ActionResult<PagedResultDto<EventRespDto>>> GetAll([FromQuery] EventQueryDto query)
         {
             var pagedResult = await _eventService.GetAllAsync(query);
             return Ok(pagedResult);
@@ -34,11 +32,6 @@ namespace iEvent.WebApi.Controllers
         public async Task<ActionResult<EventRespDto>> GetById(Guid id)
         {
             var ievent = await _eventService.GetByIdAsync(id);
-            if (ievent == null)
-            {
-                return NotFound();
-            }
-
             return Ok(ievent);
         }
 
@@ -54,12 +47,7 @@ namespace iEvent.WebApi.Controllers
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] EventUpdateDto dto)
         {
-            var updated = await _eventService.UpdateAsync(id, dto);
-            if (!updated)
-            {
-                return NotFound();
-            }
-
+            await _eventService.UpdateAsync(id, dto);
             return NoContent();
         }
 
@@ -67,12 +55,7 @@ namespace iEvent.WebApi.Controllers
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var deleted = await _eventService.DeleteAsync(id);
-            if (!deleted)
-            {
-                return NotFound();
-            }
-
+            await _eventService.DeleteAsync(id);
             return NoContent();
         }
 
@@ -90,11 +73,6 @@ namespace iEvent.WebApi.Controllers
         public async Task<ActionResult<List<EventDateRespDto>>> GetDates(Guid id)
         {
             var dates = await _eventService.GetEventDatesAsync(id);
-            if (dates == null)
-            {
-                return NotFound();
-            }
-
             return Ok(dates);
         }
 
@@ -110,11 +88,7 @@ namespace iEvent.WebApi.Controllers
         [HttpPatch("{id:guid}")]
         public async Task<IActionResult> Patch(Guid id, [FromBody] EventPatchDto dto)
         {
-            var updated = await _eventService.PatchAsync(id, dto);
-
-            if (!updated)
-                return NotFound();
-
+            await _eventService.PatchAsync(id, dto);
             return NoContent();
         }
 
@@ -122,11 +96,7 @@ namespace iEvent.WebApi.Controllers
         [HttpPost("{id:guid}/publish")]
         public async Task<IActionResult> Publish(Guid id)
         {
-            var result = await _eventService.PublishAsync(id);
-
-            if (!result)
-                return NotFound();
-
+            await _eventService.PublishAsync(id);
             return NoContent();
         }
 
@@ -142,18 +112,7 @@ namespace iEvent.WebApi.Controllers
         [HttpPost("{id:guid}/dates")]
         public async Task<IActionResult> AddDates(Guid id, [FromBody] List<EventDateCreateDto> dto)
         {
-            if (dto == null || !dto.Any())
-            {
-                return BadRequest();
-            }
-
-            var result = await _eventService.AddEventDatesAsync(id, dto);
-
-            if (!result)
-            {
-                return NotFound();
-            }
-
+            await _eventService.AddEventDatesAsync(id, dto);
             return NoContent();
         }
 
@@ -162,12 +121,6 @@ namespace iEvent.WebApi.Controllers
         public async Task<ActionResult<List<EventRespDto>>> GetSimilar(Guid id)
         {
             var similarEvents = await _eventService.GetSimilarEventsAsync(id, 4);
-
-            if (similarEvents == null)
-            {
-                return NotFound();
-            }
-
             return Ok(similarEvents);
         }
 

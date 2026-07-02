@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using iEvent.Application.Interfaces.Repositories;
 using iEvent.Domain.Entities;
 using iEvent.Infrastructure.Persistance;

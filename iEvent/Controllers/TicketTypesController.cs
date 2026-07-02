@@ -2,9 +2,6 @@ using iEvent.Application.DTOs.Tickets;
 using iEvent.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace iEvent.WebApi.Controllers
 {
@@ -32,11 +29,6 @@ namespace iEvent.WebApi.Controllers
         public async Task<ActionResult<TicketTypeRespDto>> GetById(Guid id)
         {
             var ticketType = await _ticketTypeService.GetByIdAsync(id);
-            if (ticketType == null)
-            {
-                return NotFound();
-            }
-
             return Ok(ticketType);
         }
 
@@ -52,12 +44,7 @@ namespace iEvent.WebApi.Controllers
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] TicketTypeUpdateDto dto)
         {
-            var updated = await _ticketTypeService.UpdateAsync(id, dto);
-            if (!updated)
-            {
-                return NotFound();
-            }
-
+            await _ticketTypeService.UpdateAsync(id, dto);
             return NoContent();
         }
 
@@ -65,12 +52,7 @@ namespace iEvent.WebApi.Controllers
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var deleted = await _ticketTypeService.DeleteAsync(id);
-            if (!deleted)
-            {
-                return NotFound();
-            }
-
+            await _ticketTypeService.DeleteAsync(id);
             return NoContent();
         }
 

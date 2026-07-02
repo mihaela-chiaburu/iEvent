@@ -2,11 +2,6 @@
 using iEvent.Domain.Entities;
 using iEvent.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace iEvent.Infrastructure.Repositories
 {

@@ -1,5 +1,4 @@
 using CloudinaryDotNet;
-using iEvent.Application.DTOs;
 using iEvent.Application.Interfaces.Repositories;
 using iEvent.Application.Interfaces.Services;
 using iEvent.Application.Services;
@@ -7,6 +6,7 @@ using iEvent.Infrastructure.ExternalServices;
 using iEvent.Infrastructure.Identity;
 using iEvent.Infrastructure.Persistance;
 using iEvent.Infrastructure.Repositories;
+using iEvent.WebApi.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
@@ -61,6 +61,7 @@ builder.Services.AddScoped<Cloudinary>(sp =>
 });
 
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+builder.Services.AddScoped<IBookingArtifactService, BookingArtifactService>();
 
 builder.Services.AddScoped<IEventImageRepository, EventImageRepository>();
 builder.Services.AddScoped<IEventImageService, EventImageService>();
@@ -83,6 +84,7 @@ builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IAdminUserRepository, AdminUserRepository>();
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -107,6 +109,8 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

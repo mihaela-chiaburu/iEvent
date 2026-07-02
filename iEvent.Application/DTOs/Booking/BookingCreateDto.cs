@@ -1,6 +1,4 @@
 using iEvent.Domain.Enums;
-using System;
-using System.Collections.Generic;
 
 namespace iEvent.Application.DTOs.Booking
 {

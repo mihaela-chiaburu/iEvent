@@ -1,4 +1,4 @@
-﻿namespace iEvent.Application.DTOs
+﻿namespace iEvent.Application.DTOs.User
 {
     public record IdentityResultDto(bool Succeeded, IEnumerable<string>? Errors = null)
     {

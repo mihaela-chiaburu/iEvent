@@ -1,8 +1,7 @@
-﻿using iEvent.Application.DTOs;
+﻿using iEvent.Application.DTOs.Common;
 using iEvent.Application.DTOs.Event;
 using iEvent.Application.Interfaces.Repositories;
 using iEvent.Domain.Entities;
-using iEvent.Domain.Enums;
 using iEvent.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,9 +26,10 @@ namespace iEvent.Infrastructure.Repositories
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<PagedResult<Event>> GetAllAsync(EventQueryDto query)
+        public async Task<PagedResultDto<Event>> GetAllAsync(EventQueryDto query)
         {
             var dbQuery = _dbContext.Events
+                .AsNoTracking()
                 .Where(e => !e.IsDraft) 
                 .Include(e => e.EventDates)
                     .ThenInclude(ed => ed.TimeSlots)
@@ -40,7 +40,7 @@ namespace iEvent.Infrastructure.Repositories
 
             if (!string.IsNullOrWhiteSpace(query.City))
             {
-                dbQuery = dbQuery.Where(e => e.Venue != null && e.Venue.City.Contains(query.City));
+                dbQuery = dbQuery.Where(e => e.Venue != null && EF.Functions.Like(e.Venue.City, $"%{query.City}%"));
             }
             if (query.VenueId.HasValue)
             {
@@ -78,23 +78,27 @@ namespace iEvent.Infrastructure.Repositories
             }
 
             var totalCount = await dbQuery.CountAsync();
+            var page = query.Page < 1 ? 1 : query.Page;
+            var pageSize = query.PageSize < 1 ? 10 : query.PageSize;
 
             var items = await dbQuery
-                .Skip((query.Page - 1) * query.PageSize)
-                .Take(query.PageSize)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
-            return new PagedResult<Event>
+            return new PagedResultDto<Event>
             {
                 Items = items,
-                TotalCount = totalCount
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
             };
         }
 
         public Task<Event?> GetByIdAsync(Guid id)
         {
             return _dbContext.Events.Include(e => e.EventDates).ThenInclude(ed => ed.TimeSlots)
-                .Include(e => e.Venue).Include(e => e.Images)
+                .Include(e => e.Venue).Include(e => e.Images).Include(e => e.Tickets)
                 .FirstOrDefaultAsync(e => e.EventId == id);
         }
 
@@ -106,14 +110,8 @@ namespace iEvent.Infrastructure.Repositories
 
         public async Task UpdateEventDatesAsync(Guid eventId, List<EventDate> newDates)
         {
-            var oldTimeSlots = _dbContext.EventTimeSlots
-                .Where(ts => _dbContext.EventDates.Where(ed => ed.EventId == eventId).Select(ed => ed.EventDateId).Contains(ts.EventDateId));
-            _dbContext.EventTimeSlots.RemoveRange(oldTimeSlots);
-
-            var oldDates = _dbContext.EventDates.Where(ed => ed.EventId == eventId);
+            var oldDates = await _dbContext.EventDates.Where(ed => ed.EventId == eventId).ToListAsync();
             _dbContext.EventDates.RemoveRange(oldDates);
-
-            await _dbContext.SaveChangesAsync();
 
             await _dbContext.EventDates.AddRangeAsync(newDates);
             await _dbContext.SaveChangesAsync();
@@ -122,6 +120,7 @@ namespace iEvent.Infrastructure.Repositories
         public async Task<List<Event>> GetEventsByVenueIdAsync(Guid venueId)
         {
             return await _dbContext.Events
+                .AsNoTracking()
                 .Where(e => e.VenueId == venueId)
                 .ToListAsync();
         }
@@ -129,10 +128,14 @@ namespace iEvent.Infrastructure.Repositories
         public async Task<List<Event>> GetPopularEventsAsync(int count)
         {
             return await _dbContext.Events
+                .AsNoTracking()
                 .Where(e => !e.IsDraft)
                 .Include(e => e.EventDates)
                     .ThenInclude(ed => ed.TimeSlots)
                 .Include(e => e.Images)
+                .Include(e => e.Tickets)
+                .OrderByDescending(e => _dbContext.Bookings.Count(b => b.EventId == e.EventId))
+                .ThenBy(e => e.EventDates.Any() ? e.EventDates.Min(ed => ed.Date) : DateOnly.MaxValue)
                 .Take(count)
                 .ToListAsync();
         }

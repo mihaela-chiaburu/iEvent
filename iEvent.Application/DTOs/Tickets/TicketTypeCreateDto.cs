@@ -1,5 +1,4 @@
 using iEvent.Domain.Enums;
-using System;
 
 namespace iEvent.Application.DTOs.Tickets
 {

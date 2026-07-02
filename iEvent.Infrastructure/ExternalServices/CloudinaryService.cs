@@ -1,8 +1,6 @@
 ﻿using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
-using iEvent.Application.DTOs;
 using iEvent.Application.Interfaces.Services;
-using Microsoft.AspNetCore.Http;
 
 namespace iEvent.Infrastructure.ExternalServices
 {
@@ -15,16 +13,16 @@ namespace iEvent.Infrastructure.ExternalServices
             _cloudinary = cloudinary;
         }
 
-        public async Task<string> UploadImageAsync(IFormFile file, string folder)
+        public async Task<string> UploadImageAsync(byte[] content, string fileName, string folder)
         {
-            if (file == null || file.Length == 0)
+            if (content == null || content.Length == 0)
                 throw new ArgumentException("Empty file");
 
-            await using var stream = file.OpenReadStream();
+            await using var stream = new MemoryStream(content);
 
             var uploadParams = new ImageUploadParams
             {
-                File = new FileDescription(file.FileName, stream),
+                File = new FileDescription(fileName, stream),
                 Folder = folder
             };
 

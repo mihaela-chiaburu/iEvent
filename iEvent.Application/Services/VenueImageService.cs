@@ -1,8 +1,8 @@
-﻿using iEvent.Application.DTOs.Venue;
+﻿using iEvent.Application.DTOs.Common;
+using iEvent.Application.DTOs.Venue;
 using iEvent.Application.Interfaces.Repositories;
 using iEvent.Application.Interfaces.Services;
 using iEvent.Domain.Entities;
-using Microsoft.AspNetCore.Http;
 
 namespace iEvent.Application.Services
 {
@@ -19,7 +19,7 @@ namespace iEvent.Application.Services
             _repo = repo;
         }
 
-        public async Task<List<string>> UploadAsync(Guid venueId, List<IFormFile> files)
+        public async Task<List<string>> UploadAsync(Guid venueId, List<FileUploadDto> files)
         {
             var urls = new List<string>();
             var images = new List<VenueImage>();
@@ -28,7 +28,7 @@ namespace iEvent.Application.Services
 
             foreach (var file in files)
             {
-                var url = await _cloudinary.UploadImageAsync(file, "venues/gallery");
+                var url = await _cloudinary.UploadImageAsync(file.Content, file.FileName, "venues/gallery");
 
                 urls.Add(url);
 
@@ -60,8 +60,7 @@ namespace iEvent.Application.Services
 
         public async Task<bool> DeleteAsync(Guid imageId)
         {
-            var images = await _repo.GetByVenueIdAsync(Guid.Empty);
-            var image = images.FirstOrDefault(x => x.ImageId == imageId);
+            var image = await _repo.GetByIdAsync(imageId);
 
             if (image == null)
                 return false;

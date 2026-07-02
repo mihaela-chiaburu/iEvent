@@ -1,11 +1,6 @@
 ﻿using iEvent.Domain.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace iEvent.Application.DTOs
+namespace iEvent.Application.DTOs.Payment
 {
     public class PaymentSimulationRespDto
     {

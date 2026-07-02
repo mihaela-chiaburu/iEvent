@@ -1,8 +1,5 @@
 using iEvent.Application.DTOs.Booking;
 using iEvent.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace iEvent.Application.Interfaces.Repositories
 {

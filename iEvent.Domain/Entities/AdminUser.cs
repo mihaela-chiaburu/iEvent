@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using iEvent.Domain.Enums;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace iEvent.Domain.Entities
 {

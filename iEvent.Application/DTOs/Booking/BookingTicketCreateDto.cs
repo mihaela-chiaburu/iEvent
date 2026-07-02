@@ -1,5 +1,3 @@
-using System;
-
 namespace iEvent.Application.DTOs.Booking
 {
     public class BookingTicketCreateDto

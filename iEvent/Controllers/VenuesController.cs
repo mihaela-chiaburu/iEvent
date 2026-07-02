@@ -1,14 +1,10 @@
 using iEvent.Application.DTOs.Event;
 using iEvent.Application.DTOs.Venue;
 using iEvent.Application.Interfaces.Services;
-using iEvent.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
-namespace iEvent.Controllers
+namespace iEvent.WebApi.Controllers
 {
     [ApiController]
     [Route("api/venues")]
@@ -36,11 +32,6 @@ namespace iEvent.Controllers
         public async Task<ActionResult<VenueRespDto>> GetById(Guid id)
         {
             var venue = await _venueService.GetByIdAsync(id);
-            if (venue == null)
-            {
-                return NotFound();
-            }
-
             return Ok(venue);
         }
 
@@ -64,12 +55,7 @@ namespace iEvent.Controllers
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] VenueUpdateDto dto)
         {
-            var updated = await _venueService.UpdateAsync(id, dto);
-            if (!updated)
-            {
-                return NotFound();
-            }
-
+            await _venueService.UpdateAsync(id, dto);
             return NoContent();
         }
 
@@ -77,12 +63,7 @@ namespace iEvent.Controllers
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var deleted = await _venueService.DeleteAsync(id);
-            if (!deleted)
-            {
-                return NotFound();
-            }
-
+            await _venueService.DeleteAsync(id);
             return NoContent();
         }
 
@@ -98,11 +79,7 @@ namespace iEvent.Controllers
         [HttpPatch("{id:guid}")]
         public async Task<IActionResult> Patch(Guid id, [FromBody] VenuePatchDto dto)
         {
-            var updated = await _venueService.PatchAsync(id, dto);
-
-            if (!updated)
-                return NotFound();
-
+            await _venueService.PatchAsync(id, dto);
             return NoContent();
         }
 
@@ -110,11 +87,7 @@ namespace iEvent.Controllers
         [HttpPost("{id:guid}/publish")]
         public async Task<IActionResult> Publish(Guid id)
         {
-            var result = await _venueService.PublishAsync(id);
-
-            if (!result)
-                return NotFound();
-
+            await _venueService.PublishAsync(id);
             return NoContent();
         }
 

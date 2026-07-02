@@ -2,11 +2,6 @@
 using iEvent.Domain.Entities;
 using iEvent.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace iEvent.Infrastructure.Repositories
 {
@@ -17,6 +12,11 @@ namespace iEvent.Infrastructure.Repositories
         public VenueImageRepository(ApplicationDbContext dbContext)
         {
             _dbContext = dbContext;
+        }
+
+        public Task<VenueImage?> GetByIdAsync(Guid imageId)
+        {
+            return _dbContext.VenueImages.FirstOrDefaultAsync(x => x.ImageId == imageId);
         }
 
         public async Task<List<VenueImage>> GetByVenueIdAsync(Guid venueId)

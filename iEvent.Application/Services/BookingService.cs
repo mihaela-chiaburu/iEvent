@@ -1,13 +1,11 @@
-using iEvent.Application.DTOs;
+using iEvent.Application.DTOs.Booking;
+using iEvent.Application.DTOs.Common;
+using iEvent.Application.DTOs.Payment;
+using iEvent.Application.Exceptions;
 using iEvent.Application.Interfaces.Repositories;
 using iEvent.Application.Interfaces.Services;
 using iEvent.Domain.Entities;
 using iEvent.Domain.Enums;
-using QRCoder;
-using QuestPDF.Infrastructure;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using iEvent.Application.DTOs.Booking;
 
 namespace iEvent.Application.Services
 {
@@ -18,47 +16,48 @@ namespace iEvent.Application.Services
         private readonly ITicketTypeRepository _ticketTypeRepository;
         private readonly IEventRepository _eventRepository;
         private readonly IAdminUserRepository _adminUserRepository;
+        private readonly IBookingArtifactService _bookingArtifactService;
 
         public BookingService(IBookingRepository bookingRepository, ITicketTypeRepository ticketTypeRepository,
-            ICustomerRepository customerRepository, IEventRepository eventRepository, IAdminUserRepository adminUserRepository)
+            ICustomerRepository customerRepository, IEventRepository eventRepository, IAdminUserRepository adminUserRepository,
+            IBookingArtifactService bookingArtifactService)
         {
             _bookingRepository = bookingRepository;
             _ticketTypeRepository = ticketTypeRepository;
             _customerRepository = customerRepository;
             _eventRepository = eventRepository;
             _adminUserRepository = adminUserRepository;
+            _bookingArtifactService = bookingArtifactService;
         }
 
         public async Task<List<BookingRespDto>> GetAllAsync()
         {
             var bookings = await _bookingRepository.GetAllAsync();
-            foreach (var booking in bookings)
-            {
-                await ExpireIfNeededAsync(booking);
-            }
             return bookings.Select(MapToRespDto).ToList();
         }
 
-        public async Task<BookingRespDto?> GetByIdAsync(Guid id)
+        public async Task<BookingRespDto> GetByIdAsync(Guid id)
         {
             var booking = await _bookingRepository.GetByIdAsync(id);
-            if (booking == null) return null;
-            await ExpireIfNeededAsync(booking);
+            if (booking == null)
+            {
+                throw new NotFoundException($"Booking with ID {id} was not found.");
+            }
 
             return MapToRespDto(booking);
         }
 
-        public async Task<BookingRespDto?> CreateAsync(BookingCreateDto dto, string identityUserId)
+        public async Task<BookingRespDto> CreateAsync(BookingCreateDto dto, string identityUserId)
         {
             if (dto.Tickets == null || !dto.Tickets.Any())
-                throw new ArgumentException("No tickets provided.");
+                throw new ValidationException("No tickets provided.");
 
             if (dto.Tickets.Any(t => t.Quantity <= 0))
-                throw new ArgumentException("Ticket quantity must be greater than 0.");
+                throw new ValidationException("Ticket quantity must be greater than 0.");
 
             var ievent = await _eventRepository.GetByIdAsync(dto.EventId);
             if (ievent == null)
-                throw new KeyNotFoundException($"Event with ID {dto.EventId} was not found (it might be a draft or deleted).");
+                throw new NotFoundException($"Event with ID {dto.EventId} was not found (it might be a draft or deleted).");
 
             var timeSlotExistsAndBelongsToEvent = ievent.EventDates
                 .SelectMany(ed => ed.TimeSlots)
@@ -66,7 +65,7 @@ namespace iEvent.Application.Services
 
             if (!timeSlotExistsAndBelongsToEvent)
             {
-                return null; 
+                throw new ValidationException("Invalid time slot or event combination.");
             }
 
             var ticketTypeIds = dto.Tickets
@@ -78,14 +77,19 @@ namespace iEvent.Application.Services
 
             if (ticketTypes.Count != ticketTypeIds.Count)
             {
-                throw new KeyNotFoundException("One or more ticket types were not found in the database.");
+                throw new NotFoundException("One or more ticket types were not found in the database.");
+            }
+
+            if (ticketTypes.Any(t => t.EventId != dto.EventId))
+            {
+                throw new ValidationException("One or more ticket types do not belong to the selected event.");
             }
 
             var customer = await _customerRepository.GetByIdentityUserIdAsync(identityUserId);
 
             if (customer == null)
             {
-                throw new KeyNotFoundException($"No Customer profile found associated with the logged in user: (IdentityUserId: {identityUserId}).");
+                throw new NotFoundException($"No Customer profile found associated with the logged in user: (IdentityUserId: {identityUserId}).");
             }
 
             var expirationTime = dto.PaymentMethod == PaymentMethod.CashAtVenue
@@ -112,7 +116,7 @@ namespace iEvent.Application.Services
 
                 if (ticket.Quantity > ticketType.QuantityAvailable)
                 {
-                    throw new ArgumentException($"Insufficient stock for the ticket '{ticketType.Name}'. Available: {ticketType.QuantityAvailable}, Requested: {ticket.Quantity}");
+                    throw new ValidationException($"Insufficient stock for the ticket '{ticketType.Name}'. Available: {ticketType.QuantityAvailable}, Requested: {ticket.Quantity}");
                 }
 
                 ticketType.QuantityAvailable -= ticket.Quantity;
@@ -137,23 +141,26 @@ namespace iEvent.Application.Services
             return MapToRespDto(booking);
         }
 
-        public async Task<BookingRespDto?> CreateByManagerAsync(BookingByManagerDto dto)
+        public async Task<BookingRespDto> CreateByManagerAsync(BookingByManagerDto dto)
         {
             if (dto.Tickets == null || !dto.Tickets.Any())
-                throw new ArgumentException("No tickets provided.");
+                throw new ValidationException("No tickets provided.");
 
             if (dto.Tickets.Any(t => t.Quantity <= 0))
-                throw new ArgumentException("Ticket quantity must be greater than 0.");
+                throw new ValidationException("Ticket quantity must be greater than 0.");
 
             var ievent = await _eventRepository.GetByIdAsync(dto.EventId);
             if (ievent == null)
-                throw new KeyNotFoundException($"Event with ID {dto.EventId} was not found.");
+                throw new NotFoundException($"Event with ID {dto.EventId} was not found.");
 
             var timeSlotExists = ievent.EventDates
                 .SelectMany(ed => ed.TimeSlots)
                 .Any(ts => ts.TimeSlotId == dto.BookingTimeSlotId);
 
-            if (!timeSlotExists) return null;
+            if (!timeSlotExists)
+            {
+                throw new ValidationException("Invalid time slot or event combination.");
+            }
 
             Guid finalCustomerId;
 
@@ -161,14 +168,14 @@ namespace iEvent.Application.Services
             {
                 var existingCustomer = await _customerRepository.GetByIdAsync(dto.CustomerId.Value);
                 if (existingCustomer == null)
-                    throw new KeyNotFoundException($"Customer with ID {dto.CustomerId.Value} not found.");
+                    throw new NotFoundException($"Customer with ID {dto.CustomerId.Value} not found.");
 
                 finalCustomerId = existingCustomer.CustomerId;
             }
             else if (dto.NewCustomer != null)
             {
                 if (string.IsNullOrWhiteSpace(dto.NewCustomer.Name) || string.IsNullOrWhiteSpace(dto.NewCustomer.Email))
-                    throw new ArgumentException("For a new customer, Name and Email are required.");
+                    throw new ValidationException("For a new customer, Name and Email are required.");
 
                 var newCustomer = new Customer
                 {
@@ -184,14 +191,17 @@ namespace iEvent.Application.Services
             }
             else
             {
-                throw new ArgumentException("You must either provide an existing CustomerId or complete NewCustomer details.");
+                throw new ValidationException("You must either provide an existing CustomerId or complete NewCustomer details.");
             }
 
             var ticketTypeIds = dto.Tickets.Select(t => t.TicketTypeId).Distinct().ToList();
             var ticketTypes = await _ticketTypeRepository.GetByIdsAsync(ticketTypeIds);
 
             if (ticketTypes.Count != ticketTypeIds.Count)
-                throw new KeyNotFoundException("One or more ticket types were not found.");
+                throw new NotFoundException("One or more ticket types were not found.");
+
+            if (ticketTypes.Any(t => t.EventId != dto.EventId))
+                throw new ValidationException("One or more ticket types do not belong to the selected event.");
 
             var expirationTime = dto.PaymentMethod == PaymentMethod.CashAtVenue
                 ? DateTime.UtcNow.AddHours(2)
@@ -216,7 +226,7 @@ namespace iEvent.Application.Services
                 var ticketType = ticketTypes.First(t => t.TicketTypeId == ticket.TicketTypeId);
 
                 if (ticket.Quantity > ticketType.QuantityAvailable)
-                    throw new ArgumentException($"Insufficient stock for '{ticketType.Name}'. Available: {ticketType.QuantityAvailable}");
+                    throw new ValidationException($"Insufficient stock for '{ticketType.Name}'. Available: {ticketType.QuantityAvailable}");
 
                 ticketType.QuantityAvailable -= ticket.Quantity;
 
@@ -244,11 +254,6 @@ namespace iEvent.Application.Services
         {
             var (bookings, totalCount) = await _bookingRepository.GetPagedAsync(filter);
 
-            foreach (var booking in bookings)
-            {
-                await ExpireIfNeededAsync(booking);
-            }
-
             return new PagedResultDto<BookingRespDto>
             {
                 Items = bookings.Select(MapToRespDto).ToList(),
@@ -258,78 +263,92 @@ namespace iEvent.Application.Services
             };
         }
 
-        public async Task<bool> UpdateAsync(Guid id, BookingUpdateDto dto)
+        public async Task UpdateAsync(Guid id, BookingUpdateDto dto)
         {
             var booking = await _bookingRepository.GetByIdAsync(id);
             if (booking == null)
             {
-                return false;
+                throw new NotFoundException($"Booking with ID {id} was not found.");
             }
 
             booking.Status = dto.Status;
             await _bookingRepository.UpdateAsync(booking);
-            return true;
         }
 
-        public async Task<bool> DeleteAsync(Guid id)
+        public async Task DeleteAsync(Guid id)
         {
             var booking = await _bookingRepository.GetByIdAsync(id);
             if (booking == null)
             {
-                return false;
+                throw new NotFoundException($"Booking with ID {id} was not found.");
             }
 
             await _bookingRepository.DeleteAsync(booking);
-            return true;
         }
 
-        public async Task<BookingRespDto?> GetByCodeAsync(string code)
+        public async Task<BookingRespDto> GetByCodeAsync(string code)
         {
             var booking = await _bookingRepository.GetByCodeAsync(code);
 
             if (booking == null)
             {
-                return null;
+                throw new NotFoundException($"Booking with code {code} was not found.");
             }
-            await ExpireIfNeededAsync(booking);
 
-            return booking == null ? null : MapToRespDto(booking);
+            return MapToRespDto(booking);
         }
 
-        public async Task<bool> MarkPaidAsync(Guid id)
+        public async Task MarkPaidAsync(Guid id)
         {
             var booking = await _bookingRepository.GetByIdAsync(id);
-            if (booking == null) return false;
-            if (booking.Status == BookingStatus.Cancelled) return false;
-            if (booking.Status == BookingStatus.Expired) return false;
+            if (booking == null)
+            {
+                throw new NotFoundException($"Booking with ID {id} was not found.");
+            }
+            if (booking.Status == BookingStatus.Cancelled)
+            {
+                throw new ValidationException("Cancelled bookings cannot be marked as paid.");
+            }
+            if (booking.Status == BookingStatus.Expired)
+            {
+                throw new ValidationException("Expired bookings cannot be marked as paid.");
+            }
 
             booking.Status = BookingStatus.Paid;
             booking.PaidAt = DateTime.UtcNow;
             await _bookingRepository.UpdateAsync(booking);
-
-            return true;
         }
 
-        public async Task<bool> MarkUnpaidAsync(Guid id)
+        public async Task MarkUnpaidAsync(Guid id)
         {
             var booking = await _bookingRepository.GetByIdAsync(id);
-            if (booking == null) return false;
-            if (booking.Status == BookingStatus.Cancelled) return false;
-            if (booking.Status == BookingStatus.Expired) return false;
+            if (booking == null)
+            {
+                throw new NotFoundException($"Booking with ID {id} was not found.");
+            }
+            if (booking.Status == BookingStatus.Cancelled)
+            {
+                throw new ValidationException("Cancelled bookings cannot be marked as unpaid.");
+            }
+            if (booking.Status == BookingStatus.Expired)
+            {
+                throw new ValidationException("Expired bookings cannot be marked as unpaid.");
+            }
 
             booking.Status = BookingStatus.Pending;
             booking.PaidAt = null;
             await _bookingRepository.UpdateAsync(booking);
-
-            return true;
         }
 
-        public async Task<bool> CancelAsync(Guid id)
+        public async Task CancelAsync(Guid id)
         {
             var booking = await _bookingRepository.GetByIdAsync(id);
-            if (booking == null) return false;
+            if (booking == null)
+            {
+                throw new NotFoundException($"Booking with ID {id} was not found.");
+            }
 
-            if (booking.Status == BookingStatus.Cancelled) return true;
+            if (booking.Status == BookingStatus.Cancelled) return;
 
             foreach (var bookingTicket in booking.BookingTickets)
             {
@@ -344,8 +363,6 @@ namespace iEvent.Application.Services
 
             booking.Status = BookingStatus.Cancelled;
             await _bookingRepository.UpdateAsync(booking);
-
-            return true;
         }
 
         public async Task<List<BookingRespDto>> GetMyBookingsAsync(string identityUserId)
@@ -358,24 +375,19 @@ namespace iEvent.Application.Services
 
             var bookings = await _bookingRepository.GetByCustomerIdAsync(customer.CustomerId);
 
-            foreach (var booking in bookings)
-            {
-                await ExpireIfNeededAsync(booking);
-            }
-
             return bookings.Select(MapToRespDto).ToList();
         }
 
-        public async Task<PaymentSimulationRespDto?> SimulatePaymentAsync(Guid bookingId, bool shouldSucceed)
+        public async Task<PaymentSimulationRespDto> SimulatePaymentAsync(Guid bookingId, bool shouldSucceed)
         {
             var booking = await _bookingRepository.GetByIdAsync(bookingId);
 
             if (booking == null)
             {
-                return null;
+                throw new NotFoundException($"Booking with ID {bookingId} was not found.");
             }
 
-            if (booking.Status == BookingStatus.Pending & booking.ExpiresAt < DateTime.UtcNow)
+            if (booking.Status == BookingStatus.Pending && booking.ExpiresAt < DateTime.UtcNow)
             {
                 booking.Status = BookingStatus.Expired;
 
@@ -495,46 +507,23 @@ namespace iEvent.Application.Services
             };
         }
 
-        private async Task ExpireIfNeededAsync(Booking booking)
-        {
-            if (booking.Status != BookingStatus.Pending)
-            {
-                return;
-            }
-
-            if (booking.ExpiresAt > DateTime.UtcNow)
-            {
-                return;
-            }
-
-            foreach (var bookingTicket in booking.BookingTickets)
-            {
-                var ticketType = await _ticketTypeRepository.GetByIdAsync(
-                    bookingTicket.TicketTypeId);
-
-                if (ticketType != null)
-                {
-                    ticketType.QuantityAvailable += bookingTicket.Quantity;
-                }
-            }
-
-            booking.Status = BookingStatus.Expired;
-
-            await _bookingRepository.UpdateAsync(booking);
-        }
-
-        public async Task<bool> UpdateTicketQuantityAsync(Guid bookingId, Guid bookingTicketId, int newQuantity)
+        public async Task UpdateTicketQuantityAsync(Guid bookingId, Guid bookingTicketId, int newQuantity)
         {
             var booking = await _bookingRepository.GetByIdAsync(bookingId);
             if (booking == null)
             {
-                return false;
+                throw new NotFoundException($"Booking with ID {bookingId} was not found.");
             }
 
             var ticket = booking.BookingTickets.FirstOrDefault(bt => bt.BookingTicketId == bookingTicketId);
             if (ticket == null)
             {
-                return false;
+                throw new NotFoundException($"Ticket with ID {bookingTicketId} was not found in booking {bookingId}.");
+            }
+
+            if (newQuantity <= 0)
+            {
+                throw new ValidationException("Ticket quantity must be greater than 0.");
             }
 
             ticket.Quantity = newQuantity;
@@ -544,26 +533,25 @@ namespace iEvent.Application.Services
             booking.AdminFee = Math.Round(booking.TotalPrice * 0.02m, 2);
 
             await _bookingRepository.UpdateAsync(booking);
-            return true;
         }
 
-        public async Task<bool> AddTicketToBookingAsync(Guid bookingId, BookingTicketAddDto dto)
+        public async Task AddTicketToBookingAsync(Guid bookingId, BookingTicketAddDto dto)
         {
             var booking = await _bookingRepository.GetByIdAsync(bookingId);
             if (booking == null)
             {
-                throw new KeyNotFoundException($"Booking with id {bookingId} not found.");
+                throw new NotFoundException($"Booking with ID {bookingId} was not found.");
             }
 
             var ticketType = await _ticketTypeRepository.GetByIdAsync(dto.TicketTypeId);
             if (ticketType == null)
             {
-                throw new KeyNotFoundException($"Ticket type with ID {dto.TicketTypeId} doesn't exist.");
+                throw new NotFoundException($"Ticket type with ID {dto.TicketTypeId} was not found.");
             }
 
             if (dto.Quantity > ticketType.QuantityAvailable)
             {
-                throw new ArgumentException($"Insufficient stock for the ticket '{ticketType.Name}'. Available: {ticketType.QuantityAvailable}, Requested: {dto.Quantity}");
+                throw new ValidationException($"Insufficient stock for the ticket '{ticketType.Name}'. Available: {ticketType.QuantityAvailable}, Requested: {dto.Quantity}");
             }
 
             ticketType.QuantityAvailable -= dto.Quantity;
@@ -592,27 +580,29 @@ namespace iEvent.Application.Services
             booking.AdminFee = Math.Round(booking.TotalPrice * 0.02m, 2);
 
             await _bookingRepository.UpdateAsync(booking);
-            return true;
         }
 
-        public async Task<BookingCollectAtVenueRespDto?> CollectAtVenueAsync(Guid id, BookingCollectAtVenueDto dto, string identityUserId)
+        public async Task<BookingCollectAtVenueRespDto> CollectAtVenueAsync(Guid id, BookingCollectAtVenueDto dto, string identityUserId)
         {
             var booking = await _bookingRepository.GetByIdAsync(id);
-            if (booking == null) return null;
+            if (booking == null)
+            {
+                throw new NotFoundException($"Booking with ID {id} was not found.");
+            }
 
             if (booking.Status == BookingStatus.Cancelled || booking.Status == BookingStatus.Expired)
-                throw new InvalidOperationException($"Cannot collect money for a booking with status {booking.Status}.");
+                throw new ValidationException($"Cannot collect money for a booking with status {booking.Status}.");
 
             if (booking.Status == BookingStatus.Paid)
-                throw new InvalidOperationException("This booking is already paid.");
+                throw new ValidationException("This booking is already paid.");
 
             var expectedTotal = booking.TotalPrice + booking.AdminFee;
             if (dto.Amount < expectedTotal)
-                throw new ArgumentException($"The collected amount ({dto.Amount}) is less than the required total ({expectedTotal}).");
+                throw new ValidationException($"The collected amount ({dto.Amount}) is less than the required total ({expectedTotal}).");
 
             var admin = await _adminUserRepository.GetByIdentityUserIdAsync(identityUserId);
             if (admin == null)
-                throw new KeyNotFoundException($"No Admin profile found associated with IdentityUserId: {identityUserId}.");
+                throw new NotFoundException($"No Admin profile found associated with IdentityUserId: {identityUserId}.");
 
             booking.Status = BookingStatus.Paid;
             booking.PaidAt = dto.CollectedAt;
@@ -642,73 +632,32 @@ namespace iEvent.Application.Services
             };
         }
 
-        public async Task<BookingQrCodeRespDto?> GetQrCodeAsync(Guid id)
+        public async Task<BookingQrCodeRespDto> GetQrCodeAsync(Guid id)
         {
             var booking = await _bookingRepository.GetByIdAsync(id);
-            if (booking == null) return null;
-
-            using (var qrGenerator = new QRCodeGenerator())
-            using (var qrCodeData = qrGenerator.CreateQrCode(booking.BookingCode, QRCodeGenerator.ECCLevel.Q))
-            using (var qrCode = new PngByteQRCode(qrCodeData))
+            if (booking == null)
             {
-                byte[] qrCodeAsPngByteArr = qrCode.GetGraphic(20);
-
-                string base64String = Convert.ToBase64String(qrCodeAsPngByteArr);
-
-                return new BookingQrCodeRespDto
-                {
-                    BookingCode = booking.BookingCode,
-                    QrCodeBase64 = $"data:image/png;base64,{base64String}"
-                };
+                throw new NotFoundException($"Booking with ID {id} was not found.");
             }
+
+            var qrCodeBase64 = await _bookingArtifactService.GenerateQrCodeBase64Async(booking.BookingCode);
+
+            return new BookingQrCodeRespDto
+            {
+                BookingCode = booking.BookingCode,
+                QrCodeBase64 = qrCodeBase64
+            };
         }
 
-        public async Task<byte[]?> GenerateTicketPdfAsync(Guid id)
+        public async Task<byte[]> GenerateTicketPdfAsync(Guid id)
         {
             var booking = await _bookingRepository.GetByIdAsync(id); 
-            if (booking == null) return null;
-
-            byte[] qrCodeBytes;
-            using (var qrGenerator = new QRCodeGenerator())
-            using (var qrCodeData = qrGenerator.CreateQrCode(booking.BookingCode, QRCodeGenerator.ECCLevel.Q))
-            using (var qrCode = new PngByteQRCode(qrCodeData))
+            if (booking == null)
             {
-                qrCodeBytes = qrCode.GetGraphic(10);
+                throw new NotFoundException($"Booking with ID {id} was not found.");
             }
 
-            QuestPDF.Settings.License = LicenseType.Community;
-
-            var document = Document.Create(container =>
-            {
-                container.Page(page =>
-                {
-                    page.Size(PageSizes.A6); 
-                    page.Margin(2, Unit.Centimetre);
-                    page.PageColor(Colors.White);
-
-                    page.Header().Text($"Ticket: {booking.BookingCode}")
-                        .SemiBold().FontSize(16).FontColor(Colors.Blue.Medium);
-
-                    page.Content().PaddingVertical(1, Unit.Centimetre).Column(column =>
-                    {
-                        column.Spacing(10);
-
-                        column.Item().Text($"Booking Date: {booking.BookingDate:dd.MM.yyyy HH:mm}");
-                        column.Item().Text($"Total payed: {booking.TotalPrice} Lei").Bold();
-
-                        column.Item().AlignCenter().Width(100).Image(qrCodeBytes);
-                    });
-
-                    page.Footer().AlignCenter().Text(x =>
-                    {
-                        x.CurrentPageNumber();
-                        x.Span(" / ");
-                        x.TotalPages();
-                    });
-                });
-            });
-
-            return document.GeneratePdf();
+            return await _bookingArtifactService.GenerateTicketPdfAsync(booking);
         }
     }
 }

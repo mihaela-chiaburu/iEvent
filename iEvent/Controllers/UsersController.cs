@@ -1,5 +1,6 @@
-﻿using iEvent.Application.DTOs;
-using iEvent.Application.DTOs.Admin;
+﻿using iEvent.Application.DTOs.Admin;
+using iEvent.Application.DTOs.Common;
+using iEvent.Application.DTOs.User;
 using iEvent.Application.Interfaces.Services;
 using iEvent.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
@@ -20,25 +21,16 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PagedResult<UserRespDto>>> GetAll( [FromQuery] string? search,
-        [FromQuery] string? filterByRole,
-        [FromQuery] string? filterByStatus,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 10)
+    public async Task<ActionResult<PagedResultDto<UserRespDto>>> GetAll([FromQuery] UserFilterDto filter)
     {
-        var result = await _userService.GetPaginatedUsersAsync(search, filterByRole, filterByStatus, page, pageSize);
+        var result = await _userService.GetPaginatedUsersAsync(filter);
         return Ok(result);
     }
 
     [HttpPost("create-manager")]
     public async Task<IActionResult> CreateManager([FromBody] AdminUserCreateDto request)
     {
-        var result = await _userService.CreateManagerAsync(request);
-
-        if (!result.Succeeded)
-        {
-            return BadRequest(new { errors = result.Errors });
-        }
+        await _userService.CreateManagerAsync(request);
 
         return StatusCode(201, new { message = "Manager created successfully." });
     }
@@ -46,16 +38,7 @@ public class UsersController : ControllerBase
     [HttpPut("{id}/role")]
     public async Task<IActionResult> UpdateRole(string id, [FromBody] UpdateUserRoleRequest request)
     {
-        var result = await _userService.UpdateUserRoleAsync(id, request.Role);
-
-        if (!result.Succeeded)
-        {
-            if (result.Errors != null && result.Errors.Contains("User not found."))
-            {
-                return NotFound();
-            }
-            return BadRequest(new { errors = result.Errors });
-        }
+        await _userService.UpdateUserRoleAsync(id, request.Role);
 
         return Ok(new { message = "User role updated successfully." });
     }
@@ -63,15 +46,7 @@ public class UsersController : ControllerBase
     [HttpPatch("{id}/lock")]
     public async Task<IActionResult> LockUser(string id)
     {
-        var result = await _userService.LockUserAsync(id);
-        if (!result.Succeeded)
-        {
-            if (result.Errors != null && result.Errors.Contains("User not found."))
-            {
-                return NotFound(new { message = "User not found." });
-            }
-            return BadRequest(new { errors = result.Errors });
-        }
+        await _userService.LockUserAsync(id);
 
         return Ok(new { message = "User has been locked successfully." });
     }
@@ -79,15 +54,7 @@ public class UsersController : ControllerBase
     [HttpPatch("{id}/unlock")]
     public async Task<IActionResult> UnlockUser(string id)
     {
-        var result = await _userService.UnlockUserAsync(id);
-        if (!result.Succeeded)
-        {
-            if (result.Errors != null && result.Errors.Contains("User not found."))
-            {
-                return NotFound(new { message = "User not found." });
-            }
-            return BadRequest(new { errors = result.Errors });
-        }
+        await _userService.UnlockUserAsync(id);
 
         return Ok(new { message = "User has been unlocked successfully." });
     }

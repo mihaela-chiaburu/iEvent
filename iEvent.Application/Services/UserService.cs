@@ -1,13 +1,10 @@
-﻿using iEvent.Application.DTOs;
-using iEvent.Application.DTOs.Admin;
+﻿using iEvent.Application.DTOs.Admin;
+using iEvent.Application.DTOs.Common;
+using iEvent.Application.DTOs.User;
+using iEvent.Application.Exceptions;
 using iEvent.Application.Interfaces.Repositories;
 using iEvent.Application.Interfaces.Services;
 using iEvent.Domain.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace iEvent.Application.Services
 {
@@ -24,8 +21,10 @@ namespace iEvent.Application.Services
             _userProfileService = userProfileService;
         }
 
-        public async Task<PagedResult<UserRespDto>> GetPaginatedUsersAsync(string? search, string? filterByRole, string? filterByStatus, int page, int pageSize)
+        public async Task<PagedResultDto<UserRespDto>> GetPaginatedUsersAsync(UserFilterDto filter)
         {
+            var filterByStatus = filter.FilterByStatus;
+
             bool? isActive = null;
             if (!string.IsNullOrWhiteSpace(filterByStatus))
             {
@@ -35,36 +34,36 @@ namespace iEvent.Application.Services
 
             var filterDto = new UserFilterDto
             {
-                Search = search,
-                Role = filterByRole,
+                Search = filter.Search,
+                Role = filter.Role,
                 IsActive = isActive,
-                Page = page < 1 ? 1 : page,
-                PageSize = pageSize < 1 ? 10 : pageSize
+                Page = filter.Page < 1 ? 1 : filter.Page,
+                PageSize = filter.PageSize < 1 ? 10 : filter.PageSize
             };
 
             return await _userRepository.GetUsersAsync(filterDto);
         }
 
-        public async Task<IdentityResultDto> CreateManagerAsync(AdminUserCreateDto request)
+        public async Task CreateManagerAsync(AdminUserCreateDto request)
         {
             var validManagerRoles = new HashSet<string>
-    {
-        RoleNames.EventManager,
-        RoleNames.BookingManager,
-        RoleNames.SuperAdmin
-    };
+            {
+                RoleNames.EventManager,
+                RoleNames.BookingManager,
+                RoleNames.SuperAdmin
+            };
 
             var roleString = request.Role.ToString();
 
             if (!validManagerRoles.Contains(roleString))
             {
-                return new IdentityResultDto(false, new[] { "Invalid manager role." });
+                throw new ValidationException("Invalid manager role.");
             }
 
             var exists = await _userRepository.ExistsByEmailAsync(request.Email);
             if (exists)
             {
-                return new IdentityResultDto(false, new[] { "User already exists." });
+                throw new ConflictException("User already exists.");
             }
 
             var result = await _userRepository.CreateUserWithRoleAsync(request.Email, request.Password,
@@ -73,7 +72,7 @@ namespace iEvent.Application.Services
 
             if (!result.Succeeded)
             {
-                return result;
+                throw new ValidationException("Manager creation failed.", result.Errors ?? Array.Empty<string>());
             }
 
             await _userProfileService.CreateAdminProfileAsync(
@@ -83,10 +82,9 @@ namespace iEvent.Application.Services
                 request.PhoneNumber
             );
 
-            return new IdentityResultDto(true);
         }
 
-        public async Task<IdentityResultDto> UpdateUserRoleAsync(string userId, string newRole)
+        public async Task UpdateUserRoleAsync(string userId, string newRole)
         {
             var validRoles = new HashSet<string>
             {
@@ -98,19 +96,19 @@ namespace iEvent.Application.Services
 
             if (!validRoles.Contains(newRole))
             {
-                return new IdentityResultDto(false, new[] { "Invalid role." });
+                throw new ValidationException("Invalid role.");
             }
 
             var userInfo = await _userRepository.GetUserBasicInfoAsync(userId);
             if (userInfo == null)
             {
-                return new IdentityResultDto(false, new[] { "User not found." });
+                throw new NotFoundException("User not found.");
             }
 
             var result = await _userRepository.UpdateUserRoleAsync(userId, newRole);
             if (!result.Succeeded)
             {
-                return result;
+                throw new ValidationException("Role update failed.", result.Errors ?? Array.Empty<string>());
             }
 
             await _userProfileService.SyncProfileAfterRoleChangeAsync(
@@ -121,18 +119,35 @@ namespace iEvent.Application.Services
                 newRole
             );
 
-            return new IdentityResultDto(true);
         }
 
-        public async Task<IdentityResultDto> LockUserAsync(string userId)
+        public async Task LockUserAsync(string userId)
         {
             var lockoutEnd = DateTimeOffset.UtcNow.AddYears(100);
-            return await _userRepository.LockUserAsync(userId, lockoutEnd);
+            var result = await _userRepository.LockUserAsync(userId, lockoutEnd);
+            if (!result.Succeeded)
+            {
+                if (result.Errors?.Contains("User not found.") == true)
+                {
+                    throw new NotFoundException("User not found.");
+                }
+
+                throw new ValidationException("User lock failed.", result.Errors ?? Array.Empty<string>());
+            }
         }
 
-        public async Task<IdentityResultDto> UnlockUserAsync(string userId)
+        public async Task UnlockUserAsync(string userId)
         {
-            return await _userRepository.UnlockUserAsync(userId);
+            var result = await _userRepository.UnlockUserAsync(userId);
+            if (!result.Succeeded)
+            {
+                if (result.Errors?.Contains("User not found.") == true)
+                {
+                    throw new NotFoundException("User not found.");
+                }
+
+                throw new ValidationException("User unlock failed.", result.Errors ?? Array.Empty<string>());
+            }
         }
     }
 }
