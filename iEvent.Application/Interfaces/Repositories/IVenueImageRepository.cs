@@ -8,5 +8,6 @@ namespace iEvent.Application.Interfaces.Repositories
         Task<List<VenueImage>> GetByVenueIdAsync(Guid venueId);
         Task AddRangeAsync(List<VenueImage> images);
         Task DeleteAsync(VenueImage image);
+        Task DeleteRangeAsync(List<VenueImage> images);
     }
 }

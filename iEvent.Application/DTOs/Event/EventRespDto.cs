@@ -10,6 +10,7 @@ namespace iEvent.Application.DTOs.Event
         public List<EventDateRespDto> EventDates { get; set; } = new();
         public Guid? VenueId { get; set; }
         public string? ImageUrl { get; set; }
+        public string? ImagePublicId { get; set; }
         public EventCategory Category { get; set; }
         public List<EventImageRespDto> Images { get; set; } = new();
         public decimal MinTicketPrice { get; set; }

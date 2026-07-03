@@ -16,6 +16,10 @@ namespace iEvent.Domain.Entities
         public string Url { get; set; } = string.Empty;
 
         [Required]
+        [StringLength(500)]
+        public string CloudinaryPublicId { get; set; } = string.Empty;
+
+        [Required]
         public int SortOrder { get; set; }
 
         [ForeignKey(nameof(VenueId))]

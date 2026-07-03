@@ -39,5 +39,11 @@ namespace iEvent.Infrastructure.Repositories
             _dbContext.VenueImages.Remove(image);
             await _dbContext.SaveChangesAsync();
         }
+
+        public async Task DeleteRangeAsync(List<VenueImage> images)
+        {
+            _dbContext.VenueImages.RemoveRange(images);
+            await _dbContext.SaveChangesAsync();
+        }
     }
 }

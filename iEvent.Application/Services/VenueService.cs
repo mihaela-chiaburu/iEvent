@@ -10,10 +10,12 @@ namespace iEvent.Application.Services
     public class VenueService : IVenueService
     {
         private readonly IVenueRepository _venueRepository;
+        private readonly IVenueImageService _venueImageService;
 
-        public VenueService(IVenueRepository venueRepository)
+        public VenueService(IVenueRepository venueRepository, IVenueImageService venueImageService)
         {
             _venueRepository = venueRepository;
+            _venueImageService = venueImageService;
         }
 
         public async Task<List<VenueRespDto>> GetAllAsync()
@@ -68,6 +70,7 @@ namespace iEvent.Application.Services
                     ImageId = Guid.NewGuid(),
                     VenueId = venueId,
                     Url = i.Url,
+                    CloudinaryPublicId = i.PublicId,
                     SortOrder = i.SortOrder
                 })
                 .ToList() ?? new List<VenueImage>();
@@ -106,6 +109,7 @@ namespace iEvent.Application.Services
                 ImageId = Guid.NewGuid(),
                 VenueId = venue.VenueId,
                 Url = i.Url,
+                CloudinaryPublicId = i.PublicId,
                 SortOrder = i.SortOrder
             }).ToList();
 
@@ -120,6 +124,7 @@ namespace iEvent.Application.Services
                 throw new NotFoundException($"Venue with ID {id} was not found.");
             }
 
+            await _venueImageService.DeleteByVenueIdAsync(id);
             await _venueRepository.DeleteAsync(venue);
         }
 
@@ -156,6 +161,7 @@ namespace iEvent.Application.Services
                     {
                         ImageId = i.ImageId,
                         Url = i.Url,
+                        PublicId = i.CloudinaryPublicId,
                         SortOrder = i.SortOrder
                     }).ToList()
             };

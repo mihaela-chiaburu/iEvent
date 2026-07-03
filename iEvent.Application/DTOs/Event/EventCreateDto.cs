@@ -10,6 +10,7 @@ namespace iEvent.Application.DTOs.Event
         public List<EventDateCreateDto> EventDates { get; set; } = new();
         public Guid VenueId { get; set; }
         public string? ImageUrl { get; set; }
+        public string? ImagePublicId { get; set; }
         public EventCategory Category { get; set; }
         public List<EventImageCreateDto> Images { get; set; } = new();
     }

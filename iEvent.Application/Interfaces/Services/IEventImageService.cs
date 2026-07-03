@@ -5,8 +5,9 @@ namespace iEvent.Application.Interfaces.Services
 {
     public interface IEventImageService
     {
-        Task<List<string>> UploadAsync(Guid eventId, List<FileUploadDto> files);
+        Task<List<EventImageRespDto>> UploadAsync(Guid eventId, List<FileUploadDto> files);
         Task<List<EventImageRespDto>> GetByEventIdAsync(Guid eventId);
         Task<bool> DeleteAsync(Guid imageId);
+        Task DeleteByEventIdAsync(Guid eventId);
     }
 }

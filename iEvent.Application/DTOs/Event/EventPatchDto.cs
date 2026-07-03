@@ -6,6 +6,7 @@
         public string? Description { get; set; }
         public Guid? VenueId { get; set; }
         public string? ImageUrl { get; set; }
+        public string? ImagePublicId { get; set; }
         public List<EventDateCreateDto>? EventDates { get; set; }
     }
 }

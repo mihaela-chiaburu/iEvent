@@ -1,4 +1,5 @@
 ﻿using iEvent.Application.DTOs.Common;
+using iEvent.Application.DTOs.Venue;
 using iEvent.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,7 +27,7 @@ namespace iEvent.WebApi.Controllers
 
         [Authorize(Roles = "EventManager,SuperAdmin")]
         [HttpPost]
-        public async Task<IActionResult> Upload(Guid venueId, [FromForm] List<IFormFile> files)
+        public async Task<ActionResult<List<VenueImageRespDto>>> Upload(Guid venueId, [FromForm] List<IFormFile> files)
         {
             var uploads = new List<FileUploadDto>();
 
@@ -42,8 +43,8 @@ namespace iEvent.WebApi.Controllers
                 });
             }
 
-            var urls = await _venueImageService.UploadAsync(venueId, uploads);
-            return Ok(new { urls });
+            var images = await _venueImageService.UploadAsync(venueId, uploads);
+            return Ok(images);
         }
 
         [Authorize(Roles = "EventManager,SuperAdmin")]

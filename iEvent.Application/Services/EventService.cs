@@ -11,9 +11,17 @@ namespace iEvent.Application.Services
     public class EventService : IEventService
     {
         private readonly IEventRepository _eventRepository;
-        public EventService(IEventRepository eventRepository)
+        private readonly IEventImageService _eventImageService;
+        private readonly ICloudinaryService _cloudinary;
+
+        public EventService(
+            IEventRepository eventRepository,
+            IEventImageService eventImageService,
+            ICloudinaryService cloudinary)
         {
             _eventRepository = eventRepository;
+            _eventImageService = eventImageService;
+            _cloudinary = cloudinary;
         }
 
         public async Task<EventRespDto> CreateAsync(EventCreateDto dto)
@@ -38,12 +46,14 @@ namespace iEvent.Application.Services
                     }).ToList(),
                 VenueId = dto.VenueId,
                 ImageUrl = dto.ImageUrl,
+                ImagePublicId = dto.ImagePublicId,
                 Category = dto.Category,
                 Images = dto.Images.Select(i => new EventImage
                 {
                     ImageId = Guid.NewGuid(),
                     EventId = eventId,
                     Url = i.Url,
+                    CloudinaryPublicId = i.PublicId,
                     SortOrder = i.SortOrder
                 }).ToList()
             };
@@ -59,6 +69,13 @@ namespace iEvent.Application.Services
             if (ievent == null)
             {
                 throw new NotFoundException($"Event with ID {id} was not found.");
+            }
+
+            await _eventImageService.DeleteByEventIdAsync(id);
+
+            if (!string.IsNullOrWhiteSpace(ievent.ImagePublicId))
+            {
+                await _cloudinary.DeleteImageAsync(ievent.ImagePublicId);
             }
 
             await _eventRepository.DeleteAsync(ievent);
@@ -100,6 +117,7 @@ namespace iEvent.Application.Services
             ievent.Description = dto.Description;
             ievent.VenueId = dto.VenueId;
             ievent.ImageUrl = dto.ImageUrl;
+            ievent.ImagePublicId = dto.ImagePublicId;
             ievent.Category = dto.Category;
 
             ievent.EventDates.Clear();
@@ -124,6 +142,7 @@ namespace iEvent.Application.Services
                 ImageId = Guid.NewGuid(),
                 EventId = ievent.EventId,
                 Url = i.Url,
+                CloudinaryPublicId = i.PublicId,
                 SortOrder = i.SortOrder
             }).ToList();
 
@@ -263,6 +282,7 @@ namespace iEvent.Application.Services
                 Description = ievent.Description,
                 VenueId = ievent.VenueId,
                 ImageUrl = ievent.ImageUrl,
+                ImagePublicId = ievent.ImagePublicId,
                 Category = ievent.Category,
                 EventDates = sortedDates.Select(ed => new EventDateRespDto
                 {
@@ -281,6 +301,7 @@ namespace iEvent.Application.Services
                     {
                         ImageId = i.ImageId,
                         Url = i.Url,
+                        PublicId = i.CloudinaryPublicId,
                         SortOrder = i.SortOrder
                     }).ToList(),
                 MinTicketPrice = ievent.Tickets != null && ievent.Tickets.Any() ? ievent.Tickets.Min(t => t.Price) : 0,
@@ -319,6 +340,7 @@ namespace iEvent.Application.Services
             if (dto.Description != null) ev.Description = dto.Description;
             if (dto.VenueId.HasValue) ev.VenueId = dto.VenueId.Value;
             if (dto.ImageUrl != null) ev.ImageUrl = dto.ImageUrl;
+            if (dto.ImagePublicId != null) ev.ImagePublicId = dto.ImagePublicId;
 
             await _eventRepository.UpdateAsync(ev);
 
