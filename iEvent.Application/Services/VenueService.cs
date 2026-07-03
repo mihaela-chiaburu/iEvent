@@ -11,11 +11,16 @@ namespace iEvent.Application.Services
     {
         private readonly IVenueRepository _venueRepository;
         private readonly IVenueImageService _venueImageService;
+        private readonly ICloudinaryService _cloudinary;
 
-        public VenueService(IVenueRepository venueRepository, IVenueImageService venueImageService)
+        public VenueService(
+            IVenueRepository venueRepository,
+            IVenueImageService venueImageService,
+            ICloudinaryService cloudinary)
         {
             _venueRepository = venueRepository;
             _venueImageService = venueImageService;
+            _cloudinary = cloudinary;
         }
 
         public async Task<List<VenueRespDto>> GetAllAsync()
@@ -124,7 +129,14 @@ namespace iEvent.Application.Services
                 throw new NotFoundException($"Venue with ID {id} was not found.");
             }
 
-            await _venueImageService.DeleteByVenueIdAsync(id);
+            foreach (var image in venue.Images)
+            {
+                if (!string.IsNullOrWhiteSpace(image.CloudinaryPublicId))
+                {
+                    await _cloudinary.DeleteImageAsync(image.CloudinaryPublicId);
+                }
+            }
+
             await _venueRepository.DeleteAsync(venue);
         }
 

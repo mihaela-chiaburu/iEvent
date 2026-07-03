@@ -8,7 +8,6 @@ namespace iEvent.Application.Interfaces.Services
         Task<PagedResultDto<EventRespDto>> GetAllAsync(EventQueryDto query);
         Task<EventRespDto> GetByIdAsync(Guid id);
         Task<EventRespDto> CreateAsync(EventCreateDto dto);
-        Task UpdateAsync(Guid id, EventUpdateDto dto);
         Task DeleteAsync(Guid id);
         Task<List<EventRespDto>> GetEventsByVenueIdAsync(Guid venueId);
         Task<List<EventRespDto>> GetPopularEventsAsync(int count);

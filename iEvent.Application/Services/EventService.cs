@@ -71,11 +71,17 @@ namespace iEvent.Application.Services
                 throw new NotFoundException($"Event with ID {id} was not found.");
             }
 
-            await _eventImageService.DeleteByEventIdAsync(id);
-
             if (!string.IsNullOrWhiteSpace(ievent.ImagePublicId))
             {
                 await _cloudinary.DeleteImageAsync(ievent.ImagePublicId);
+            }
+
+            foreach (var image in ievent.Images)
+            {
+                if (!string.IsNullOrWhiteSpace(image.CloudinaryPublicId))
+                {
+                    await _cloudinary.DeleteImageAsync(image.CloudinaryPublicId);
+                }
             }
 
             await _eventRepository.DeleteAsync(ievent);
@@ -103,50 +109,6 @@ namespace iEvent.Application.Services
             }
 
             return MapToRespDto(ievent);
-        }
-
-        public async Task UpdateAsync(Guid id, EventUpdateDto dto)
-        {
-            var ievent = await _eventRepository.GetByIdAsync(id);
-            if (ievent == null)
-            {
-                throw new NotFoundException($"Event with ID {id} was not found.");
-            }
-
-            ievent.Name = dto.Name;
-            ievent.Description = dto.Description;
-            ievent.VenueId = dto.VenueId;
-            ievent.ImageUrl = dto.ImageUrl;
-            ievent.ImagePublicId = dto.ImagePublicId;
-            ievent.Category = dto.Category;
-
-            ievent.EventDates.Clear();
-            foreach (var d in dto.EventDates)
-            {
-                ievent.EventDates.Add(new EventDate
-                {
-                    EventDateId = Guid.NewGuid(),
-                    EventId = ievent.EventId,
-                    Date = d.Date,
-                    TimeSlots = d.TimeSlots.Select(t => new EventTimeSlot
-                    {
-                        TimeSlotId = Guid.NewGuid(),
-                        StartTime = t.StartTime,
-                        EndTime = t.EndTime
-                    }).ToList()
-                });
-            }
-
-            ievent.Images = dto.Images.Select(i => new EventImage
-            {
-                ImageId = Guid.NewGuid(),
-                EventId = ievent.EventId,
-                Url = i.Url,
-                CloudinaryPublicId = i.PublicId,
-                SortOrder = i.SortOrder
-            }).ToList();
-
-            await _eventRepository.UpdateAsync(ievent);
         }
 
         public async Task<List<EventRespDto>> GetEventsByVenueIdAsync(Guid venueId)
@@ -332,44 +294,61 @@ namespace iEvent.Application.Services
         {
             var ev = await _eventRepository.GetByIdAsync(id);
             if (ev == null)
-            {
-                throw new NotFoundException($"Event with ID {id} was not found.");
-            }
+                throw new NotFoundException($"Event with ID {id} not found.");
 
-            if (dto.Name != null) ev.Name = dto.Name;
-            if (dto.Description != null) ev.Description = dto.Description;
-            if (dto.VenueId.HasValue) ev.VenueId = dto.VenueId.Value;
-            if (dto.ImageUrl != null) ev.ImageUrl = dto.ImageUrl;
-            if (dto.ImagePublicId != null) ev.ImagePublicId = dto.ImagePublicId;
+            ev.Name = dto.Name;
+            ev.Description = dto.Description;
+            ev.VenueId = dto.VenueId;
+            ev.ImageUrl = dto.ImageUrl;
+            ev.ImagePublicId = dto.ImagePublicId;
+            ev.Category = dto.Category;
 
-            await _eventRepository.UpdateAsync(ev);
+            var newDates = new List<EventDate>();
+            var newImages = new List<EventImage>();
 
             if (dto.EventDates != null)
             {
-                var mappedNewDates = dto.EventDates.Select(d => new EventDate
+                foreach (var d in dto.EventDates)
                 {
-                    EventDateId = Guid.NewGuid(),
-                    EventId = ev.EventId,
-                    Date = d.Date,
-                    TimeSlots = d.TimeSlots.Select(ts => new EventTimeSlot
+                    var dateId = Guid.NewGuid();
+
+                    newDates.Add(new EventDate
                     {
-                        TimeSlotId = Guid.NewGuid(),
-                        StartTime = ts.StartTime,
-                        EndTime = ts.EndTime
-                    }).ToList()
-                }).ToList();
-
-                await _eventRepository.UpdateEventDatesAsync(ev.EventId, mappedNewDates);
-
-                ev.EventDates = mappedNewDates;
+                        EventDateId = dateId,
+                        EventId = ev.EventId,
+                        Date = d.Date,
+                        TimeSlots = d.TimeSlots?.Select(ts => new EventTimeSlot
+                        {
+                            TimeSlotId = Guid.NewGuid(),
+                            EventDateId = dateId,
+                            StartTime = ts.StartTime,
+                            EndTime = ts.EndTime
+                        }).ToList() ?? new List<EventTimeSlot>()
+                    });
+                }
             }
 
-            if (!string.IsNullOrEmpty(ev.Name) && ev.VenueId.HasValue && ev.EventDates.Any())
+            if (dto.Images != null)
+            {
+                newImages = dto.Images.Select(i => new EventImage
+                {
+                    ImageId = Guid.NewGuid(),
+                    EventId = ev.EventId,
+                    Url = i.Url,
+                    CloudinaryPublicId = i.PublicId,
+                    SortOrder = i.SortOrder
+                }).ToList();
+            }
+
+            await _eventRepository.ReplaceEventChildrenAsync(ev.EventId, newDates, newImages);
+
+            if (!string.IsNullOrEmpty(ev.Name) &&
+                ev.VenueId.HasValue &&
+                ev.EventDates.Any())
             {
                 ev.IsDraft = false;
                 await _eventRepository.UpdateAsync(ev);
             }
-
         }
 
         public async Task PublishAsync(Guid id)

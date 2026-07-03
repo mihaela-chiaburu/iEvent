@@ -44,14 +44,6 @@ namespace iEvent.WebApi.Controllers
         }
 
         [Authorize(Roles = "EventManager,SuperAdmin")]
-        [HttpPut("{id:guid}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] EventUpdateDto dto)
-        {
-            await _eventService.UpdateAsync(id, dto);
-            return NoContent();
-        }
-
-        [Authorize(Roles = "EventManager,SuperAdmin")]
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {

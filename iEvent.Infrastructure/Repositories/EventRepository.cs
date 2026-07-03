@@ -104,7 +104,30 @@ namespace iEvent.Infrastructure.Repositories
 
         public async Task UpdateAsync(Event ievent)
         {
-            //_dbContext.Events.Update(ievent);
+            if (_dbContext.Entry(ievent).State == EntityState.Detached)
+            {
+                _dbContext.Events.Update(ievent);
+            }
+
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task ReplaceEventChildrenAsync(Guid eventId, List<EventDate> dates, List<EventImage> images)
+        {
+            var existingDates = await _dbContext.EventDates
+                .Where(x => x.EventId == eventId)
+                .ToListAsync();
+
+            var existingImages = await _dbContext.EventImages
+                .Where(x => x.EventId == eventId)
+                .ToListAsync();
+
+            _dbContext.EventDates.RemoveRange(existingDates);
+            _dbContext.EventImages.RemoveRange(existingImages);
+
+            await _dbContext.EventDates.AddRangeAsync(dates);
+            await _dbContext.EventImages.AddRangeAsync(images);
+
             await _dbContext.SaveChangesAsync();
         }
 
