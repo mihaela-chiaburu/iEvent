@@ -7,7 +7,6 @@ namespace iEvent.Application.Interfaces.Services
         Task<List<VenueRespDto>> GetAllAsync();
         Task<VenueRespDto> GetByIdAsync(Guid id);
         Task<VenueRespDto> CreateAsync(VenueCreateDto dto);
-        Task UpdateAsync(Guid id, VenueUpdateDto dto);
         Task DeleteAsync(Guid id);
         Task<List<VenueRespDto>> GetPopularAsync(int take);
         Task<VenueRespDto> CreateDraftAsync();

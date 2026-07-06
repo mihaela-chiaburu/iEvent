@@ -85,42 +85,6 @@ namespace iEvent.Application.Services
             return MapToRespDto(venue);
         }
 
-        public async Task UpdateAsync(Guid id, VenueUpdateDto dto)
-        {
-            var venue = await _venueRepository.GetByIdAsync(id);
-            if (venue == null)
-            {
-                throw new NotFoundException($"Venue with ID {id} was not found.");
-            }
-
-            venue.Name = dto.Name;
-            venue.Address = dto.Address;
-            venue.City = dto.City;
-            venue.Capacity = dto.Capacity;
-            venue.Description = dto.Description;
-            venue.Phone = dto.Phone;
-            venue.Email = dto.Email;
-            venue.MapLocation = new MapLocation(dto.Latitude, dto.Longitude);
-
-            venue.Facilities = dto.Facilities.Select(f => new VenueFacility
-            {
-                FacilityId = Guid.NewGuid(),
-                VenueId = venue.VenueId,
-                Name = f.Name
-            }).ToList();
-
-            venue.Images = dto.Images.Select(i => new VenueImage
-            {
-                ImageId = Guid.NewGuid(),
-                VenueId = venue.VenueId,
-                Url = i.Url,
-                CloudinaryPublicId = i.PublicId,
-                SortOrder = i.SortOrder
-            }).ToList();
-
-            await _venueRepository.UpdateAsync(venue);
-        }
-
         public async Task DeleteAsync(Guid id)
         {
             var venue = await _venueRepository.GetByIdAsync(id);
