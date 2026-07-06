@@ -11,5 +11,6 @@ namespace iEvent.Application.Interfaces.Repositories
         Task UpdateAsync(TicketType ticketType);
         Task DeleteAsync(TicketType ticketType);
         Task<List<string>> GetUniqueNamesAsync();
+        Task<bool> HasBookingsAsync(Guid ticketTypeId);
     }
 }

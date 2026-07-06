@@ -539,20 +539,14 @@ namespace iEvent.Application.Services
         {
             var booking = await _bookingRepository.GetByIdAsync(bookingId);
             if (booking == null)
-            {
                 throw new NotFoundException($"Booking with ID {bookingId} was not found.");
-            }
 
             var ticketType = await _ticketTypeRepository.GetByIdAsync(dto.TicketTypeId);
             if (ticketType == null)
-            {
                 throw new NotFoundException($"Ticket type with ID {dto.TicketTypeId} was not found.");
-            }
 
             if (dto.Quantity > ticketType.QuantityAvailable)
-            {
                 throw new ValidationException($"Insufficient stock for the ticket '{ticketType.Name}'. Available: {ticketType.QuantityAvailable}, Requested: {dto.Quantity}");
-            }
 
             ticketType.QuantityAvailable -= dto.Quantity;
 
@@ -561,6 +555,9 @@ namespace iEvent.Application.Services
             if (existingTicket != null)
             {
                 existingTicket.Quantity += dto.Quantity;
+                booking.TotalPrice = booking.BookingTickets.Sum(bt => bt.UnitPrice * bt.Quantity);
+                booking.AdminFee = Math.Round(booking.TotalPrice * 0.02m, 2);
+                await _bookingRepository.UpdateAsync(booking);
             }
             else
             {
@@ -573,13 +570,12 @@ namespace iEvent.Application.Services
                     UnitPrice = ticketType.Price
                 };
 
-                booking.BookingTickets.Add(newBookingTicket);
+                await _bookingRepository.AddBookingTicketAsync(newBookingTicket);
+
+                booking.TotalPrice = booking.BookingTickets.Sum(bt => bt.UnitPrice * bt.Quantity) + (newBookingTicket.UnitPrice * newBookingTicket.Quantity);
+                booking.AdminFee = Math.Round(booking.TotalPrice * 0.02m, 2);
+                await _bookingRepository.UpdateAsync(booking);
             }
-
-            booking.TotalPrice = booking.BookingTickets.Sum(bt => bt.UnitPrice * bt.Quantity);
-            booking.AdminFee = Math.Round(booking.TotalPrice * 0.02m, 2);
-
-            await _bookingRepository.UpdateAsync(booking);
         }
 
         public async Task<BookingCollectAtVenueRespDto> CollectAtVenueAsync(Guid id, BookingCollectAtVenueDto dto, string identityUserId)

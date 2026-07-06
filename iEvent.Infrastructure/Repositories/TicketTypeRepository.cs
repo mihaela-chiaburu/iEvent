@@ -66,5 +66,11 @@ namespace iEvent.Infrastructure.Repositories
                 .OrderBy(name => name) 
                 .ToListAsync();
         }
+
+        public async Task<bool> HasBookingsAsync(Guid ticketTypeId)
+        {
+            return await _dbContext.BookingTickets
+                .AnyAsync(bt => bt.TicketTypeId == ticketTypeId);
+        }
     }
 }

@@ -10,5 +10,6 @@ namespace iEvent.Application.Interfaces.Repositories
         Task UpdateAsync(Venue venue);
         Task DeleteAsync(Venue venue);
         Task<List<Venue>> GetPopularAsync(int take);
+        Task ReplaceVenueChildrenAsync(Guid venueId, List<VenueFacility> facilities, List<VenueImage> images);
     }
 }

@@ -3,6 +3,7 @@ using iEvent.Application.Interfaces.Repositories;
 using iEvent.Domain.Entities;
 using iEvent.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace iEvent.Infrastructure.Repositories
 {
@@ -79,6 +80,12 @@ namespace iEvent.Infrastructure.Repositories
         public async Task AddAsync(Booking booking)
         {
             _dbContext.Bookings.Add(booking);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task AddBookingTicketAsync(BookingTicket bookingTicket)
+        {
+            _dbContext.BookingTickets.Add(bookingTicket);
             await _dbContext.SaveChangesAsync();
         }
 

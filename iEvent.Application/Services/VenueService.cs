@@ -211,30 +211,43 @@ namespace iEvent.Application.Services
                 throw new NotFoundException($"Venue with ID {id} was not found.");
             }
 
-            if (dto.Name != null)
-                ven.Name = dto.Name;
+            ven.Name = dto.Name;
+            ven.Address = dto.Address;
+            ven.City = dto.City;
+            ven.Capacity = dto.Capacity;
+            ven.MapLocation = new MapLocation(dto.Latitude, dto.Longitude);
+            ven.Description = dto.Description;
+            ven.Phone = dto.Phone;
+            ven.Email = dto.Email;
 
-            if (dto.Address != null)
-                ven.Address = dto.Address;
+            var facilities = new List<VenueFacility>();
+            var newImages = new List<VenueImage>();
 
-            if (dto.City != null)
-                ven.City = dto.City;
+            if (dto.Facilities != null)
+            {
+                facilities = dto.Facilities.Select(f => new VenueFacility
+                {
+                    FacilityId = Guid.NewGuid(),
+                    VenueId = ven.VenueId,
+                    Name = f.Name
+                }).ToList();
+            }
 
-            if (dto.Capacity.HasValue)
-                ven.Capacity = dto.Capacity.Value;
+            if (dto.Images != null)
+            {
+                newImages = dto.Images.Select(i => new VenueImage
+                {
+                    ImageId = Guid.NewGuid(),
+                    VenueId = ven.VenueId,
+                    Url = i.Url,
+                    CloudinaryPublicId = i.PublicId, 
+                    SortOrder = i.SortOrder
+                }).ToList();
+            }
 
-            if (dto.Latitude.HasValue && dto.Longitude.HasValue)
-                ven.MapLocation = new MapLocation(dto.Latitude.Value, dto.Longitude.Value);
+            await _venueRepository.ReplaceVenueChildrenAsync(ven.VenueId, facilities, newImages);
 
-            if (dto.Description != null)
-                ven.Description = dto.Description;
-
-            if (dto.Phone != null)
-                ven.Phone = dto.Phone;
-
-            if (dto.Email != null)
-                ven.Email = dto.Email;
-
+            ven.IsDraft = false;
             await _venueRepository.UpdateAsync(ven);
         }
 

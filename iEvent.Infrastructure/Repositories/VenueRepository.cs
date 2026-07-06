@@ -2,6 +2,7 @@ using iEvent.Application.Interfaces.Repositories;
 using iEvent.Domain.Entities;
 using iEvent.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace iEvent.Infrastructure.Repositories
 {
@@ -42,9 +43,31 @@ namespace iEvent.Infrastructure.Repositories
             await _dbContext.SaveChangesAsync();
         }
 
+        public async Task ReplaceVenueChildrenAsync(Guid venueId, List<VenueFacility> facilities, List<VenueImage> images)
+        {
+            var existingFacilities = await _dbContext.VenueFacilities
+                .Where(x => x.VenueId == venueId)
+                .ToListAsync();
+
+            var existingImages = await _dbContext.VenueImages
+                .Where(x => x.VenueId == venueId)
+                .ToListAsync();
+
+            _dbContext.VenueFacilities.RemoveRange(existingFacilities);
+            _dbContext.VenueImages.RemoveRange(existingImages);
+
+            await _dbContext.VenueFacilities.AddRangeAsync(facilities);
+            await _dbContext.VenueImages.AddRangeAsync(images);
+
+            await _dbContext.SaveChangesAsync();
+        }
+
         public async Task UpdateAsync(Venue venue)
         {
-            _dbContext.Venues.Update(venue);
+            if (_dbContext.Entry(venue).State == EntityState.Detached)
+            {
+                _dbContext.Venues.Update(venue);
+            }
             await _dbContext.SaveChangesAsync();
         }
 

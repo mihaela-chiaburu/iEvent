@@ -89,6 +89,11 @@ namespace iEvent.Application.Services
                 throw new NotFoundException($"Ticket type with ID {id} was not found.");
             }
 
+            if (await _ticketTypeRepository.HasBookingsAsync(id))
+            {
+                throw new ConflictException("Ticket type cannot be deleted because it is used by existing bookings.");
+            }
+
             await _ticketTypeRepository.DeleteAsync(ticketType);
         }
 

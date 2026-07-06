@@ -53,23 +53,32 @@ namespace iEvent.Infrastructure.Repositories
                 .ToListAsync();
 
             var userIds = users.Select(u => u.Id).ToList();
-            var customersMap = await _dbContext.Customers
+            var customerMap = await _dbContext.Customers
                 .Where(c => userIds.Contains(c.IdentityUserId!))
-                .ToDictionaryAsync(c => c.IdentityUserId!, c => c.CustomerId); 
+                .ToDictionaryAsync(c => c.IdentityUserId!);
+
+            var adminMap = await _dbContext.AdminUsers
+                .Where(a => userIds.Contains(a.IdentityUserId))
+                .ToDictionaryAsync(a => a.IdentityUserId);
 
             var result = new List<UserRespDto>();
             foreach (var user in users)
             {
                 var roles = await _userManager.GetRolesAsync(user);
 
-                customersMap.TryGetValue(user.Id, out var customerId);
+                adminMap.TryGetValue(user.Id, out var admin);
+                customerMap.TryGetValue(user.Id, out var customer);
 
-                result.Add(new UserRespDto(
-                    user.Id,
-                    customerId != Guid.Empty ? customerId : null, 
+                var name = admin?.Name ?? customer?.Name ?? user.UserName;
+
+                var phone = admin?.PhoneNumber ?? customer?.PhoneNumber ?? user.PhoneNumber;
+
+                result.Add(new UserRespDto( user.Id,
+                    customer?.CustomerId,
+                    admin?.AdminId,
                     user.Email ?? string.Empty,
-                    user.UserName ?? string.Empty,
-                    user.PhoneNumber,
+                    name ?? string.Empty,
+                    phone,
                     roles.ToList()
                 ));
             }
@@ -107,6 +116,7 @@ namespace iEvent.Infrastructure.Repositories
             {
                 Email = email,
                 UserName = email,
+                PhoneNumber = PhoneNumber,
                 EmailConfirmed = true
             };
 

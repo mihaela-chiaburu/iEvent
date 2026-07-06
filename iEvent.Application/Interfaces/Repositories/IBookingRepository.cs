@@ -7,6 +7,7 @@ namespace iEvent.Application.Interfaces.Repositories
     {
         Task<List<Booking>> GetAllAsync();
         Task<Booking?> GetByIdAsync(Guid id);
+        Task AddBookingTicketAsync(BookingTicket bookingTicket);
         Task<(List<Booking> Items, int TotalCount)> GetPagedAsync(BookingFilterDto filter);
         Task AddAsync(Booking booking);
         Task UpdateAsync(Booking booking);

@@ -1,5 +1,4 @@
-﻿using Xunit;
-using Moq;
+﻿using Moq;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using iEvent.WebApi.Controllers;
