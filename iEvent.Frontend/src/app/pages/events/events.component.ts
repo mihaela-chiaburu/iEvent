@@ -1,22 +1,75 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { EventItem } from '../../models/event-item.model';
-import { SlicePipe } from '@angular/common';
 import { EventService } from '../../services/event.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
+  selector: 'app-events',
   standalone: true,
-  imports: [RouterLink, SlicePipe],
+  imports: [RouterLink, CommonModule],
   templateUrl: './events.component.html',
   styleUrl: './events.component.css'
 })
 export class EventsComponent implements OnInit {
   private eventService = inject(EventService);
   auth = inject(AuthService);
-  events = signal<EventItem[]>([]);
+
+  banners = signal<any[]>([]);
+  popularEvents = signal<any[]>([]);
+  categoryEvents = signal<any[]>([]);
+  dateEvents = signal<any[]>([]);
+  popularVenues = signal<any[]>([]);
+
+  categories = [
+    'Concerts', 'Teatru', 'Festivaluri', 'Stand-up', 'Copii', 
+    'Sport', 'Expoziții', 'Business', 'Parties', 'Filme', 'Altele'
+  ];
+  selectedCategory = signal<number>(0);
+
+  availableDates = signal<string[]>([]);
+  selectedDate = signal<string>('');
 
   ngOnInit() {
-    this.eventService.getEvents().subscribe(res => this.events.set(res));
+    this.loadInitialData();
+    this.generateFilterDates();
+  }
+
+  loadInitialData() {
+    this.eventService.getBanners().subscribe(res => this.banners.set(res));
+    this.eventService.getPopularEvents().subscribe(res => this.popularEvents.set(res));
+    this.selectCategory(0);
+    this.eventService.getPopularVenues().subscribe(res => this.popularVenues.set(res));
+  }
+
+  selectCategory(index: number) {
+    this.selectedCategory.set(index);
+    this.eventService.getEventsByCategory(index).subscribe(res => {
+      this.categoryEvents.set(res.items || []);
+    });
+  }
+
+  generateFilterDates() {
+    const dates: string[] = [];
+    const today = new Date();
+    
+    for (let i = 0; i < 7; i++) {
+      const nextDate = new Date(today);
+      nextDate.setDate(today.getDate() + i);
+      const formatted = nextDate.toISOString().split('T')[0];
+      dates.push(formatted);
+    }
+    
+    this.availableDates.set(dates);
+    if (dates.length > 0) {
+      this.selectDate(dates[0]); 
+    }
+  }
+
+  selectDate(dateStr: string) {
+    this.selectedDate.set(dateStr);
+    this.eventService.getEventsByDate(dateStr).subscribe(res => {
+      this.dateEvents.set(res.items || []);
+    });
   }
 }

@@ -87,6 +87,11 @@ namespace iEvent.Application.Services
             await _eventRepository.DeleteAsync(ievent);
         }
 
+        public async Task<List<EventBannerDto>> GetEventBannersAsync(int count = 5)
+        {
+            return await _eventRepository.GetEventBannersAsync(count);
+        }
+
         public async Task<PagedResultDto<EventRespDto>> GetAllAsync(EventQueryDto query)
         {
             var pagedEvents = await _eventRepository.GetAllAsync(query);

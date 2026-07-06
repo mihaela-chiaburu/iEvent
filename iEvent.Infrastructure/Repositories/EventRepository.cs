@@ -102,6 +102,22 @@ namespace iEvent.Infrastructure.Repositories
                 .FirstOrDefaultAsync(e => e.EventId == id);
         }
 
+        public async Task<List<EventBannerDto>> GetEventBannersAsync(int count = 5)
+        {
+            return await _dbContext.Events
+                .AsNoTracking()
+                .Where(e => !e.IsDraft && e.Images.Any())
+                .OrderByDescending(e => _dbContext.Bookings.Count(b => b.EventId == e.EventId))
+                .Take(count)
+                .Select(e => new EventBannerDto
+                {
+                    EventId = e.EventId,
+                    Name = e.Name,
+                    ImageUrl = e.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault() ?? e.ImageUrl ?? string.Empty
+                })
+                .ToListAsync();
+        }
+
         public async Task UpdateAsync(Event ievent)
         {
             if (_dbContext.Entry(ievent).State == EntityState.Detached)

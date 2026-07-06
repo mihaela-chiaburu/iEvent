@@ -142,5 +142,13 @@ namespace iEvent.WebApi.Controllers
             return Ok(events);
         }
 
+        [AllowAnonymous]
+        [HttpGet("banners")]
+        public async Task<ActionResult<List<EventBannerDto>>> GetBanners([FromQuery] int count = 5)
+        {
+            var banners = await _eventService.GetEventBannersAsync(count);
+            return Ok(banners);
+        }
+
     }
 }

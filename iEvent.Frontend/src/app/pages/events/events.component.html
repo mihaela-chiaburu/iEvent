@@ -5,18 +5,120 @@
     }
 </div>
 
-<div class="events-grid">
-    @for (ev of events(); track ev.eventId) {
-        <div class="event-card">
-            <h3>{{ ev.name }}</h3>
-            <p>{{ ev.description }}</p>
-            <small class="event-date">Date: {{ ev.startDate | slice:0:10 }}</small>
-            
-            <div class="event-actions">
-                @if (auth.currentUser()?.role === 'Customer') {
-                    <button [routerLink]="['/book-ticket', ev.eventId]" class="btn btn-book">Book a ticket</button>
-                }
+<!-- BANNER -->
+<section class="banner-section">
+    <div class="banner-slider">
+        @for (b of banners(); track b.eventId) {
+            <div class="banner-item" [routerLink]="['/book-ticket', b.eventId]">
+                <img [src]="b.imageUrl || 'assets/placeholder.jpg'" [alt]="b.name">
+                <h3>{{ b.name }}</h3>
             </div>
-        </div>
-    }
-</div>
+        }
+    </div>
+</section>
+
+<hr />
+
+<!-- POPULARE -->
+<section class="events-section">
+    <h3>Popular Events</h3>
+    <div class="events-grid">
+        @for (ev of popularEvents(); track ev.eventId) {
+            <div class="event-card">
+                <img [src]="ev.imageUrl || 'assets/placeholder.jpg'" alt="Event Image" class="card-img">
+                <div class="card-body">
+                    <small class="event-dates">
+                        {{ ev.allDates[0] | date:'dd MMM' }} 
+                        @if (ev.allDates.length > 1) { - {{ ev.allDates[ev.allDates.length - 1] | date:'dd MMM' }} }
+                    </small>
+                    <h3>{{ ev.name }}</h3>
+                    <div class="event-actions">
+                        @if (auth.currentUser()?.role === 'Customer') {
+                            <button [routerLink]="['/book-ticket', ev.eventId]" class="btn btn-book">Book</button>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+<hr />
+
+<!-- DUPĂ CATEGORII -->
+<section class="categories-section">
+    <h3>Browse by Category</h3>
+    <div class="filter-buttons">
+        @for (cat of categories; track $index) {
+            <button 
+                (click)="selectCategory($index)" 
+                [class.active]="selectedCategory() === $index"
+                class="btn-filter">
+                {{ cat }}
+            </button>
+        }
+    </div>
+
+    <div class="events-grid">
+        @for (ev of categoryEvents(); track ev.eventId) {
+            <div class="event-card">
+                <img [src]="ev.imageUrl || 'assets/placeholder.jpg'" alt="Category Event" class="card-img">
+                <div class="card-body">
+                    <small class="event-dates">{{ ev.allDates[0] | date:'dd MMM' }}</small>
+                    <h3>{{ ev.name }}</h3>
+                    <button [routerLink]="['/book-ticket', ev.eventId]" class="btn btn-book">View Details</button>
+                </div>
+            </div>
+        } @empty {
+            <p>Nu s-au găsit evenimente în această categorie.</p>
+        }
+    </div>
+</section>
+
+<hr />
+
+<!-- DUPĂ DATĂ -->
+<section class="date-section">
+    <h3>Schedule</h3>
+    <div class="filter-buttons">
+        @for (dateStr of availableDates(); track dateStr) {
+            <button 
+                (click)="selectDate(dateStr)" 
+                [class.active]="selectedDate() === dateStr"
+                class="btn-filter">
+                {{ dateStr | date:'EEE, dd MMM' }}
+            </button>
+        }
+    </div>
+
+    <div class="events-grid">
+        @for (ev of dateEvents(); track ev.eventId) {
+            <div class="event-card">
+                <h3>{{ ev.name }}</h3>
+                <p>{{ ev.description | slice:0:60 }}...</p>
+                <button [routerLink]="['/book-ticket', ev.eventId]" class="btn btn-book">Book</button>
+            </div>
+        } @empty {
+            <p>Nu sunt evenimente planificate pentru această zi.</p>
+        }
+    </div>
+</section>
+
+<hr />
+
+<!-- VENUES POPULARE -->
+<section class="venues-section">
+    <h3>Popular Venues</h3>
+    <div class="venues-grid">
+        @for (v of popularVenues(); track v.venueId) {
+            <div class="venue-card">
+                <img [src]="v.images[0]?.url || 'assets/placeholder-venue.jpg'" alt="Venue Image" class="card-img">
+                <div class="card-body">
+                    <h3>{{ v.name }}</h3>
+                    <p class="venue-address"><i class="icon-pin"></i> {{ v.address }}, {{ v.city }}</p>
+                    <span class="badge">{{ v.eventCount }} Active Events</span>
+                </div>
+            </div>
+        }
+    </div>
+</section>

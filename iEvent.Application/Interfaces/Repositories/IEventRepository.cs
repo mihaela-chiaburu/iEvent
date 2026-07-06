@@ -8,6 +8,7 @@ namespace iEvent.Application.Interfaces.Repositories
     {
         Task<PagedResultDto<Event>> GetAllAsync(EventQueryDto query);
         Task<Event?> GetByIdAsync(Guid id);
+        Task<List<EventBannerDto>> GetEventBannersAsync(int count);
         Task AddAsync(Event ievent);
         Task UpdateAsync(Event ievent);
         Task ReplaceEventChildrenAsync(Guid eventId, List<EventDate> dates, List<EventImage> images);
