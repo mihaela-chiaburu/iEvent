@@ -24,5 +24,7 @@ namespace iEvent.Domain.Entities
 
         [ForeignKey(nameof(EventId))]
         public Event? Event { get; set; }
+
+        public bool IsBanner { get; set; }
     }
 }

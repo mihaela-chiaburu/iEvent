@@ -94,7 +94,9 @@ namespace iEvent.Application.Services
             {
                 ImageId = x.ImageId,
                 Url = x.Url,
-                SortOrder = x.SortOrder
+                PublicId = x.CloudinaryPublicId,
+                SortOrder = x.SortOrder,
+                IsBanner = x.IsBanner
             }).ToList();
         }
 
@@ -123,6 +125,55 @@ namespace iEvent.Application.Services
             {
                 await _repo.DeleteRangeAsync(images);
             }
+        }
+
+        public async Task<EventImageRespDto> UploadBannerAsync(Guid eventId, FileUploadDto file)
+        {
+            if (file == null || file.Content.Length == 0)
+                throw new ValidationException("Banner file is required.");
+
+            var ievent = await _eventRepository.GetByIdAsync(eventId);
+            if (ievent == null)
+                throw new NotFoundException($"Event with ID {eventId} was not found.");
+
+            var currentBanner = await _repo.GetBannerByEventIdAsync(eventId);
+
+            var upload = await _cloudinary.UploadImageAsync(file.Content, file.FileName, "events/banner");
+
+            var newBanner = new EventImage
+            {
+                ImageId = Guid.NewGuid(),
+                EventId = eventId,
+                Url = upload.Url,
+                CloudinaryPublicId = upload.PublicId,
+                SortOrder = 0,
+                IsBanner = true
+            };
+
+            try
+            {
+                if (currentBanner != null)
+                {
+                    await _cloudinary.DeleteImageAsync(currentBanner.CloudinaryPublicId);
+                    await _repo.DeleteAsync(currentBanner);
+                }
+
+                await _repo.AddRangeAsync(new List<EventImage> { newBanner });
+            }
+            catch
+            {
+                await _cloudinary.DeleteImageAsync(upload.PublicId);
+                throw;
+            }
+
+            return new EventImageRespDto
+            {
+                ImageId = newBanner.ImageId,
+                Url = newBanner.Url,
+                PublicId = newBanner.CloudinaryPublicId,
+                SortOrder = newBanner.SortOrder,
+                IsBanner = true
+            };
         }
     }
 }

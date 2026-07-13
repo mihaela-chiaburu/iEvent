@@ -35,12 +35,36 @@ export class EventsComponent implements OnInit {
     this.generateFilterDates();
   }
 
-  loadInitialData() {
-    this.eventService.getBanners().subscribe(res => this.banners.set(res));
-    this.eventService.getPopularEvents().subscribe(res => this.popularEvents.set(res));
-    this.selectCategory(0);
-    this.eventService.getPopularVenues().subscribe(res => this.popularVenues.set(res));
-  }
+loadInitialData() {
+  this.eventService.getBanners().subscribe(res => {
+    const mapped = res.map(ev => ({
+      ...ev,
+      imageUrl: ev.imageUrl || ev.images?.find((img: any) => img.isBanner)?.url
+    }));
+    this.banners.set(mapped);
+  });
+
+  this.eventService.getPopularEvents().subscribe(res => {
+    const mapped = res.map(ev => ({
+      ...ev,
+      imageUrl: ev.images?.find((img: any) => img.isBanner)?.url
+    }));
+    this.popularEvents.set(mapped);
+  });
+
+  this.selectCategory(0);
+
+  this.eventService.getPopularVenues().subscribe(res => {
+    const mapped = res.map(v => {
+      const primaryImage = v.images?.find((img: any) => img.sortOrder === 0);
+      return {
+        ...v,
+        venueImageUrl: primaryImage ? primaryImage.url : (v.images?.[0]?.url || null)
+      };
+    });
+    this.popularVenues.set(mapped);
+  });
+}
 
   selectCategory(index: number) {
     this.selectedCategory.set(index);

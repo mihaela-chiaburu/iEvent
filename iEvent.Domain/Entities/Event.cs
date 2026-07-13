@@ -22,12 +22,6 @@ namespace iEvent.Domain.Entities
         [ForeignKey(nameof(VenueId))]
         public Venue? Venue { get; set; }
 
-        [StringLength(500)]
-        public string? ImageUrl { get; set; }
-
-        [StringLength(500)]
-        public string? ImagePublicId { get; set; }
-
         public List<TicketType> Tickets { get; set; } = new();
 
         [Required]

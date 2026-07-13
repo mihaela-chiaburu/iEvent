@@ -24,5 +24,6 @@ namespace iEvent.Domain.Entities
 
         [ForeignKey(nameof(VenueId))]
         public Venue? Venue { get; set; }
+
     }
 }

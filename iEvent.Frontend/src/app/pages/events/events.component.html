@@ -25,7 +25,7 @@
     <div class="events-grid">
         @for (ev of popularEvents(); track ev.eventId) {
             <div class="event-card">
-                <img [src]="ev.imageUrl || 'assets/placeholder.jpg'" alt="Event Image" class="card-img">
+                <img [src]="(ev.images?.find(i => i.isBanner)?.url) || 'assets/placeholder.jpg'" alt="Event Image" class="card-img">
                 <div class="card-body">
                     <small class="event-dates">
                         {{ ev.allDates[0] | date:'dd MMM' }} 
@@ -62,7 +62,7 @@
     <div class="events-grid">
         @for (ev of categoryEvents(); track ev.eventId) {
             <div class="event-card">
-                <img [src]="ev.imageUrl || 'assets/placeholder.jpg'" alt="Category Event" class="card-img">
+                <img [src]="(ev.images?.find(i => i.isBanner)?.url) || 'assets/placeholder.jpg'" alt="Category Event" class="card-img">
                 <div class="card-body">
                     <small class="event-dates">{{ ev.allDates[0] | date:'dd MMM' }}</small>
                     <h3>{{ ev.name }}</h3>
@@ -94,9 +94,12 @@
     <div class="events-grid">
         @for (ev of dateEvents(); track ev.eventId) {
             <div class="event-card">
-                <h3>{{ ev.name }}</h3>
-                <p>{{ ev.description | slice:0:60 }}...</p>
-                <button [routerLink]="['/book-ticket', ev.eventId]" class="btn btn-book">Book</button>
+                <img [src]="(ev.images?.find(i => i.isBanner)?.url) || 'assets/placeholder.jpg'" alt="Event Image" class="card-img">
+                <div class="card-body">
+                    <h3>{{ ev.name }}</h3>
+                    <p>{{ ev.description | slice:0:60 }}...</p>
+                    <button [routerLink]="['/book-ticket', ev.eventId]" class="btn btn-book">Book</button>
+                </div>
             </div>
         } @empty {
             <p>Nu sunt evenimente planificate pentru această zi.</p>
@@ -112,7 +115,7 @@
     <div class="venues-grid">
         @for (v of popularVenues(); track v.venueId) {
             <div class="venue-card">
-                <img [src]="v.images[0]?.url || 'assets/placeholder-venue.jpg'" alt="Venue Image" class="card-img">
+                <img [src]="v.venueImageUrl || 'assets/placeholder-venue.jpg'" alt="Venue Image" class="card-img">
                 <div class="card-body">
                     <h3>{{ v.name }}</h3>
                     <p class="venue-address"><i class="icon-pin"></i> {{ v.address }}, {{ v.city }}</p>

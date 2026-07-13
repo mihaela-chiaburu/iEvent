@@ -45,5 +45,19 @@ namespace iEvent.Infrastructure.Repositories
             _dbContext.EventImages.RemoveRange(images);
             await _dbContext.SaveChangesAsync();
         }
+
+        public async Task<EventImage?> GetBannerByEventIdAsync(Guid eventId)
+        {
+            return await _dbContext.EventImages
+                .FirstOrDefaultAsync(x => x.EventId == eventId && x.IsBanner);
+        }
+
+        public async Task UpdateAsync(EventImage image)
+        {
+            if (_dbContext.Entry(image).State == EntityState.Detached)
+                _dbContext.EventImages.Update(image);
+
+            await _dbContext.SaveChangesAsync();
+        }
     }
 }

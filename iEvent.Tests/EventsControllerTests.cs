@@ -139,8 +139,6 @@ namespace iEvent.Tests.Controllers
                 Name = "Updated Title",
                 Description = "Updated description",
                 VenueId = Guid.NewGuid(),
-                ImageUrl = "https://example.com/banner.jpg",
-                ImagePublicId = "events/banner/sample",
                 Category = Domain.Enums.EventCategory.Conference,
                 EventDates = new List<EventDateCreateDto>(),
                 Images = new List<EventImageCreateDto>()

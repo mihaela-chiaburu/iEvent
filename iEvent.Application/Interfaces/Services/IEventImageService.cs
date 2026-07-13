@@ -9,5 +9,6 @@ namespace iEvent.Application.Interfaces.Services
         Task<List<EventImageRespDto>> GetByEventIdAsync(Guid eventId);
         Task<bool> DeleteAsync(Guid imageId);
         Task DeleteByEventIdAsync(Guid eventId);
+        Task<EventImageRespDto> UploadBannerAsync(Guid eventId, FileUploadDto file);
     }
 }

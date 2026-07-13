@@ -45,8 +45,6 @@ namespace iEvent.Application.Services
                             }).ToList()
                     }).ToList(),
                 VenueId = dto.VenueId,
-                ImageUrl = dto.ImageUrl,
-                ImagePublicId = dto.ImagePublicId,
                 Category = dto.Category,
                 Images = dto.Images.Select(i => new EventImage
                 {
@@ -54,7 +52,8 @@ namespace iEvent.Application.Services
                     EventId = eventId,
                     Url = i.Url,
                     CloudinaryPublicId = i.PublicId,
-                    SortOrder = i.SortOrder
+                    SortOrder = i.SortOrder,
+                    IsBanner = i.IsBanner
                 }).ToList()
             };
 
@@ -69,11 +68,6 @@ namespace iEvent.Application.Services
             if (ievent == null)
             {
                 throw new NotFoundException($"Event with ID {id} was not found.");
-            }
-
-            if (!string.IsNullOrWhiteSpace(ievent.ImagePublicId))
-            {
-                await _cloudinary.DeleteImageAsync(ievent.ImagePublicId);
             }
 
             foreach (var image in ievent.Images)
@@ -248,8 +242,6 @@ namespace iEvent.Application.Services
                 Name = ievent.Name,
                 Description = ievent.Description,
                 VenueId = ievent.VenueId,
-                ImageUrl = ievent.ImageUrl,
-                ImagePublicId = ievent.ImagePublicId,
                 Category = ievent.Category,
                 EventDates = sortedDates.Select(ed => new EventDateRespDto
                 {
@@ -269,7 +261,8 @@ namespace iEvent.Application.Services
                         ImageId = i.ImageId,
                         Url = i.Url,
                         PublicId = i.CloudinaryPublicId,
-                        SortOrder = i.SortOrder
+                        SortOrder = i.SortOrder,
+                        IsBanner = i.IsBanner
                     }).ToList(),
                 MinTicketPrice = ievent.Tickets != null && ievent.Tickets.Any() ? ievent.Tickets.Min(t => t.Price) : 0,
                 AllDates = sortedDates.Select(ed => ed.Date).ToList()
@@ -304,8 +297,6 @@ namespace iEvent.Application.Services
             ev.Name = dto.Name;
             ev.Description = dto.Description;
             ev.VenueId = dto.VenueId;
-            ev.ImageUrl = dto.ImageUrl;
-            ev.ImagePublicId = dto.ImagePublicId;
             ev.Category = dto.Category;
 
             var newDates = new List<EventDate>();
@@ -341,7 +332,8 @@ namespace iEvent.Application.Services
                     EventId = ev.EventId,
                     Url = i.Url,
                     CloudinaryPublicId = i.PublicId,
-                    SortOrder = i.SortOrder
+                    SortOrder = i.SortOrder,
+                    IsBanner = i.IsBanner
                 }).ToList();
             }
 

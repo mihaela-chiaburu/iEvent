@@ -113,7 +113,9 @@ namespace iEvent.Infrastructure.Repositories
                 {
                     EventId = e.EventId,
                     Name = e.Name,
-                    ImageUrl = e.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault() ?? e.ImageUrl ?? string.Empty
+                    ImageUrl = e.Images.Where(i => i.IsBanner).Select(i => i.Url).FirstOrDefault()
+                        ?? e.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault()
+                        ?? string.Empty
                 })
                 .ToListAsync();
         }
@@ -184,5 +186,6 @@ namespace iEvent.Infrastructure.Repositories
             await _dbContext.EventDates.AddRangeAsync(newDates);
             await _dbContext.SaveChangesAsync();
         }
+
     }
 }

@@ -140,6 +140,11 @@ namespace iEvent.Infrastructure.Persistance
                 .WithMany()
                 .HasForeignKey(b => b.BookingTimeSlotId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<EventImage>()
+                .HasIndex(x => new { x.EventId, x.IsBanner })
+                .IsUnique()
+                .HasFilter("[IsBanner] = 1");
         }
     }
 }
