@@ -4,10 +4,11 @@ import { IndexComponent } from './pages/index/index.component';
 import { EventsComponent } from './pages/events/events.component';
 import { VenuesComponent } from './pages/venues/venues.component';
 import { MyBookingsComponent } from './pages/my-bookings/my-bookings.component';
-import { BookTicketComponent } from './pages/book-ticket/book-ticket.component';
+import { BookingComponent } from './pages/book-ticket/booking.component';
 import { EventFormComponent } from './pages/event-form/event-form.component';
 import { BookingsManagerComponent } from './pages/bookings-manager/bookings-manager.component';
 import { UsersComponent } from './pages/users/users.component';
+import { EventDetailsComponent } from './pages/event-details/event-details.component';
 
 export const routes: Routes = [
   { 
@@ -30,14 +31,17 @@ export const routes: Routes = [
     path: 'my-bookings', 
     component: MyBookingsComponent },
   { 
-    path: 'book-ticket/:id', 
-    component: BookTicketComponent },
+    path: 'booking/:id', 
+    component: BookingComponent },
   { 
     path: 'bookings-manager', 
     component: BookingsManagerComponent },
   { 
     path: 'users', 
     component: UsersComponent },
+  { 
+    path: 'event-details/:id', 
+    component: EventDetailsComponent },
   { 
     path: '**', 
     redirectTo: '' 

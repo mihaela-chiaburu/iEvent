@@ -1,0 +1,142 @@
+<div class="booking-container">
+    
+    @if (event()) {
+        <header class="mini-hero-banner">
+            <img [src]="event().imageUrl" alt="Event Banner" class="mini-banner-img">
+            <div class="mini-banner-info">
+                <h1>{{ event().name }}</h1>
+                <p><i class="icon-pin"></i> {{ event().venueName }}</p>
+            </div>
+        </header>
+    }
+
+    <div class="step-indicator">
+        <span [class.active]="currentStep() >= 1">1. Bilete</span>
+        <span class="arrow">&gt;</span>
+        <span [class.active]="currentStep() >= 2">2. Plată & Date</span>
+        <span class="arrow">&gt;</span>
+        <span [class.active]="currentStep() === 3">3. Confirmare</span>
+    </div>
+
+    <main class="booking-content">
+
+        @if (currentStep() === 1) {
+            <h2 class="section-title">Alege Biletul</h2>
+            <div class="tickets-list">
+                @for (ticket of ticketTypes(); track ticket.ticketTypeId) {
+                    <div class="ticket-item-row">
+                        <div class="ticket-details">
+                            <h3 class="ticket-name">{{ ticket.name }}</h3>
+                            <p class="ticket-price">{{ ticket.price }} RON</p>
+                            <small class="ticket-available">Disponibile: {{ ticket.quantityAvailable }} buc.</small>
+                        </div>
+                        <div class="quantity-selector">
+                            <button (click)="decrementQuantity(ticket.ticketTypeId)" [disabled]="(quantities()[ticket.ticketTypeId] || 0) === 0" class="qty-btn">-</button>
+                            <span class="qty-value">{{ quantities()[ticket.ticketTypeId] || 0 }}</span>
+                            <button (click)="incrementQuantity(ticket.ticketTypeId, ticket.quantityAvailable)" [disabled]="(quantities()[ticket.ticketTypeId] || 0) >= ticket.quantityAvailable" class="qty-btn">+</button>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <footer class="booking-summary-footer">
+                <div class="total-row">
+                    <span class="total-label">Total Fara taxa:</span>
+                    <span class="total-price">{{ subtotalAmount() }} RON</span>
+                </div>
+                <button (click)="goToStep2()" [disabled]="subtotalAmount() === 0" class="btn-primary">
+                    Continua Spre Plata &gt;
+                </button>
+            </footer>
+        }
+
+        @if (currentStep() === 2) {
+            <button (click)="backToStep1()" class="btn-back">&larr; Înapoi la bilete</button>
+            
+            <h2 class="section-title">Comanda Ta</h2>
+            
+            <div class="summary-box">
+                @for (item of selectedTicketsSummary(); track item.ticketTypeId) {
+                    <div class="summary-item">
+                        <span>{{ item.name }} <strong>x{{ item.qty }}</strong></span>
+                        <span>{{ item.price * item.qty }} RON</span>
+                    </div>
+                }
+            </div>
+
+            <h3 class="subsection-title">Alege metoda de plata</h3>
+            <div class="payment-methods-grid">
+                <label class="method-card" [class.selected]="paymentMethod() === 0">
+                    <input type="radio" name="paymentMethod" [value]="0" (change)="paymentMethod.set(0)" checked>
+                    <div class="method-details">
+                        <strong>Card bancar Online</strong>
+                        <small>Securizat prin procesator de plăți</small>
+                    </div>
+                </label>
+
+                <label class="method-card" [class.selected]="paymentMethod() === 1">
+                    <input type="radio" name="paymentMethod" [value]="1" (change)="paymentMethod.set(1)">
+                    <div class="method-details">
+                        <strong>Numerar la venue</strong>
+                        <small>Plătești direct la intrarea evenimentului</small>
+                    </div>
+                </label>
+            </div>
+
+            <h3 class="subsection-title">Date Contact</h3>
+            <div class="user-form">
+                <div class="form-group">
+                    <label>Nume Complet</label>
+                    <input type="text" [(ngModel)]="userData().fullName" placeholder="Numele tău">
+                </div>
+                <div class="form-group-row">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" [(ngModel)]="userData().email" placeholder="adresa@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Telefon</label>
+                        <input type="text" [(ngModel)]="userData().phone" placeholder="+373...">
+                    </div>
+                </div>
+            </div>
+
+            <footer class="booking-summary-footer final-checkout">
+                <h3 class="subsection-title">Rezumatul comenzii</h3>
+                <div class="checkout-row">
+                    <span>Rezervare:</span>
+                    <span>{{ subtotalAmount() }} RON</span>
+                </div>
+                <div class="checkout-row">
+                    <span>Taxa administrare:</span>
+                    <span>{{ adminFee }} RON</span>
+                </div>
+                <hr>
+                <div class="checkout-row total">
+                    <span>Total de plată:</span>
+                    <span>{{ totalAmount() }} RON</span>
+                </div>
+
+                <button (click)="submitBooking()" class="btn-success">
+                    {{ paymentMethod() === 0 ? 'Plătește Acum' : 'Confirmă Rezervarea' }}
+                </button>
+            </footer>
+        }
+
+        @if (currentStep() === 3) {
+            <div class="success-screen">
+                <div class="success-icon">✓</div>
+                <h2>Comandă Plasată cu Succes!</h2>
+                <p>Rezervarea ta a fost înregistrată. Detaliile au fost trimise pe email.</p>
+                
+                <div class="ticket-receipt" @if(bookingResponse()) {>
+                    <p>Cod Rezervare: <strong>{{ bookingResponse().bookingCode }}</strong></p>
+                    <p>Status: <span class="badge">Confirmat</span></p>
+                    <p>Total Achitat: <strong>{{ bookingResponse().totalPrice }} RON</strong></p>
+                </div>
+
+                <button routerLink="/events" class="btn-primary mt-4">Înapoi la Evenimente</button>
+            </div>
+        }
+    </main>
+</div>

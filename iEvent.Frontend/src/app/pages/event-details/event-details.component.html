@@ -1,0 +1,77 @@
+@if (event()) {
+    <div class="details-container">
+        <header class="event-hero-banner" [style.background-image]="'url(' + event().imageUrl + ')'">
+            <div class="banner-overlay">
+                <div class="hero-content">
+                    <h1 class="event-title">{{ event().name }}</h1>
+                    <p class="event-location"><i class="icon-pin"></i> {{ event().venueName }}</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="details-layout">
+            <main class="main-content">
+                <section class="tickets-schedule-section">
+                    <h2>Disponibilitate și Bilete</h2>
+                    <div class="schedule-list">
+                        @for (dateGroup of event().processedDates; track dateGroup.eventDateId) {
+                            <div class="date-card">
+                                <div class="date-header">
+                                    <i class="icon-calendar"></i>
+                                    <h3>{{ dateGroup.date | date:'EEEE, dd MMMM yyyy' }}</h3>
+                                </div>
+                                
+                                <div class="slots-grid">
+                                    @for (slot of dateGroup.timeSlots; track slot.timeSlotId) {
+                                        <div class="slot-row">
+                                            <span class="slot-time">
+                                                {{ slot.startTime | slice:0:5 }} - {{ slot.endTime | slice:0:5 }}
+                                            </span>
+                                            <button 
+                                                [routerLink]="['/booking', event().eventId]" 
+                                                [queryParams]="{ slotId: slot.timeSlotId }" 
+                                                class="btn-book-now">
+                                                Cumpără
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+
+                <section class="description-section">
+                    <h2>Despre Eveniment</h2>
+                    <p class="event-description">{{ event().description }}</p>
+                </section>
+            </main>
+        </div>
+
+        @if (similarEvents().length > 0) {
+            <section class="similar-events-section">
+                <hr class="section-divider">
+                <h2>Evenimente Similare</h2>
+                <div class="similar-grid">
+                    @for (sev of similarEvents(); track sev.eventId) {
+                        <div class="similar-card" [routerLink]="['/event-details', sev.eventId]">
+                            <img [src]="sev.imageUrl" alt="{{ sev.name }}" class="similar-img">
+                            <div class="similar-body">
+                                <small class="similar-date">{{ sev.allDates?.[0] | date:'dd MMM yyyy' }}</small>
+                                <h3>{{ sev.name }}</h3>
+                                <p class="similar-venue">{{ sev.venueName }}</p>
+                                <span class="similar-price">
+                                    @if (sev.minPrice > 0) { De la {{ sev.minPrice }} RON } @else { Intrare liberă }
+                                </span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+    </div>
+} @else {
+    <div class="loading-state">
+        <p>Se încarcă detaliile evenimentului...</p>
+    </div>
+}

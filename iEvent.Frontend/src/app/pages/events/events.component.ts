@@ -32,32 +32,26 @@ export class EventsComponent implements OnInit {
   filteredEvents = computed(() => {
     let events = [...this.allEvents()];
 
-    // 1. Filtrare Categorie
     if (this.selectedCategory() !== null) {
       events = events.filter(e => e.category === this.selectedCategory());
     }
 
-    // 2. Filtrare Dată
     if (this.selectedDate()) {
       events = events.filter(e => e.allDates?.some((d: string) => d.startsWith(this.selectedDate())));
     }
 
-    // 3. Filtrare Oraș
     if (this.selectedCity()) {
       events = events.filter(e => e.venue?.city === this.selectedCity());
     }
 
-    // 4. Filtrare Locație
     if (this.selectedVenueId()) {
       events = events.filter(e => e.venueId === this.selectedVenueId());
     }
 
-    // 5. Filtrare Preț Maxim
     if (this.selectedMaxPrice() !== null) {
       events = events.filter(e => e.minPrice <= (this.selectedMaxPrice() ?? Infinity));
     }
 
-    // 6. Sortare după Dată
     events.sort((a, b) => {
       const dateA = new Date(a.allDates?.[0] || 0).getTime();
       const dateB = new Date(b.allDates?.[0] || 0).getTime();
@@ -76,7 +70,7 @@ loadInitialData() {
     this.venues.set(venuesList || []);
 
     this.eventService.getEvents().subscribe((res: any) => {
-      const rawItems = res.items || res; // Suportă și structură paginată și array simplu
+      const rawItems = res.items || res; 
       
       const mapped = rawItems.map((ev: any) => {
         const matchingVenue = venuesList?.find((v: any) => v.venueId === ev.venueId);

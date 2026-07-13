@@ -1,7 +1,6 @@
 <div class="all-events-container">
     <h1 class="page-title">Toate Evenimentele</h1>
 
-    <!-- CATEGORII -->
     <section class="categories-filter-section">
         <div class="filter-buttons central-buttons">
             <button 
@@ -21,10 +20,8 @@
         </div>
     </section>
 
-    <!-- FILTRE DROPDOWN -->
     <section class="filters-bar-section">
         <div class="filters-wrapper">
-            <!-- Data -->
             <div class="filter-group">
                 <label for="filter-date">Data</label>
                 <input 
@@ -35,7 +32,6 @@
                     class="filter-select date-input">
             </div>
 
-            <!-- Oraș -->
             <div class="filter-group">
                 <label for="filter-city">Oraș</label>
                 <select id="filter-city" (change)="onCityChange($event)" [value]="selectedCity()" class="filter-select">
@@ -46,7 +42,6 @@
                 </select>
             </div>
 
-            <!-- Locație -->
             <div class="filter-group">
                 <label for="filter-venue">Locație</label>
                 <select id="filter-venue" (change)="onVenueChange($event)" [value]="selectedVenueId()" class="filter-select">
@@ -57,7 +52,6 @@
                 </select>
             </div>
 
-            <!-- Preț -->
             <div class="filter-group">
                 <label for="filter-price">Preț maxim</label>
                 <select id="filter-price" (change)="onPriceChange($event)" [value]="selectedMaxPrice() || ''" class="filter-select">
@@ -69,7 +63,6 @@
                 </select>
             </div>
 
-            <!-- Sortare -->
             <div class="filter-group">
                 <label for="sort-date">Sortează după dată</label>
                 <select id="sort-date" (change)="onSortChange($event)" [value]="sortByDate()" class="filter-select">
@@ -78,7 +71,6 @@
                 </select>
             </div>
 
-            <!-- Reset -->
             <div class="filter-group reset-group">
                 <button (click)="resetFilters()" class="btn-reset" title="Resetează toate filtrele">
                     <i class="icon-reset"></i> Reset
@@ -87,11 +79,10 @@
         </div>
     </section>
 
-    <!-- GRID EVENIMENTE -->
     <main class="events-grid-section">
         <div class="events-grid">
             @for (ev of filteredEvents(); track ev.eventId) {
-                <div class="event-card" [routerLink]="['/book-ticket', ev.eventId]">
+                <div class="event-card" [routerLink]="['/event-details', ev.eventId]">
                     <div class="card-img-wrapper">
                         <img [src]="ev.imageUrl || 'assets/placeholder.jpg'" alt="{{ ev.name }}" class="card-img">
                     </div>

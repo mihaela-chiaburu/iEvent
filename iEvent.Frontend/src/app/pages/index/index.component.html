@@ -9,7 +9,7 @@
 <section class="banner-section">
     <div class="banner-slider">
         @for (b of banners(); track b.eventId) {
-            <div class="banner-item" [routerLink]="['/book-ticket', b.eventId]">
+            <div class="banner-item" [routerLink]="['/event-details', b.eventId]">
                 <img [src]="b.imageUrl || 'assets/placeholder.jpg'" [alt]="b.name">
                 <h3>{{ b.name }}</h3>
             </div>
@@ -32,11 +32,6 @@
                         @if (ev.allDates.length > 1) { - {{ ev.allDates[ev.allDates.length - 1] | date:'dd MMM' }} }
                     </small>
                     <h3>{{ ev.name }}</h3>
-                    <div class="event-actions">
-                        @if (auth.currentUser()?.role === 'Customer') {
-                            <button [routerLink]="['/book-ticket', ev.eventId]" class="btn btn-book">Book</button>
-                        }
-                    </div>
                 </div>
             </div>
         }
@@ -66,7 +61,6 @@
                 <div class="card-body">
                     <small class="event-dates">{{ ev.allDates[0] | date:'dd MMM' }}</small>
                     <h3>{{ ev.name }}</h3>
-                    <button [routerLink]="['/book-ticket', ev.eventId]" class="btn btn-book">View Details</button>
                 </div>
             </div>
         } @empty {
@@ -98,7 +92,6 @@
                 <div class="card-body">
                     <h3>{{ ev.name }}</h3>
                     <p>{{ ev.description | slice:0:60 }}...</p>
-                    <button [routerLink]="['/book-ticket', ev.eventId]" class="btn btn-book">Book</button>
                 </div>
             </div>
         } @empty {
