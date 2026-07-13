@@ -1,8 +1,7 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
-import { EventService } from '../../services/event.service';
 import { CommonModule } from '@angular/common';
+import { EventService } from '../../services/event.service';
 
 @Component({
   selector: 'app-events',
@@ -13,87 +12,126 @@ import { CommonModule } from '@angular/common';
 })
 export class EventsComponent implements OnInit {
   private eventService = inject(EventService);
-  auth = inject(AuthService);
 
-  banners = signal<any[]>([]);
-  popularEvents = signal<any[]>([]);
-  categoryEvents = signal<any[]>([]);
-  dateEvents = signal<any[]>([]);
-  popularVenues = signal<any[]>([]);
+  allEvents = signal<any[]>([]);
+  venues = signal<any[]>([]);
+  cities = signal<string[]>([]);
+
+  selectedCategory = signal<number | null>(null);
+  selectedDate = signal<string>('');
+  selectedCity = signal<string>('');
+  selectedVenueId = signal<string>('');
+  selectedMaxPrice = signal<number | null>(null);
+  sortByDate = signal<string>('asc');
 
   categories = [
     'Concerts', 'Teatru', 'Festivaluri', 'Stand-up', 'Copii', 
     'Sport', 'Expoziții', 'Business', 'Parties', 'Filme', 'Altele'
   ];
-  selectedCategory = signal<number>(0);
 
-  availableDates = signal<string[]>([]);
-  selectedDate = signal<string>('');
+  filteredEvents = computed(() => {
+    let events = [...this.allEvents()];
+
+    // 1. Filtrare Categorie
+    if (this.selectedCategory() !== null) {
+      events = events.filter(e => e.category === this.selectedCategory());
+    }
+
+    // 2. Filtrare Dată
+    if (this.selectedDate()) {
+      events = events.filter(e => e.allDates?.some((d: string) => d.startsWith(this.selectedDate())));
+    }
+
+    // 3. Filtrare Oraș
+    if (this.selectedCity()) {
+      events = events.filter(e => e.venue?.city === this.selectedCity());
+    }
+
+    // 4. Filtrare Locație
+    if (this.selectedVenueId()) {
+      events = events.filter(e => e.venueId === this.selectedVenueId());
+    }
+
+    // 5. Filtrare Preț Maxim
+    if (this.selectedMaxPrice() !== null) {
+      events = events.filter(e => e.minPrice <= (this.selectedMaxPrice() ?? Infinity));
+    }
+
+    // 6. Sortare după Dată
+    events.sort((a, b) => {
+      const dateA = new Date(a.allDates?.[0] || 0).getTime();
+      const dateB = new Date(b.allDates?.[0] || 0).getTime();
+      return this.sortByDate() === 'asc' ? dateA - dateB : dateB - dateA;
+    });
+
+    return events;
+  });
 
   ngOnInit() {
     this.loadInitialData();
-    this.generateFilterDates();
   }
 
 loadInitialData() {
-  this.eventService.getBanners().subscribe(res => {
-    const mapped = res.map(ev => ({
-      ...ev,
-      imageUrl: ev.imageUrl || ev.images?.find((img: any) => img.isBanner)?.url
-    }));
-    this.banners.set(mapped);
-  });
+  this.eventService.getPopularVenues().subscribe((venuesList: any) => {
+    this.venues.set(venuesList || []);
 
-  this.eventService.getPopularEvents().subscribe(res => {
-    const mapped = res.map(ev => ({
-      ...ev,
-      imageUrl: ev.images?.find((img: any) => img.isBanner)?.url
-    }));
-    this.popularEvents.set(mapped);
-  });
+    this.eventService.getEvents().subscribe((res: any) => {
+      const rawItems = res.items || res; // Suportă și structură paginată și array simplu
+      
+      const mapped = rawItems.map((ev: any) => {
+        const matchingVenue = venuesList?.find((v: any) => v.venueId === ev.venueId);
 
-  this.selectCategory(0);
+        return {
+          ...ev,
+          imageUrl: ev.images?.find((img: any) => img.isBanner)?.url || null,
+          venueName: matchingVenue ? matchingVenue.name : 'Locație necunoscută',
+          minPrice: ev.minTicketPrice ?? 0
+        };
+      });
+      
+      this.allEvents.set(mapped);
 
-  this.eventService.getPopularVenues().subscribe(res => {
-    const mapped = res.map(v => {
-      const primaryImage = v.images?.find((img: any) => img.sortOrder === 0);
-      return {
-        ...v,
-        venueImageUrl: primaryImage ? primaryImage.url : (v.images?.[0]?.url || null)
-      };
+      const uniqueCities = [...new Set(venuesList?.map((v: any) => v.city).filter(Boolean))] as string[];
+      this.cities.set(uniqueCities);
     });
-    this.popularVenues.set(mapped);
   });
 }
 
-  selectCategory(index: number) {
+  selectCategory(index: number | null) {
     this.selectedCategory.set(index);
-    this.eventService.getEventsByCategory(index).subscribe(res => {
-      this.categoryEvents.set(res.items || []);
-    });
   }
 
-  generateFilterDates() {
-    const dates: string[] = [];
-    const today = new Date();
-    
-    for (let i = 0; i < 7; i++) {
-      const nextDate = new Date(today);
-      nextDate.setDate(today.getDate() + i);
-      const formatted = nextDate.toISOString().split('T')[0];
-      dates.push(formatted);
-    }
-    
-    this.availableDates.set(dates);
-    if (dates.length > 0) {
-      this.selectDate(dates[0]); 
-    }
+  onDateChange(event: Event) {
+    const val = (event.target as HTMLInputElement).value;
+    this.selectedDate.set(val);
   }
 
-  selectDate(dateStr: string) {
-    this.selectedDate.set(dateStr);
-    this.eventService.getEventsByDate(dateStr).subscribe(res => {
-      this.dateEvents.set(res.items || []);
-    });
+  onCityChange(event: Event) {
+    const val = (event.target as HTMLSelectElement).value;
+    this.selectedCity.set(val);
+  }
+
+  onVenueChange(event: Event) {
+    const val = (event.target as HTMLSelectElement).value;
+    this.selectedVenueId.set(val);
+  }
+
+  onPriceChange(event: Event) {
+    const val = (event.target as HTMLSelectElement).value;
+    this.selectedMaxPrice.set(val ? Number(val) : null);
+  }
+
+  onSortChange(event: Event) {
+    const val = (event.target as HTMLSelectElement).value;
+    this.sortByDate.set(val);
+  }
+
+  resetFilters() {
+    this.selectedCategory.set(null);
+    this.selectedDate.set('');
+    this.selectedCity.set('');
+    this.selectedVenueId.set('');
+    this.selectedMaxPrice.set(null);
+    this.sortByDate.set('asc');
   }
 }

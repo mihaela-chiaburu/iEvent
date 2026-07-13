@@ -1,127 +1,131 @@
-<div class="events-header">
-    <h2>Events</h2>
-    @if (auth.currentUser()?.role === 'EventManager' || auth.currentUser()?.role === 'SuperAdmin') {
-        <button routerLink="/event-form" class="btn btn-add">Add New Event</button>
-    }
-</div>
+<div class="all-events-container">
+    <h1 class="page-title">Toate Evenimentele</h1>
 
-<!-- BANNER -->
-<section class="banner-section">
-    <div class="banner-slider">
-        @for (b of banners(); track b.eventId) {
-            <div class="banner-item" [routerLink]="['/book-ticket', b.eventId]">
-                <img [src]="b.imageUrl || 'assets/placeholder.jpg'" [alt]="b.name">
-                <h3>{{ b.name }}</h3>
+    <!-- CATEGORII -->
+    <section class="categories-filter-section">
+        <div class="filter-buttons central-buttons">
+            <button 
+                (click)="selectCategory(null)" 
+                [class.active]="selectedCategory() === null"
+                class="btn-filter">
+                Toate
+            </button>
+            @for (cat of categories; track $index) {
+                <button 
+                    (click)="selectCategory($index)" 
+                    [class.active]="selectedCategory() === $index"
+                    class="btn-filter">
+                    {{ cat }}
+                </button>
+            }
+        </div>
+    </section>
+
+    <!-- FILTRE DROPDOWN -->
+    <section class="filters-bar-section">
+        <div class="filters-wrapper">
+            <!-- Data -->
+            <div class="filter-group">
+                <label for="filter-date">Data</label>
+                <input 
+                    type="date" 
+                    id="filter-date" 
+                    [value]="selectedDate()"
+                    (change)="onDateChange($event)"
+                    class="filter-select date-input">
             </div>
-        }
-    </div>
-</section>
 
-<hr />
+            <!-- Oraș -->
+            <div class="filter-group">
+                <label for="filter-city">Oraș</label>
+                <select id="filter-city" (change)="onCityChange($event)" [value]="selectedCity()" class="filter-select">
+                    <option value="">Toate orașele</option>
+                    @for (city of cities(); track city) {
+                        <option [value]="city">{{ city }}</option>
+                    }
+                </select>
+            </div>
 
-<!-- POPULARE -->
-<section class="events-section">
-    <h3>Popular Events</h3>
-    <div class="events-grid">
-        @for (ev of popularEvents(); track ev.eventId) {
-            <div class="event-card">
-                <img [src]="(ev.images?.find(i => i.isBanner)?.url) || 'assets/placeholder.jpg'" alt="Event Image" class="card-img">
-                <div class="card-body">
-                    <small class="event-dates">
-                        {{ ev.allDates[0] | date:'dd MMM' }} 
-                        @if (ev.allDates.length > 1) { - {{ ev.allDates[ev.allDates.length - 1] | date:'dd MMM' }} }
-                    </small>
-                    <h3>{{ ev.name }}</h3>
-                    <div class="event-actions">
-                        @if (auth.currentUser()?.role === 'Customer') {
-                            <button [routerLink]="['/book-ticket', ev.eventId]" class="btn btn-book">Book</button>
-                        }
+            <!-- Locație -->
+            <div class="filter-group">
+                <label for="filter-venue">Locație</label>
+                <select id="filter-venue" (change)="onVenueChange($event)" [value]="selectedVenueId()" class="filter-select">
+                    <option value="">Toate locațiile</option>
+                    @for (v of venues(); track v.venueId) {
+                        <option [value]="v.venueId">{{ v.name }}</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Preț -->
+            <div class="filter-group">
+                <label for="filter-price">Preț maxim</label>
+                <select id="filter-price" (change)="onPriceChange($event)" [value]="selectedMaxPrice() || ''" class="filter-select">
+                    <option value="">Orice preț</option>
+                    <option value="50">Până la 50 Lei</option>
+                    <option value="100">Până la 100 Lei</option>
+                    <option value="200">Până la 200 Lei</option>
+                    <option value="500">Până la 500 Lei</option>
+                </select>
+            </div>
+
+            <!-- Sortare -->
+            <div class="filter-group">
+                <label for="sort-date">Sortează după dată</label>
+                <select id="sort-date" (change)="onSortChange($event)" [value]="sortByDate()" class="filter-select">
+                    <option value="asc">Cele mai apropiate</option>
+                    <option value="desc">Cele mai îndepărtate</option>
+                </select>
+            </div>
+
+            <!-- Reset -->
+            <div class="filter-group reset-group">
+                <button (click)="resetFilters()" class="btn-reset" title="Resetează toate filtrele">
+                    <i class="icon-reset"></i> Reset
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- GRID EVENIMENTE -->
+    <main class="events-grid-section">
+        <div class="events-grid">
+            @for (ev of filteredEvents(); track ev.eventId) {
+                <div class="event-card" [routerLink]="['/book-ticket', ev.eventId]">
+                    <div class="card-img-wrapper">
+                        <img [src]="ev.imageUrl || 'assets/placeholder.jpg'" alt="{{ ev.name }}" class="card-img">
+                    </div>
+                    
+                    <div class="card-body">
+                        <small class="event-dates">
+                            {{ ev.allDates[0] | date:'dd MMM' }} 
+                            @if (ev.allDates.length > 1) { 
+                                - {{ ev.allDates[ev.allDates.length - 1] | date:'dd MMM' }} 
+                            }
+                        </small>
+                        
+                        <h3 class="event-title">{{ ev.name }}</h3>
+                        
+                        <p class="event-venue">
+                            <i class="icon-pin"></i> {{ ev.venueName || 'Locație nespecificată' }}
+                        </p>
+                        
+                        <div class="card-footer">
+                            <span class="event-price">
+                                @if (ev.minPrice > 0) {
+                                    De la {{ ev.minPrice }} Lei
+                                } @else {
+                                    Intrare liberă
+                                }
+                            </span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        }
-    </div>
-</section>
-
-<hr />
-
-<!-- DUPĂ CATEGORII -->
-<section class="categories-section">
-    <h3>Browse by Category</h3>
-    <div class="filter-buttons">
-        @for (cat of categories; track $index) {
-            <button 
-                (click)="selectCategory($index)" 
-                [class.active]="selectedCategory() === $index"
-                class="btn-filter">
-                {{ cat }}
-            </button>
-        }
-    </div>
-
-    <div class="events-grid">
-        @for (ev of categoryEvents(); track ev.eventId) {
-            <div class="event-card">
-                <img [src]="(ev.images?.find(i => i.isBanner)?.url) || 'assets/placeholder.jpg'" alt="Category Event" class="card-img">
-                <div class="card-body">
-                    <small class="event-dates">{{ ev.allDates[0] | date:'dd MMM' }}</small>
-                    <h3>{{ ev.name }}</h3>
-                    <button [routerLink]="['/book-ticket', ev.eventId]" class="btn btn-book">View Details</button>
+            } @empty {
+                <div class="no-results">
+                    <p>Nu s-a găsit niciun eveniment care să corespundă filtrelor selectate.</p>
                 </div>
-            </div>
-        } @empty {
-            <p>Nu s-au găsit evenimente în această categorie.</p>
-        }
-    </div>
-</section>
-
-<hr />
-
-<!-- DUPĂ DATĂ -->
-<section class="date-section">
-    <h3>Schedule</h3>
-    <div class="filter-buttons">
-        @for (dateStr of availableDates(); track dateStr) {
-            <button 
-                (click)="selectDate(dateStr)" 
-                [class.active]="selectedDate() === dateStr"
-                class="btn-filter">
-                {{ dateStr | date:'EEE, dd MMM' }}
-            </button>
-        }
-    </div>
-
-    <div class="events-grid">
-        @for (ev of dateEvents(); track ev.eventId) {
-            <div class="event-card">
-                <img [src]="(ev.images?.find(i => i.isBanner)?.url) || 'assets/placeholder.jpg'" alt="Event Image" class="card-img">
-                <div class="card-body">
-                    <h3>{{ ev.name }}</h3>
-                    <p>{{ ev.description | slice:0:60 }}...</p>
-                    <button [routerLink]="['/book-ticket', ev.eventId]" class="btn btn-book">Book</button>
-                </div>
-            </div>
-        } @empty {
-            <p>Nu sunt evenimente planificate pentru această zi.</p>
-        }
-    </div>
-</section>
-
-<hr />
-
-<!-- VENUES POPULARE -->
-<section class="venues-section">
-    <h3>Popular Venues</h3>
-    <div class="venues-grid">
-        @for (v of popularVenues(); track v.venueId) {
-            <div class="venue-card">
-                <img [src]="v.venueImageUrl || 'assets/placeholder-venue.jpg'" alt="Venue Image" class="card-img">
-                <div class="card-body">
-                    <h3>{{ v.name }}</h3>
-                    <p class="venue-address"><i class="icon-pin"></i> {{ v.address }}, {{ v.city }}</p>
-                    <span class="badge">{{ v.eventCount }} Active Events</span>
-                </div>
-            </div>
-        }
-    </div>
-</section>
+            }
+        </div>
+    </main>
+</div>
