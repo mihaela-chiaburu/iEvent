@@ -1,0 +1,78 @@
+@if (isLoading()) {
+  <div class="loading">Se încarcă detaliile spațiului...</div>
+} @else if (venue()) {
+  <div class="venue-details-container">
+    
+    <header class="venue-header-centered">
+      <button routerLink="/venues" class="btn-back-link">&larr; Înapoi la toate locațiile</button>
+      <h1>{{ venue().name }}</h1>
+      <p class="venue-meta-address">📍 {{ venue().address }}, {{ venue().city }}</p>
+    </header>
+
+    <div class="venue-media-grid">
+      <div class="media-box image-box">
+        <img [src]="getMainImageUrl(venue())" [alt]="venue().name" class="detail-main-img">
+      </div>
+      
+      <div class="media-box map-box">
+        <div id="single-osm-map" class="osm-detail-mockup">
+          <div class="mock-map-content">
+            <span class="pulse-marker">📍</span>
+            <p>OpenStreetMap Interactiv</p>
+            <small>Lat: {{ venue().latitude }} | Long: {{ venue().longitude }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="venue-info-section">
+      <div class="info-block description-block">
+        <h2>Descriere Spațiu</h2>
+        <p>{{ venue().description || 'Nu există o descriere adăugată pentru această locație.' }}</p>
+        
+        @if (venue().phone || venue().email) {
+          <div class="contact-subtext">
+            <p><strong>Telefon:</strong> {{ venue().phone || '-' }}</p>
+            <p><strong>Email:</strong> {{ venue().email || '-' }}</p>
+          </div>
+        }
+      </div>
+
+      <div class="info-block facilities-block">
+        <h2>Facilități Disponibile</h2>
+        @if (venue().facilities && venue().facilities.length > 0) {
+          <ul class="facility-tags-list">
+            @for (fac of venue().facilities; track fac.facilityId) {
+              <li>✨ {{ fac.name }}</li>
+            }
+          </ul>
+        } @else {
+          <p class="no-data">Nu sunt facilități specifice înregistrate.</p>
+        }
+      </div>
+    </div>
+
+    <footer class="venue-events-section">
+      <h2>Evenimente în această locație ({{ venueEvents().length }})</h2>
+      
+      @if (venueEvents().length === 0) {
+        <div class="no-events-box">Actualmente nu sunt evenimente programate în acest spațiu.</div>
+      } @else {
+        <div class="events-mini-list">
+          @for (ev of venueEvents(); track ev.eventId) {
+            <div class="event-mini-card" [routerLink]="['/event-details', ev.eventId]">
+              <div class="mini-card-details">
+                <h3>{{ ev.name }}</h3>
+                <p class="event-date">📅 {{ ev.startDate | date:'dd MMM yyyy' }}</p>
+              </div>
+              <span class="btn-arrow">&rarr;</span>
+            </div>
+          }
+        </div>
+      }
+    </footer>
+
+  </div>
+} @else {
+  <div class="error-state">Locația nu a putut fi găsită.</div>
+}

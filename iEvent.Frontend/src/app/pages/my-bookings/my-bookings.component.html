@@ -1,24 +1,96 @@
-<h2>My Bookings</h2>
-@for (b of bookings(); track b.bookingId) {
-    <div class="booking-card">
-        <p><strong>Booking Code:</strong> {{ b.bookingCode }}</p>
-        <p>Date: {{ b.bookingDate | slice:0:10 }} | Total: {{ b.totalPrice }}</p>
-        <p>Status: {{ b.status === 0 ? 'Pending' : 'Confirmed' }}</p>
-        
-        @if (editingBookingId() === b.bookingId) {
-            <div class="edit-panel">
-                <label>Change Status (Simulation Edit):</label>
-                <select [(ngModel)]="b.status">
-                    <option [value]="0">Pending</option>
-                    <option [value]="1">Cancelled</option>
-                </select>
-                <button (click)="saveEdit(b)" class="btn-save">Save</button>
-                <button (click)="editingBookingId.set(null)">Cancel</button>
-            </div>
-        } @else {
-            <button (click)="editingBookingId.set(b.bookingId)" class="btn-edit">Edit</button>
-        }
-
-        <button (click)="cancelBooking(b.bookingId)" class="btn-delete">Delete / Cancel</button>
+<div class="bookings-container">
+    <h1>Biletele mele</h1>
+    <div class="tabs">
+        <button 
+            [class.active]="selectedTab() === 'pending'"
+            (click)="selectedTab.set('pending')">
+            Necesită acțiuni
+            ({{ pendingBookings().length }})
+        </button>
+        <button 
+            [class.active]="selectedTab() === 'active'"
+            (click)="selectedTab.set('active')">
+            Bilete active
+            ({{ activeBookings().length }})
+        </button>
+        <button 
+            [class.active]="selectedTab() === 'all'"
+            (click)="selectedTab.set('all')">
+            Toate biletele
+            ({{ bookings().length }})
+        </button>
     </div>
-}
+    <div class="bookings-list">
+        @for (b of displayBookings(); track b.bookingId) {
+            <div class="booking-card">
+                <img 
+                    class="event-image"
+                    [src]="b.event?.imageUrl"
+                    alt="event">
+                <div class="booking-content">
+                    <h2>
+                        {{ b.event?.name }}
+                    </h2>
+                    <p>
+                        {{ b.venue?.name }}
+                    </p>
+                    <p>
+                        {{ b.venue?.address }}
+                    </p>
+                    <p>
+                        {{ b.event?.eventDates?.[0]?.date 
+                            | date:'dd MMM yyyy' }}
+                    </p>
+                    <p>
+                        {{
+                        b.event?.eventDates?.[0]
+                        ?.timeSlots?.[0]
+                        ?.startTime
+                        | slice:0:5
+                        }}
+                    </p>
+                    <p>
+                        {{ b.tickets.length }} bilete
+                    </p>
+                    <p class="price">
+                        Total: {{ b.totalPrice }} Lei
+                    </p>
+                    @if(selectedTab() === 'pending') {
+                        <div class="actions">
+                            <button 
+                                class="pay"
+                                (click)="payBooking(b.bookingId)">
+                                Achită Online
+                            </button>
+                            <button
+                                class="cancel"
+                                (click)="cancelBooking(b.bookingId)">
+                                Renunță
+                            </button>
+                        </div>
+                    } @else {
+                        <p>
+                            Cod:
+                            <strong>
+                                {{ b.bookingCode }}
+                            </strong>
+                        </p>
+                        @if (b.qrCode) {
+                            <img
+                                [src]="b.qrCode"
+                                class="qr-image">
+                        }
+                        <img
+                            [id]="'qr-'+b.bookingId"
+                            class="qr-image">
+                        <button
+                            class="pdf-btn"
+                            (click)="downloadPdf(b.bookingId)">
+                            Descarcă PDF
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>

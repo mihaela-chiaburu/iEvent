@@ -38,4 +38,19 @@ export class BookingService {
   markUnpaid(id: string) { 
     return this.http.patch(`${this.url}/${id}/mark-unpaid`, {}); 
   }
+
+  simulatePayment(id:string){
+    return this.http.post(`${this.url}/${id}/simulate-payment`, {});
+}
+
+
+getQr(id:string){
+    return this.http.get(`${this.url}/${id}/qr`);
+}
+
+downloadPdf(id:string){
+    return this.http.get(`${this.url}/${id}/pdf`, {
+        responseType:'blob'
+    });
+}
 }

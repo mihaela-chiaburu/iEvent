@@ -25,7 +25,6 @@ export class BookingComponent implements OnInit {
   timeSlotId = signal<string>('');
   event = signal<any>(null);
   ticketTypes = signal<any[]>([]);
-  
   quantities = signal<{ [key: string]: number }>({});
 
   userData = signal({
@@ -34,18 +33,20 @@ export class BookingComponent implements OnInit {
     fullName: ''
   });
 
-  paymentMethod = signal<number>(0);
+  cardData = signal({
+    cardholderName: '',
+    cardNumber: '',
+    expiryDate: '',
+    cvv: ''
+  });
 
+  paymentMethod = signal<number>(0); 
   adminFee = 10;
-
   bookingResponse = signal<any>(null);
 
   selectedTicketsSummary = computed(() => {
     return this.ticketTypes()
-      .map(t => ({
-        ...t,
-        qty: this.quantities()[t.ticketTypeId] || 0
-      }))
+      .map(t => ({ ...t, qty: this.quantities()[t.ticketTypeId] || 0 }))
       .filter(t => t.qty > 0);
   });
 
@@ -63,9 +64,7 @@ export class BookingComponent implements OnInit {
 
     if (id) {
       this.eventId.set(id);
-      if (slotId) {
-        this.timeSlotId.set(slotId);
-      }
+      if (slotId) this.timeSlotId.set(slotId);
       this.loadBookingData(id);
     }
 
@@ -94,25 +93,19 @@ export class BookingComponent implements OnInit {
     this.eventService.getEventTicketTypes(id).subscribe((tickets: any) => {
       this.ticketTypes.set(tickets || []);
       const initialQty: { [key: string]: number } = {};
-      tickets.forEach((t: any) => {
-        initialQty[t.ticketTypeId] = 0;
-      });
+      tickets.forEach((t: any) => { initialQty[t.ticketTypeId] = 0; });
       this.quantities.set(initialQty);
     });
   }
 
   incrementQuantity(ticketTypeId: string, maxAvailable: number) {
     const current = this.quantities()[ticketTypeId] || 0;
-    if (current < maxAvailable) {
-      this.quantities.update(q => ({ ...q, [ticketTypeId]: current + 1 }));
-    }
+    if (current < maxAvailable) this.quantities.update(q => ({ ...q, [ticketTypeId]: current + 1 }));
   }
 
   decrementQuantity(ticketTypeId: string) {
     const current = this.quantities()[ticketTypeId] || 0;
-    if (current > 0) {
-      this.quantities.update(q => ({ ...q, [ticketTypeId]: current - 1 }));
-    }
+    if (current > 0) this.quantities.update(q => ({ ...q, [ticketTypeId]: current - 1 }));
   }
 
   goToStep2() {
@@ -123,11 +116,10 @@ export class BookingComponent implements OnInit {
     this.currentStep.set(2);
   }
 
-  backToStep1() {
-    this.currentStep.set(1);
-  }
+  backToStep1() { this.currentStep.set(1); }
+  backToStep2() { this.currentStep.set(2); }
 
-  submitBooking() {
+  handleStep2Submit() {
     const ticketsPayload = this.selectedTicketsSummary().map(t => ({
       ticketTypeId: t.ticketTypeId,
       quantity: t.qty
@@ -137,17 +129,41 @@ export class BookingComponent implements OnInit {
       eventId: this.eventId(),
       bookingTimeSlotId: this.timeSlotId(),
       tickets: ticketsPayload,
-      paymentMethod: Number(this.paymentMethod()) // 0 sau 1
+      paymentMethod: Number(this.paymentMethod())
     };
 
     this.http.post('https://localhost:44330/api/bookings', payload).subscribe({
       next: (res: any) => {
         this.bookingResponse.set(res);
-        this.currentStep.set(3); 
+
+        if (this.paymentMethod() === 0) {
+          this.currentStep.set(25);
+        } else {
+          this.currentStep.set(3);
+        }
       },
       error: (err) => {
-        console.error('Eroare la crearea rezervării:', err);
-        alert('A apărut o problemă la procesarea comenzii. Încercați din nou.');
+        console.error(err);
+        alert('Eroare la generarea rezervării.');
+      }
+    });
+  }
+
+  processOnlinePayment() {
+    const bookingId = this.bookingResponse()?.bookingId;
+    if (!bookingId) return;
+
+    this.http.post(`https://localhost:44330/api/bookings/${bookingId}/simulate-payment`, { shouldSucceed: true }).subscribe({
+      next: () => {
+        this.bookingResponse.update(current => ({
+          ...current,
+          status: 1
+        }));
+        this.currentStep.set(3);
+      },
+      error: (err) => {
+        console.error(err);
+        alert('Plata a eșuat la procesare.');
       }
     });
   }

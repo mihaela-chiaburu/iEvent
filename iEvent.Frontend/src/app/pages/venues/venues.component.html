@@ -1,18 +1,52 @@
-<h2>Venues</h2>
+<div class="venues-page-container">
+  
+  <header class="page-header">
+    <h1>Toate Locațiile</h1>
+  </header>
 
-@if (auth.currentUser()?.role === 'EventManager' || auth.currentUser()?.role === 'SuperAdmin') {
-    <fieldset class="venue-fieldset">
-        <legend>Create New Venue</legend>
-        <input type="text" [(ngModel)]="newVenue.name" placeholder="Name" />
-        <input type="text" [(ngModel)]="newVenue.city" placeholder="City" />
-        <input type="text" [(ngModel)]="newVenue.address" placeholder="Address" />
-        <input type="number" [(ngModel)]="newVenue.capacity" placeholder="Capacity" />
-        <button (click)="addVenue()" class="btn-add">Add</button>
-    </fieldset>
-}
+  <section class="map-section">
+    <div class="map-header">
+      <h2><i class="icon-map"></i> Harta Locațiilor</h2>
+    </div>
+    <div id="osm-map-container" class="map-mockup">
+      <div class="map-placeholder-content">
+        <span class="map-icon">📍</span>
+        <p>Aici va fi integrată harta OpenStreetMap</p>
+      </div>
+    </div>
+  </section>
 
-<ul class="venue-list">
-    @for (v of venues(); track v.venueId) {
-        <li><strong>{{ v.name }}</strong> - {{ v.city }}, {{ v.address }} (Capacity: {{ v.capacity }})</li>
+  <section class="venues-section">
+    <h2>Listă Spații</h2>
+
+    @if (isLoading()) {
+      <div class="loading-spinner">Se încarcă locațiile...</div>
+    } @else if (venues().length === 0) {
+      <div class="empty-state">Nu a fost găsită nicio locație disponibilă.</div>
+    } @else {
+      <div class="venues-grid">
+        @for (venue of venues(); track venue.venueId) {
+          <div class="venue-card-clickable" [routerLink]="['/venue-details', venue.venueId]">
+            
+            <div class="venue-image-wrapper">
+              <img [src]="getMainImageUrl(venue)" [alt]="venue.name" class="venue-card-img">
+              <span class="event-count-badge">
+                {{ venue.eventCount }} {{ venue.eventCount === 1 ? 'Eveniment' : 'Evenimente' }}
+              </span>
+            </div>
+
+            <div class="venue-card-body">
+              <h3 class="venue-name">{{ venue.name }}</h3>
+              
+              <div class="venue-address-info">
+                <span class="city-tag">{{ venue.city }}</span>
+                <p class="full-address"><i class="icon-location"></i> {{ venue.address }}</p>
+              </div>
+            </div>
+
+          </div>
+        }
+      </div>
     }
-</ul>
+  </section>
+</div>

@@ -1,31 +1,43 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { AuthService } from '../../services/auth.service';
-import { Venue } from '../../models/venue.model';
-import { VenueService } from '../../services/venue.service';
+import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { EventService } from '../../services/event.service';
 
 @Component({
+  selector: 'app-venues',
   standalone: true,
-  imports: [FormsModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './venues.component.html',
   styleUrl: './venues.component.css'
 })
 export class VenuesComponent implements OnInit {
-  private venueService = inject(VenueService);
-  auth = inject(AuthService);
-  venues = signal<Venue[]>([]);
+  private eventService = inject(EventService);
 
-  newVenue = { name: '', city: '', address: '', capacity: 0, latitude: 0, longitude: 0 };
+  venues = signal<any[]>([]);
+  isLoading = signal<boolean>(true);
 
-  ngOnInit() { this.loadVenues(); }
+  ngOnInit() {
+    this.loadVenues();
+  }
 
-  loadVenues() { this.venueService.getVenues().subscribe(res => this.venues.set(res)); }
-
-  addVenue() {
-    this.venueService.createVenue(this.newVenue).subscribe(() => {
-      alert('Venue added successfully!');
-      this.loadVenues();
-      this.newVenue = { name: '', city: '', address: '', capacity: 0, latitude: 0, longitude: 0 };
+  loadVenues() {
+    this.eventService.getPopularVenues().subscribe({
+      next: (data: any[]) => {
+        this.venues.set(data || []);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Eroare la încărcarea locațiilor:', err);
+        this.isLoading.set(false);
+      }
     });
+  }
+
+  getMainImageUrl(venue: any): string {
+    if (!venue.images || venue.images.length === 0) {
+      return 'assets/placeholder-venue.jpg';
+    }
+    const mainImg = venue.images.find((img: any) => img.sortOrder === 0);
+    return mainImg ? mainImg.url : venue.images[0].url;
   }
 }

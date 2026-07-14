@@ -9,6 +9,7 @@ import { EventFormComponent } from './pages/event-form/event-form.component';
 import { BookingsManagerComponent } from './pages/bookings-manager/bookings-manager.component';
 import { UsersComponent } from './pages/users/users.component';
 import { EventDetailsComponent } from './pages/event-details/event-details.component';
+import { VenueDetailsComponent } from './pages/venue-details/venue-details.component';
 
 export const routes: Routes = [
   { 
@@ -42,6 +43,9 @@ export const routes: Routes = [
   { 
     path: 'event-details/:id', 
     component: EventDetailsComponent },
+  { 
+    path: 'venue-details/:id', 
+    component: VenueDetailsComponent },
   { 
     path: '**', 
     redirectTo: '' 

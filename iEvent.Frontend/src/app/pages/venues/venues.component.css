@@ -1,28 +1,231 @@
-.venue-fieldset {
-    margin-bottom: 20px;
-    padding: 15px;
-    border: 1px solid #ccc;
+.venues-page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.page-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.page-header h1 {
+    font-size: 2.5rem;
+    color: #222;
+    margin-bottom: 0.5rem;
+}
+
+.page-header p {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+/* Stiluri Secțiune Hartă OpenStreetMap */
+.map-section {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    margin-bottom: 3rem;
+    border: 1px solid #eef0f2;
+}
+
+.map-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.map-header h2 {
+    font-size: 1.4rem;
+    margin: 0;
+    color: #333;
+}
+
+.map-badge {
+    background: #e3f2fd;
+    color: #0d47a1;
+    padding: 0.3rem 0.7rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.map-mockup {
+    width: 100%;
+    height: 350px;
+    background: #e5e3df; /* Culoare clasică de fundal pentru hărți */
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccd1d9;
+    position: relative;
+    overflow: hidden;
+}
+
+.map-placeholder-content {
+    text-align: center;
+    color: #555;
+}
+
+.map-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 0.5rem;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Gridul de Carduri */
+.venues-section h2 {
+    font-size: 1.6rem;
+    margin-bottom: 1.5rem;
+    color: #333;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+.venues-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+}
+
+.venue-card {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    border: 1px solid #e9ecef;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.venue-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+/* Imaginea */
+.venue-image-wrapper {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    background: #f8f9fa;
+}
+
+.venue-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.event-count-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(51, 51, 51, 0.9);
+    color: #fff;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    backdrop-filter: blur(4px);
+}
+
+/* Corpul Cardului */
+.venue-card-body {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.venue-name {
+    font-size: 1.3rem;
+    margin: 0 0 0.75rem 0;
+    color: #111;
+}
+
+.venue-address-info {
+    margin-bottom: 1rem;
+}
+
+.city-tag {
+    display: inline-block;
+    background: #f1f3f5;
+    color: #495057;
+    padding: 0.2rem 0.5rem;
     border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    text-transform: uppercase;
 }
 
-.venue-fieldset input {
-    margin-right: 5px; 
+.full-address {
+    margin: 0;
+    color: #666;
+    font-size: 0.95rem;
+    line-height: 1.4;
 }
 
-.btn-add {
-    background-color: green;
-    color: white;
-    margin-left: 10px;
-    padding: 5px 10px;
+.venue-capacity {
+    font-size: 0.9rem;
+    color: #555;
+    margin-top: auto;
+    margin-bottom: 1rem;
+}
+
+.venue-actions {
+    margin-top: auto;
+}
+
+.btn-view-details {
+    width: 100%;
+    background: #333;
+    color: #fff;
     border: none;
-    border-radius: 3px;
+    padding: 0.7rem;
+    border-radius: 6px;
     cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+    text-align: center;
 }
 
-.venue-list {
-    padding-left: 20px;
+.btn-view-details:hover {
+    background: #555;
 }
 
-.venue-list li {
-    margin-bottom: 5px;
+/* Stări Loading & Empty */
+.loading-spinner, .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #777;
+    font-size: 1.1rem;
+}
+.venue-card-clickable {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    border: 1px solid #e9ecef;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer; /* Transformă indicatorul în mână */
+}
+
+.venue-card-clickable:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
 }
