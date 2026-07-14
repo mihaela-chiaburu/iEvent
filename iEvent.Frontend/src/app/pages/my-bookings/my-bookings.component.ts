@@ -66,98 +66,64 @@ export class MyBookingsComponent implements OnInit {
       .filter(b => b.status === 0);
   }
 
-
   activeBookings() {
     return this.bookings()
       .filter(b => b.status !== 0);
   }
 
-
   displayBookings() {
-
     switch(this.selectedTab()) {
-
       case 'pending':
         return this.pendingBookings();
-
       case 'active':
         return this.activeBookings();
-
       default:
         return this.bookings();
     }
-
   }
 
-
-
   payBooking(id:string) {
-
     this.bookingService.simulatePayment(id)
       .subscribe(() => {
-
         alert('Plata a fost efectuată!');
         this.loadBookings();
-
       });
-
   }
 
 
 
   cancelBooking(id:string) {
-
     if(confirm('Sigur dorești să renunți la acest bilet?')) {
-
       this.bookingService.deleteBooking(id)
         .subscribe(() => {
-
           this.loadBookings();
-
         });
-
     }
-
   }
 
 
 
 showQr(id:string) {
-
   this.bookingService.getQr(id)
     .subscribe((res:any)=>{
-
       const booking = this.bookings()
         .find(b => b.bookingId === id);
-
       if(booking){
-
         booking.qrCode = res.qrCodeBase64;
-
         this.bookings.set([...this.bookings()]);
-
       }
-
     });
-
 }
 
   downloadPdf(id:string) {
-
     this.bookingService.downloadPdf(id)
       .subscribe((blob:any)=>{
-
         const url = window.URL.createObjectURL(blob);
-
         const a = document.createElement('a');
         a.href = url;
         a.download = 'booking.pdf';
         a.click();
-
         window.URL.revokeObjectURL(url);
-
       });
-
   }
-
 }
