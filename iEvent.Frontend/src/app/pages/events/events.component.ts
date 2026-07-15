@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { EventService } from '../../services/event.service';
+import { AuthService } from '../../services/auth.service'; 
 
 @Component({
   selector: 'app-events',
@@ -12,6 +13,7 @@ import { EventService } from '../../services/event.service';
 })
 export class EventsComponent implements OnInit {
   private eventService = inject(EventService);
+  auth = inject(AuthService); 
 
   allEvents = signal<any[]>([]);
   venues = signal<any[]>([]);
@@ -28,6 +30,11 @@ export class EventsComponent implements OnInit {
     'Concerts', 'Teatru', 'Festivaluri', 'Stand-up', 'Copii', 
     'Sport', 'Expoziții', 'Business', 'Parties', 'Filme', 'Altele'
   ];
+
+  isManager = computed(() => {
+    const role = this.auth.currentUser()?.role;
+    return role === 'EventManager' || role === 'SuperAdmin';
+  });
 
   filteredEvents = computed(() => {
     let events = [...this.allEvents()];
@@ -65,31 +72,31 @@ export class EventsComponent implements OnInit {
     this.loadInitialData();
   }
 
-loadInitialData() {
-  this.eventService.getPopularVenues().subscribe((venuesList: any) => {
-    this.venues.set(venuesList || []);
+  loadInitialData() {
+    this.eventService.getPopularVenues().subscribe((venuesList: any) => {
+      this.venues.set(venuesList || []);
 
-    this.eventService.getEvents().subscribe((res: any) => {
-      const rawItems = res.items || res; 
-      
-      const mapped = rawItems.map((ev: any) => {
-        const matchingVenue = venuesList?.find((v: any) => v.venueId === ev.venueId);
+      this.eventService.getEvents().subscribe((res: any) => {
+        const rawItems = res.items || res; 
+        
+        const mapped = rawItems.map((ev: any) => {
+          const matchingVenue = venuesList?.find((v: any) => v.venueId === ev.venueId);
 
-        return {
-          ...ev,
-          imageUrl: ev.images?.find((img: any) => img.isBanner)?.url || null,
-          venueName: matchingVenue ? matchingVenue.name : 'Locație necunoscută',
-          minPrice: ev.minTicketPrice ?? 0
-        };
+          return {
+            ...ev,
+            imageUrl: ev.images?.find((img: any) => img.isBanner)?.url || null,
+            venueName: matchingVenue ? matchingVenue.name : 'Locație necunoscută',
+            minPrice: ev.minTicketPrice ?? 0
+          };
+        });
+        
+        this.allEvents.set(mapped);
+
+        const uniqueCities = [...new Set(venuesList?.map((v: any) => v.city).filter(Boolean))] as string[];
+        this.cities.set(uniqueCities);
       });
-      
-      this.allEvents.set(mapped);
-
-      const uniqueCities = [...new Set(venuesList?.map((v: any) => v.city).filter(Boolean))] as string[];
-      this.cities.set(uniqueCities);
     });
-  });
-}
+  }
 
   selectCategory(index: number | null) {
     this.selectedCategory.set(index);

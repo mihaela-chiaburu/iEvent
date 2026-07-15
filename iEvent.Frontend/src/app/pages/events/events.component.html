@@ -81,8 +81,19 @@
 
     <main class="events-grid-section">
         <div class="events-grid">
+            
+            @if (isManager()) {
+                <div class="event-card add-event-card" routerLink="/create-event">
+                    <div class="add-event-content">
+                        <div class="plus-icon">+</div>
+                        <h3>Adaugă Eveniment</h3>
+                        <p>Creează un eveniment nou în sistem</p>
+                    </div>
+                </div>
+            }
+
             @for (ev of filteredEvents(); track ev.eventId) {
-                <div class="event-card" [routerLink]="['/event-details', ev.eventId]">
+                <div class="event-card" [routerLink]="isManager() ? ['/edit-event', ev.eventId] : ['/event-details', ev.eventId]">
                     <div class="card-img-wrapper">
                         <img [src]="ev.imageUrl || 'assets/placeholder.jpg'" alt="{{ ev.name }}" class="card-img">
                     </div>
@@ -113,9 +124,11 @@
                     </div>
                 </div>
             } @empty {
-                <div class="no-results">
-                    <p>Nu s-a găsit niciun eveniment care să corespundă filtrelor selectate.</p>
-                </div>
+                @if (!isManager() || filteredEvents().length === 0) {
+                    <div class="no-results">
+                        <p>Nu s-a găsit niciun eveniment care să corespundă filtrelor selectate.</p>
+                    </div>
+                }
             }
         </div>
     </main>

@@ -162,3 +162,45 @@
     color: #777;
     font-size: 1.1rem;
 }
+
+.add-event-card {
+  border: 2px dashed #999;
+  background: #fdfdfd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  min-height: 320px; 
+  transition: all 0.3s ease;
+  box-shadow: none;
+}
+
+.add-event-card:hover {
+  border-color: #333;
+  background: #f4f4f4;
+  transform: translateY(-5px);
+}
+
+.add-event-content {
+  padding: 20px;
+  color: #555;
+}
+
+.add-event-content .plus-icon {
+  font-size: 3rem;
+  font-weight: 300;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.add-event-content h3 {
+  font-size: 1.25rem;
+  margin: 10px 0 5px;
+  color: #333;
+}
+
+.add-event-content p {
+  font-size: 0.9rem;
+  color: #777;
+}

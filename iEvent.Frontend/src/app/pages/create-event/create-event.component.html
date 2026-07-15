@@ -1,0 +1,160 @@
+<div class="create-event-container">
+  <h2>Creează Eveniment</h2>
+
+  <form [formGroup]="eventForm" class="event-form">
+    
+    <div class="form-section image-upload-section">
+      <label class="section-label">Banner Eveniment</label>
+      <div class="banner-preview-box" [style.background-image]="bannerUrl() ? 'url(' + bannerUrl() + ')' : null">
+        @if (!bannerUrl()) {
+          <div class="upload-placeholder">
+            @if (isUploadingBanner()) {
+              <p>Se încarcă bannerul...</p>
+            } @else {
+              <p>Niciun banner încărcat</p>
+              <label class="btn-browse">
+                Browse File
+                <input type="file" (change)="onFileSelected($event)" accept="image/*" style="display: none;">
+              </label>
+            }
+          </div>
+        } @else {
+          <label class="btn-browse change-banner-btn">
+            Schimbă imaginea
+            <input type="file" (change)="onFileSelected($event)" accept="image/*" style="display: none;">
+          </label>
+        }
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="name">Titlul evenimentului *</label>
+          <input type="text" id="name" formControlName="name" placeholder="Ex: Concert Rock">
+        </div>
+
+        <div class="form-group">
+          <label for="category">Categoria *</label>
+          <select id="category" formControlName="category">
+            @for (cat of categories; track $index) {
+              <option [value]="$index">{{ cat }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="venueId">Locație *</label>
+        <select id="venueId" formControlName="venueId">
+          <option value="">Alege o locație</option>
+          @for (v of venues(); track v.venueId) {
+            <option [value]="v.venueId">{{ v.name }} - {{ v.city }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Descriere *</label>
+        <textarea id="description" formControlName="description" rows="5" placeholder="Adaugă detalii despre eveniment..."></textarea>
+      </div>
+    </div>
+
+    <div class="form-section calendar-section">
+      <div class="section-header">
+        <label class="section-label">Date și Ore de Desfășurare</label>
+        <button type="button" class="btn-secondary-action" (click)="addDateGroup()">+ Adaugă Dată</button>
+      </div>
+
+      <div formArrayName="eventDates">
+        @for (dateGroup of eventDates.controls; track $index; let dIndex = $index) {
+          <div [formGroupName]="dIndex" class="date-row-box">
+            
+            <div class="calendar-split-container">
+              <div class="left-split">
+                <label>Data Evenimentului</label>
+                <input type="date" formControlName="date" class="date-picker-input">
+                <button type="button" class="btn-delete-danger" (click)="removeDateGroup(dIndex)">Elimină Data</button>
+              </div>
+
+              <div class="right-split">
+                <div class="sub-section-header">
+                  <label>Intervale Orare (Ore)</label>
+                  <button type="button" class="btn-add-time" (click)="addTimeSlot(dIndex)">+ Adaugă interval</button>
+                </div>
+
+                <div formArrayName="timeSlots">
+                  @for (slot of getTimeSlots(dIndex).controls; track $index; let sIndex = $index) {
+                    <div [formGroupName]="sIndex" class="time-slot-inputs">
+                      <input type="time" formControlName="startTime">
+                      <span>până la</span>
+                      <input type="time" formControlName="endTime">
+                      <button type="button" class="btn-icon-delete" (click)="removeTimeSlot(dIndex, sIndex)" title="Șterge oră">×</button>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+
+          </div>
+        } @empty {
+          <p class="empty-list-info">Nu a fost adăugată nicio dată. Apăsați butonul "+ Adaugă Dată".</p>
+        }
+      </div>
+    </div>
+
+    <div class="form-section ticket-section">
+      <div class="section-header">
+        <label class="section-label">Tipuri de Bilete</label>
+        <button type="button" class="btn-secondary-action" (click)="addTicketType()">+ Adaugă tip de bilet</button>
+      </div>
+
+      <div formArrayName="ticketTypes" class="tickets-list">
+        @for (ticket of ticketTypes.controls; track $index; let tIndex = $index) {
+          <div [formGroupName]="tIndex" class="ticket-item-card">
+            <div class="ticket-row-inputs">
+              <div class="form-group flex-2">
+                <label>Nume bilet *</label>
+                <input type="text" formControlName="name" placeholder="Ex: VIP, Standard">
+              </div>
+
+              <div class="form-group flex-1">
+                <label>Preț (Lei) *</label>
+                <input type="number" formControlName="price">
+              </div>
+
+              <div class="form-group flex-1">
+                <label>Cantitate *</label>
+                <input type="number" formControlName="quantity">
+              </div>
+            </div>
+
+            <div class="ticket-row-inputs margin-top-10">
+              <div class="form-group flex-1">
+                <label>Disponibil de la *</label>
+                <input type="date" formControlName="availableFrom">
+              </div>
+
+              <div class="form-group flex-1">
+                <label>Disponibil până la *</label>
+                <input type="date" formControlName="availableTo">
+              </div>
+
+              <div class="form-group delete-btn-wrapper">
+                <button type="button" class="btn-delete-ticket" (click)="removeTicketType(tIndex)">Elimină bilet</button>
+              </div>
+            </div>
+          </div>
+        } @empty {
+          <p class="empty-list-info">Niciun tip de bilet adăugat. Evenimentul va fi considerat implicit cu intrare liberă.</p>
+        }
+      </div>
+    </div>
+
+    <div class="action-footer-buttons">
+      <button type="button" class="btn-delete-draft" (click)="deleteDraft()">Șterge Evenimentul</button>
+      <button type="button" class="btn-publish" (click)="publishEvent()">Publică Evenimentul</button>
+    </div>
+
+  </form>
+</div>

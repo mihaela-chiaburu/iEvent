@@ -47,6 +47,9 @@ export const routes: Routes = [
     path: 'venue-details/:id', 
     component: VenueDetailsComponent },
   { 
+    path: 'create-event', 
+    component: EventFormComponent },
+  { 
     path: '**', 
     redirectTo: '' 
   }
