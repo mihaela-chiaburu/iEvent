@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { Booking } from '../models/booking.model';
 
 @Injectable({ providedIn: 'root' })
@@ -112,4 +112,18 @@ export class BookingService {
   createBookingByManager(payload: any): Observable<any> {
     return this.http.post<any>(`${this.url}/by-manager`, payload);
   }
+
+  getCustomers(search: string): Observable<any[]> {
+  return this.http.get<any>('https://localhost:44330/api/users', {
+    params: {
+      Search: search,
+      PageSize: '20'
+    }
+  }).pipe(
+    map((res: any) => {
+      const list = res.items || res || [];
+      return Array.isArray(list) ? list : [];
+    })
+  );
+}
 }

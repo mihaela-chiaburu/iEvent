@@ -1,0 +1,209 @@
+<div class="booking-container">
+  
+  <div class="back-navigation">
+    <a routerLink="/bookings" class="back-link">
+      ← Înapoi la listă rezervări
+    </a>
+  </div>
+
+  <div class="booking-card">
+    
+    <div class="card-header">
+      <h1 class="page-title">Creează rezervare de la Manager</h1>
+      <p class="page-subtitle">Formular dedicat organizatorilor pentru adăugarea manuală a clienților în sistem</p>
+    </div>
+
+<div class="step-section">
+  <h2 class="step-title">
+    <span class="step-number">1</span>
+    Selectează Evenimentul
+  </h2>
+  <div class="search-wrapper" style="position: relative;">
+    <input 
+      type="text"
+      [(ngModel)]="eventSearchQuery"
+      (ngModelChange)="filterEvents($event)"
+      placeholder="Scrie numele evenimentului pentru a filtra..."
+      class="search-input"
+    />
+    
+    <div *ngIf="eventSearchQuery && filteredEvents().length > 0" class="suggestions-dropdown" style="position: absolute; width: 100%; z-index: 999; background: white; border: 1px solid #ccc; max-height: 200px; overflow-y: auto;">
+      <div 
+        *ngFor="let ev of filteredEvents()"
+        (click)="onEventSelect(ev.eventId); filterEvents(ev.name)"
+        class="suggestion-item"
+        style="padding: 10px; cursor: pointer;"
+      >
+        <span class="event-name" style="font-weight: bold; display: block;">{{ ev.name }}</span>
+        <span class="event-category" style="font-size: 12px; color: gray;">{{ ev.category }}</span>
+      </div>
+    </div>
+    
+    <div *ngIf="eventSearchQuery && filteredEvents().length === 0" class="no-results" style="position: absolute; background: #fff3cd; color: #856404; padding: 10px; width: 100%; z-index: 999; border: 1px solid #ffeeba;">
+      Niciun eveniment găsit pentru "{{ eventSearchQuery }}"
+    </div>
+  </div>
+</div>
+
+    <div class="step-section" *ngIf="selectedEvent()">
+      <div class="selected-event-banner">
+        <div>
+          <h3 class="selected-event-title">{{ selectedEvent().name }}</h3>
+          <p class="selected-event-venue">Locație: {{ selectedEvent().venueName }}</p>
+        </div>
+        <span class="badge">Eveniment selectat</span>
+      </div>
+
+      <h2 class="step-title">
+        <span class="step-number">2</span>
+        Disponibilitate și Sloturi
+      </h2>
+      
+      <div class="grid-dates">
+        <div *ngFor="let dateGroup of selectedEvent().processedDates" class="date-card">
+          <div class="date-header">
+            <span class="date-icon">📅</span>
+            <h4 class="date-text">{{ dateGroup.date | date:'EEEE, dd MMMM yyyy' }}</h4>
+          </div>
+          
+          <div class="slots-list">
+            <div *ngFor="let slot of dateGroup.timeSlots" 
+                 class="slot-row"
+                 [ngClass]="{'slot-selected': selectedSlotId() === slot.timeSlotId}">
+              <span class="slot-time">
+                {{ slot.startTime | slice:0:5 }} - {{ slot.endTime | slice:0:5 }}
+              </span>
+              <button 
+                type="button" 
+                (click)="selectSlot(slot.timeSlotId)"
+                class="slot-button"
+                [ngClass]="{'btn-selected': selectedSlotId() === slot.timeSlotId}">
+                {{ selectedSlotId() === slot.timeSlotId ? 'Selectat' : 'Alege slot' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-section" *ngIf="selectedSlotId()">
+      <h2 class="step-title">
+        <span class="step-number">3</span>
+        Informații Client
+      </h2>
+
+      <div class="client-tabs">
+        <button 
+          type="button" 
+          (click)="clientMode.set('new')"
+          class="tab-button"
+          [ngClass]="{'tab-active': clientMode() === 'new'}">
+          Client Nou
+        </button>
+        <button 
+          type="button" 
+          (click)="clientMode.set('existing')"
+          class="tab-button"
+          [ngClass]="{'tab-active': clientMode() === 'existing'}">
+          Client Existent
+        </button>
+      </div>
+
+      <div *ngIf="clientMode() === 'new'" class="client-form-grid">
+        <div class="input-group">
+          <label class="input-label">Nume Complet *</label>
+          <input type="text" [(ngModel)]="newCustomer.name" placeholder="Popescu Ion" class="form-input">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Email *</label>
+          <input type="email" [(ngModel)]="newCustomer.email" placeholder="ion@example.com" class="form-input">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Telefon</label>
+          <input type="text" [(ngModel)]="newCustomer.phone" placeholder="07xx xxx xxx" class="form-input">
+        </div>
+      </div>
+
+      <div *ngIf="clientMode() === 'existing'" class="client-search-box">
+        <label class="input-label mb-1">Caută Clientul după Nume sau Email</label>
+        <input 
+          type="text" 
+          [(ngModel)]="customerSearchQuery" 
+          (ngModelChange)="searchExistingCustomer($event)"
+          placeholder="Tastează minim 3 caractere..." 
+          class="form-input"
+        >
+
+        <div *ngIf="customerSearchQuery && foundCustomers().length > 0" class="customers-dropdown" style="position: absolute; width: 100%; z-index: 999; background: white; border: 1px solid #ccc; max-height: 200px; overflow-y: auto;">
+        <div 
+            *ngFor="let client of foundCustomers()" 
+            (click)="selectCustomer(client)"
+            class="customer-item"
+            style="padding: 10px; cursor: pointer; border-bottom: 1px solid #eee;"
+        >
+            <span class="customer-name" style="font-weight: bold;">
+            {{ client.name || client.fullName || 'Fără Nume' }}
+            </span> 
+            <span *ngIf="client.email" class="customer-email" style="color: gray; font-size: 13px;">
+            - {{ client.email }}
+            </span>
+        </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-section" *ngIf="selectedSlotId()">
+      <h2 class="step-title">
+        <span class="step-number">4</span>
+        Alege Biletele
+      </h2>
+
+      <div class="tickets-list">
+        <div *ngFor="let ticket of ticketTypes()" class="ticket-row">
+          <div class="ticket-info">
+            <h3 class="ticket-name">{{ ticket.name }}</h3>
+            <div class="ticket-meta">
+              <span class="ticket-price">{{ ticket.price }} RON</span>
+              <span class="ticket-badge">Disponibile: {{ ticket.quantityAvailable }}</span>
+            </div>
+          </div>
+
+          <div class="quantity-selector">
+            <button 
+              type="button"
+              (click)="decrementQuantity(ticket.ticketTypeId)" 
+              [disabled]="(quantities()[ticket.ticketTypeId] || 0) === 0" 
+              class="quantity-btn">
+              -
+            </button>
+            <span class="quantity-value">{{ quantities()[ticket.ticketTypeId] || 0 }}</span>
+            <button 
+              type="button"
+              (click)="incrementQuantity(ticket.ticketTypeId, ticket.quantityAvailable)" 
+              [disabled]="(quantities()[ticket.ticketTypeId] || 0) >= ticket.quantityAvailable" 
+              class="quantity-btn">
+              +
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="errorMessage()" class="error-banner">
+      ⚠️ {{ errorMessage() }}
+    </div>
+
+    <div class="footer-section">
+      <button 
+        type="button" 
+        (click)="submitBooking()"
+        [disabled]="isSaving() || !selectedSlotId()"
+        class="submit-button"
+      >
+        <span *ngIf="isSaving()" class="spinner"></span>
+        {{ isSaving() ? 'Se creează rezervarea...' : 'Creează Rezervare manuală' }}
+      </button>
+    </div>
+
+  </div>
+</div>

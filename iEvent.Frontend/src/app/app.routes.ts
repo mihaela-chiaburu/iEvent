@@ -13,6 +13,7 @@ import { VenueDetailsComponent } from './pages/venue-details/venue-details.compo
 import { CreateEventComponent } from './pages/create-event/create-event.component';
 import { CreateVenueComponent } from './pages/create-venue/create-venue.component';
 import { BookingDetailsComponent } from './pages/booking-details/booking-details.component';
+import { AddBookingComponent } from './pages/add-booking/add-booking.component';
 
 export const routes: Routes = [
   { 
@@ -58,6 +59,9 @@ export const routes: Routes = [
   { 
     path: 'bookings/:id', 
     component: BookingDetailsComponent },
+  { 
+    path: 'add-booking', 
+    component: AddBookingComponent },
   { 
     path: '**', 
     redirectTo: '' 
