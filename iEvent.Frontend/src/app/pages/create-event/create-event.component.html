@@ -4,26 +4,57 @@
   <form [formGroup]="eventForm" class="event-form">
     
     <div class="form-section image-upload-section">
-      <label class="section-label">Banner Eveniment</label>
-      <div class="banner-preview-box" [style.background-image]="bannerUrl() ? 'url(' + bannerUrl() + ')' : null">
-        @if (!bannerUrl()) {
-          <div class="upload-placeholder">
-            @if (isUploadingBanner()) {
-              <p>Se încarcă bannerul...</p>
+      <div class="images-grid-container">
+        
+        <div class="banner-upload-wrapper">
+          <label class="section-label">Banner Eveniment (Imagine Principală)</label>
+          <div class="banner-preview-box" [style.background-image]="bannerUrl() ? 'url(' + bannerUrl() + ')' : null">
+            @if (!bannerUrl()) {
+              <div class="upload-placeholder">
+                @if (isUploadingBanner()) {
+                  <p>Se încarcă bannerul...</p>
+                } @else {
+                  <p>Niciun banner încărcat</p>
+                  <label class="btn-browse">
+                    Browse Banner
+                    <input type="file" (change)="onBannerSelected($event)" accept="image/*" style="display: none;">
+                  </label>
+                }
+              </div>
             } @else {
-              <p>Niciun banner încărcat</p>
-              <label class="btn-browse">
-                Browse File
-                <input type="file" (change)="onFileSelected($event)" accept="image/*" style="display: none;">
+              <label class="btn-browse change-banner-btn">
+                Schimbă bannerul
+                <input type="file" (change)="onBannerSelected($event)" accept="image/*" style="display: none;">
               </label>
             }
           </div>
-        } @else {
-          <label class="btn-browse change-banner-btn">
-            Schimbă imaginea
-            <input type="file" (change)="onFileSelected($event)" accept="image/*" style="display: none;">
-          </label>
-        }
+        </div>
+
+        <div class="gallery-upload-wrapper" style="margin-top: 20px;">
+          <label class="section-label">Alte Imagini Eveniment (Galerie Secundară)</label>
+          <div class="gallery-actions">
+            <label class="btn-browse btn-gallery-add">
+              + Adaugă Imagini
+              <input type="file" (change)="onGallerySelected($event)" accept="image/*" multiple style="display: none;">
+            </label>
+            @if (isUploadingGallery()) {
+              <span class="upload-status-text">Se încarcă imaginile...</span>
+            }
+          </div>
+
+          <div class="gallery-preview-grid" style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+            @for (img of galleryImages(); track img.imageId) {
+              <div class="gallery-preview-item" style="position: relative; width: 100px; height: 100px; border-radius: 6px; overflow: hidden; border: 1px solid #ccc;">
+                <img [src]="img.url" style="width: 100%; height: 100%; object-fit: cover;" alt="Galerie">
+              </div>
+            } @empty {
+              @if (!isUploadingGallery()) {
+                <p class="empty-gallery-text" style="color: #666; font-size: 0.9rem;">Nu ai adăugat încă imagini pentru galerie.</p>
+              }
+            }
+          </div>
+        </div>
+
       </div>
     </div>
 

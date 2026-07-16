@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { EventService } from '../../services/event.service';
+import { forkJoin, of } from 'rxjs'; 
 
 @Component({
   selector: 'app-create-event',
@@ -19,8 +20,11 @@ export class CreateEventComponent implements OnInit {
   eventForm!: FormGroup;
   eventId = signal<string | null>(null);
   venues = signal<any[]>([]);
+  
   bannerUrl = signal<string | null>(null);
+  galleryImages = signal<any[]>([]); 
   isUploadingBanner = signal<boolean>(false);
+  isUploadingGallery = signal<boolean>(false);
 
   categories = [
     'Concerts', 'Teatru', 'Festivaluri', 'Stand-up', 'Copii', 
@@ -114,7 +118,7 @@ export class CreateEventComponent implements OnInit {
     this.ticketTypes.removeAt(index);
   }
 
-  onFileSelected(event: Event) {
+  onBannerSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
@@ -134,7 +138,33 @@ export class CreateEventComponent implements OnInit {
         error: (err) => {
           console.error(err);
           this.isUploadingBanner.set(false);
-          alert('Eroare la încărcarea imaginii pe Cloudinary.');
+          alert('Eroare la încărcarea bannerului.');
+        }
+      });
+    }
+  }
+
+  onGallerySelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const files = input.files;
+      const currentId = this.eventId();
+
+      if (!currentId) {
+        alert('Se generează încă ID-ul evenimentului. Încearcă din nou.');
+        return;
+      }
+
+      this.isUploadingGallery.set(true);
+      this.eventService.uploadImages(currentId, files).subscribe({
+        next: (res) => {
+          this.galleryImages.set([...this.galleryImages(), ...res]);
+          this.isUploadingGallery.set(false);
+        },
+        error: (err) => {
+          console.error(err);
+          this.isUploadingGallery.set(false);
+          alert('Eroare la încărcarea imaginilor în galerie.');
         }
       });
     }
@@ -143,7 +173,7 @@ export class CreateEventComponent implements OnInit {
   publishEvent() {
     if (this.eventForm.invalid) {
       this.eventForm.markAllAsTouched();
-      alert('Vă rugăm să completați toate câmpurile obligatorii.');
+      alert('Vă rugăm să completați toate câmpurile obligatorii din formular.');
       return;
     }
 
@@ -152,30 +182,83 @@ export class CreateEventComponent implements OnInit {
 
     const formValues = this.eventForm.value;
 
+    const currentImages: any[] = [];
+
+    if (this.bannerUrl()) {
+      currentImages.push({
+        url: this.bannerUrl(),
+        publicId: '', 
+        sortOrder: 0,
+        isBanner: true
+      });
+    }
+
+    if (this.galleryImages() && this.galleryImages().length > 0) {
+      this.galleryImages().forEach((img, index) => {
+        currentImages.push({
+          url: img.url,
+          publicId: img.publicId || '',
+          sortOrder: index + 1,
+          isBanner: false
+        });
+      });
+    }
+
     const patchData = {
       name: formValues.name,
       description: formValues.description,
       venueId: formValues.venueId,
       category: Number(formValues.category),
-      eventDates: formValues.eventDates 
+      images: currentImages 
     };
 
     this.eventService.patchEvent(currentId, patchData).subscribe({
       next: () => {
-        this.eventService.publishEvent(currentId).subscribe({
+        const dateRequests = formValues.eventDates.length > 0 
+          ? this.eventService.saveDates(currentId, formValues.eventDates) 
+          : of(null);
+
+        const ticketRequests = formValues.ticketTypes.map((ticket: any) => {
+          const ticketPayload = {
+            eventId: currentId,
+            name: ticket.name,
+            price: ticket.price,
+            quantityAvailable: ticket.quantity || 0, 
+            icon: 0, 
+            availableFrom: new Date(ticket.availableFrom).toISOString(),
+            availableUntil: new Date(ticket.availableTo).toISOString() 
+          };
+          
+          return this.eventService.createTicketType(ticketPayload);
+        });
+
+        const allTicketsRequest = ticketRequests.length > 0 
+          ? forkJoin(ticketRequests) 
+          : of(null);
+
+        forkJoin([dateRequests, allTicketsRequest]).subscribe({
           next: () => {
-            alert('Evenimentul a fost publicat cu succes!');
-            this.router.navigate(['/events']);
+            this.eventService.publishEvent(currentId).subscribe({
+              next: () => {
+                alert('Evenimentul a fost publicat cu succes!');
+                this.router.navigate(['/events']);
+              },
+              error: (err) => {
+                console.error(err);
+                alert('Detaliile s-au salvat, dar a apărut o eroare la publicarea evenimentului.');
+              }
+            });
           },
           error: (err) => {
             console.error(err);
-            alert('Eroare la publicarea evenimentului.');
+            alert('Eroare la salvarea biletelor sau a datelor calendaristice.');
           }
         });
+
       },
       error: (err) => {
         console.error(err);
-        alert('Eroare la salvarea detaliilor evenimentului.');
+        alert('Eroare la salvarea datelor de bază ale evenimentului.');
       }
     });
   }
@@ -196,6 +279,41 @@ export class CreateEventComponent implements OnInit {
           console.error(err);
           this.router.navigate(['/events']);
         }
+      });
+    }
+  }
+
+  saveEventDetails(eventId: string) {
+    const formValues = this.eventForm.value;
+
+    if (formValues.eventDates && formValues.eventDates.length > 0) {
+      this.eventService.saveDates(eventId, formValues.eventDates).subscribe({
+        next: (res) => console.log('Datele calendaristice au fost salvate cu succes!', res),
+        error: (err) => console.error('Eroare la salvarea datelor calendaristice:', err)
+      });
+    }
+
+    if (formValues.ticketTypes && formValues.ticketTypes.length > 0) {
+      formValues.ticketTypes.forEach((ticket: any) => {
+        
+        const ticketPayload = {
+          eventId: eventId,
+          name: ticket.name,
+          price: ticket.price,
+          quantityAvailable: ticket.quantity || 0, 
+          icon: 0, 
+          availableFrom: new Date(ticket.availableFrom).toISOString(),
+          availableUntil: new Date(ticket.availableTo).toISOString() 
+        };
+
+        this.eventService.createTicketType(ticketPayload).subscribe({
+          next: (res) => {
+            console.log(`Biletul "${ticket.name}" a fost creat cu succes!`, res);
+          },
+          error: (err) => {
+            console.error(`Eroare la salvarea biletului "${ticket.name}":`, err);
+          }
+        });
       });
     }
   }

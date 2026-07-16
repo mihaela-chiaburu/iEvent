@@ -7,7 +7,6 @@ import { Observable } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class EventService {
   private http = inject(HttpClient);
-  // Folosim proprietatea ta de bază definită la început
   private url = 'https://localhost:44330/api/events';
   private venuesUrl = 'https://localhost:44330/api/venues';
 
@@ -47,47 +46,57 @@ export class EventService {
     return this.http.get<any>(this.url, { params });
   }
 
-  // Obține locațiile populare (folosește URL-ul corect definit de tine)
   getPopularVenues(): Observable<any[]> {
     return this.http.get<any[]>(`${this.venuesUrl}/popular`);
   }
 
-  // --- Metode pentru fluxul de Event Manager (Draft -> Patch -> Publish) ---
-
-  // Creează un draft gol și returnează datele lui (inclusiv eventId primit de la backend)
   createDraft(): Observable<any> {
     return this.http.post<any>(`${this.url}/draft`, {});
   }
 
-  // Actualizează detaliile generale ale evenimentului draftat
   patchEvent(id: string, data: any): Observable<any> {
     return this.http.patch<any>(`${this.url}/${id}`, data);
   }
 
-  // Încarcă bannerul în Cloudinary pentru evenimentul dat
   uploadBanner(eventId: string, file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post<any>(`${this.url}/${eventId}/banner`, formData);
   }
 
-  // Adaugă/actualizează datele evenimentului
   saveDates(eventId: string, dates: any[]): Observable<any> {
     return this.http.post<any>(`${`${this.url}/${eventId}/dates`}`, dates);
   }
 
-  // Adaugă tipurile de bilet la eveniment
   addTicketType(eventId: string, ticket: any): Observable<any> {
     return this.http.post<any>(`${this.url}/${eventId}/ticket-types`, ticket);
   }
 
-  // Publică evenimentul de la stadiul de draft la activ
   publishEvent(id: string): Observable<any> {
     return this.http.post<any>(`${this.url}/${id}/publish`, {});
   }
 
-  // Șterge draft-ul sau evenimentul definitiv
   deleteEvent(id: string): Observable<any> {
     return this.http.delete<any>(`${this.url}/${id}`);
+  }
+
+  uploadImages(eventId: string, files: FileList): Observable<any> {
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append(`Files`, files[i], files[i].name);
+    }
+    return this.http.post<any>(`${this.url}/${eventId}/images`, formData);
+  }
+
+  createTicketType(ticketData: {
+    eventId: string;
+    name: string;
+    price: number;
+    quantityAvailable: number; 
+    icon?: number;
+    availableFrom: string;
+    availableUntil: string;   
+  }): Observable<any> {
+    return this.http.post<any>(`https://localhost:44330/api/ticket-types`, ticketData);
   }
 }

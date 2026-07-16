@@ -93,7 +93,7 @@
             }
 
             @for (ev of filteredEvents(); track ev.eventId) {
-                <div class="event-card" [routerLink]="isManager() ? ['/edit-event', ev.eventId] : ['/event-details', ev.eventId]">
+                <div class="event-card" [routerLink]="['/event-details', ev.eventId]">
                     <div class="card-img-wrapper">
                         <img [src]="ev.imageUrl || 'assets/placeholder.jpg'" alt="{{ ev.name }}" class="card-img">
                     </div>
