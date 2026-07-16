@@ -11,6 +11,7 @@ import { UsersComponent } from './pages/users/users.component';
 import { EventDetailsComponent } from './pages/event-details/event-details.component';
 import { VenueDetailsComponent } from './pages/venue-details/venue-details.component';
 import { CreateEventComponent } from './pages/create-event/create-event.component';
+import { CreateVenueComponent } from './pages/create-venue/create-venue.component';
 
 export const routes: Routes = [
   { 
@@ -50,6 +51,9 @@ export const routes: Routes = [
   { 
     path: 'create-event', 
     component: CreateEventComponent },
+  { 
+    path: 'create-venue/:id', 
+    component: CreateVenueComponent },
   { 
     path: '**', 
     redirectTo: '' 

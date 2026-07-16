@@ -1,43 +1,54 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { EventService } from '../../services/event.service';
+import { Component, inject, signal } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+import { VenueService } from '../../services/venue.service'; // ajusteză calea
 
 @Component({
-  selector: 'app-venues',
+  selector: 'app-venues-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [RouterModule],
   templateUrl: './venues.component.html',
-  styleUrl: './venues.component.css'
+  styleUrls: ['./venues.component.css']
 })
-export class VenuesComponent implements OnInit {
-  private eventService = inject(EventService);
+export class VenuesComponent {
+  private venueService = inject(VenueService);
+  private router = inject(Router);
 
   venues = signal<any[]>([]);
-  isLoading = signal<boolean>(true);
+  isLoading = signal<boolean>(false);
+  
+  isManager = signal<boolean>(true); 
 
   ngOnInit() {
     this.loadVenues();
   }
 
   loadVenues() {
-    this.eventService.getPopularVenues().subscribe({
-      next: (data: any[]) => {
-        this.venues.set(data || []);
+    this.isLoading.set(true);
+    this.venueService.getVenues().subscribe({
+      next: (data) => {
+        this.venues.set(data);
         this.isLoading.set(false);
       },
-      error: (err) => {
-        console.error('Eroare la încărcarea locațiilor:', err);
-        this.isLoading.set(false);
-      }
+      error: () => this.isLoading.set(false)
     });
   }
 
   getMainImageUrl(venue: any): string {
-    if (!venue.images || venue.images.length === 0) {
-      return 'assets/placeholder-venue.jpg';
+    if (venue.images && venue.images.length > 0) {
+      return venue.images[0].url;
     }
-    const mainImg = venue.images.find((img: any) => img.sortOrder === 0);
-    return mainImg ? mainImg.url : venue.images[0].url;
+    return 'assets/images/default-venue.jpg'; 
+  }
+
+  goToCreateVenue() {
+    this.venueService.createDraft().subscribe({
+      next: (draft) => {
+        this.router.navigate(['/create-venue', draft.venueId]);
+      },
+      error: (err) => {
+        console.error(err);
+        alert('Eroare la inițializarea locației noi.');
+      }
+    });
   }
 }

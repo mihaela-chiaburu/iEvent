@@ -1,0 +1,135 @@
+<div class="create-event-container">
+  <h2>Adaugă Locație Nouă</h2>
+
+  <form [formGroup]="venueForm" class="event-form">
+    
+    <!-- SECTIUNE INCARCARE IMAGINI -->
+    <div class="form-section image-upload-section">
+      <div class="images-grid-container">
+        <div class="gallery-upload-wrapper">
+          <label class="section-label">Imagini Locație (Galerie Foto)</label>
+          <div class="gallery-actions">
+            <label class="btn-browse btn-gallery-add" style="background-color: #007bff; color: white; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+              + Încarcă Imagini
+              <input type="file" (change)="onGallerySelected($event)" accept="image/*" multiple style="display: none;">
+            </label>
+            @if (isUploadingGallery()) {
+              <span class="upload-status-text" style="margin-left: 10px;">Se încarcă imaginile...</span>
+            }
+          </div>
+
+          <div class="gallery-preview-grid" style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+            @for (img of galleryImages(); track img.imageId) {
+              <div class="gallery-preview-item" style="position: relative; width: 120px; height: 120px; border-radius: 6px; overflow: hidden; border: 1px solid #ccc;">
+                <img [src]="img.url" style="width: 100%; height: 100%; object-fit: cover;" alt="Galerie">
+              </div>
+            } @empty {
+              @if (!isUploadingGallery()) {
+                <p class="empty-gallery-text" style="color: #666; font-size: 0.9rem;">Nu ai adăugat încă nicio imagine pentru această locație.</p>
+              }
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTIUNE DETALII GENERALE -->
+    <div class="form-section">
+      <div class="form-row">
+        <div class="form-group" style="flex: 1;">
+          <label for="name">Numele Locației *</label>
+          <input type="text" id="name" formControlName="name" placeholder="Ex: Sala Palatului, Club Rock">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Descriere Locație *</label>
+        <textarea id="description" formControlName="description" rows="5" placeholder="Adaugă detalii, istoric sau dotări generale..."></textarea>
+      </div>
+    </div>
+
+    <!-- SECTIUNE LOCALIZARE (FĂRĂ HARTĂ INTERACTIVĂ, DOAR DATE REALE) -->
+    <div class="form-section">
+      <h3 style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Localizare</h3>
+      <div class="form-row" style="display: flex; gap: 15px;">
+        <div class="form-group" style="flex: 1;">
+          <label for="city">Oraș *</label>
+          <input type="text" id="city" formControlName="city" placeholder="Ex: București">
+        </div>
+        <div class="form-group" style="flex: 2;">
+          <label for="address">Adresă completă *</label>
+          <input type="text" id="address" formControlName="address" placeholder="Ex: Str. Academiei Nr. 10">
+        </div>
+      </div>
+
+      <div class="form-row" style="display: flex; gap: 15px; margin-top: 10px;">
+        <div class="form-group" style="flex: 1;">
+          <label for="latitude">Latitudine *</label>
+          <input type="number" step="any" id="latitude" formControlName="latitude" placeholder="Ex: 44.4396">
+        </div>
+        <div class="form-group" style="flex: 1;">
+          <label for="longitude">Longitudine *</label>
+          <input type="number" step="any" id="longitude" formControlName="longitude" placeholder="Ex: 26.0963">
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTIUNE DETALII CONTACT ȘI CAPACITATE -->
+    <div class="form-section">
+      <h3 style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Detalii Locație & Contact</h3>
+      <div class="form-row" style="display: flex; gap: 15px;">
+        <div class="form-group" style="flex: 1;">
+          <label for="capacity">Capacitate maximă (persoane) *</label>
+          <input type="number" id="capacity" formControlName="capacity">
+        </div>
+      </div>
+
+      <div class="form-row" style="display: flex; gap: 15px; margin-top: 10px;">
+        <div class="form-group" style="flex: 1;">
+          <label for="phone">Telefon Contact *</label>
+          <input type="text" id="phone" formControlName="phone" placeholder="Ex: 0722000000">
+        </div>
+        <div class="form-group" style="flex: 1;">
+          <label for="email">Email Contact *</label>
+          <input type="email" id="email" formControlName="email" placeholder="Ex: contact@locatie.ro">
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTIUNE FACILITĂȚI -->
+    <div class="form-section">
+      <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <label class="section-label" style="font-weight: bold; font-size: 1.1rem;">Facilități Disponibile</label>
+        <button type="button" class="btn-secondary-action" (click)="addFacility()" style="background-color: #6c757d; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
+          + Adaugă Facilitate
+        </button>
+      </div>
+
+      <div formArrayName="facilities" style="display: flex; flex-direction: column; gap: 10px;">
+        @for (facility of facilities.controls; track $index; let fIndex = $index) {
+          <div [formGroupName]="fIndex" style="display: flex; gap: 10px; align-items: center; background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+              <input type="text" formControlName="name" placeholder="Ex: Parcare gratuită, Aer condiționat, Scenă, Acces Rampă">
+            </div>
+            <button type="button" (click)="removeFacility(fIndex)" style="background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+              Șterge
+            </button>
+          </div>
+        } @empty {
+          <p style="color: #666; font-size: 0.9rem;">Nu ai adăugat facilități. (Ex: Wi-Fi, Parcare, Sunet)</p>
+        }
+      </div>
+    </div>
+
+    <!-- BUTOANE DE SALVARE ȘI ANULARE -->
+    <div class="action-footer-buttons" style="display: flex; justify-content: space-between; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+      <button type="button" class="btn-delete-draft" (click)="deleteDraft()" style="background-color: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+        Anulează locația
+      </button>
+      <button type="button" class="btn-publish" (click)="publishVenue()" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+        Publică Locația
+      </button>
+    </div>
+
+  </form>
+</div>
