@@ -10,7 +10,6 @@ namespace iEvent.WebApi.Controllers;
 
 [ApiController]
 [Route("api/users")]
-[Authorize(Roles = RoleNames.SuperAdmin)]
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -20,6 +19,7 @@ public class UsersController : ControllerBase
         _userService = userService;
     }
 
+    [Authorize(Roles = "BookingManager,SuperAdmin")]
     [HttpGet]
     public async Task<ActionResult<PagedResultDto<UserRespDto>>> GetAll([FromQuery] UserFilterDto filter)
     {
@@ -27,6 +27,7 @@ public class UsersController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Roles = RoleNames.SuperAdmin)]
     [HttpPost("create-manager")]
     public async Task<IActionResult> CreateManager([FromBody] AdminUserCreateDto request)
     {
@@ -35,6 +36,7 @@ public class UsersController : ControllerBase
         return StatusCode(201, new { message = "Manager created successfully." });
     }
 
+    [Authorize(Roles = RoleNames.SuperAdmin)]
     [HttpPut("{id}/role")]
     public async Task<IActionResult> UpdateRole(string id, [FromBody] UpdateUserRoleRequest request)
     {
@@ -43,6 +45,7 @@ public class UsersController : ControllerBase
         return Ok(new { message = "User role updated successfully." });
     }
 
+    [Authorize(Roles = RoleNames.SuperAdmin)]
     [HttpPatch("{id}/lock")]
     public async Task<IActionResult> LockUser(string id)
     {
@@ -51,6 +54,7 @@ public class UsersController : ControllerBase
         return Ok(new { message = "User has been locked successfully." });
     }
 
+    [Authorize(Roles = RoleNames.SuperAdmin)]
     [HttpPatch("{id}/unlock")]
     public async Task<IActionResult> UnlockUser(string id)
     {
