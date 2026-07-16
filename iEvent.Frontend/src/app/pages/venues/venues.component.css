@@ -21,7 +21,6 @@
     font-size: 1.1rem;
 }
 
-/* Stiluri Secțiune Hartă OpenStreetMap */
 .map-section {
     background: #ffffff;
     border-radius: 12px;
@@ -56,7 +55,7 @@
 .map-mockup {
     width: 100%;
     height: 350px;
-    background: #e5e3df; /* Culoare clasică de fundal pentru hărți */
+    background: #e5e3df; 
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -83,7 +82,6 @@
     50% { transform: translateY(-10px); }
 }
 
-/* Gridul de Carduri */
 .venues-section h2 {
     font-size: 1.6rem;
     margin-bottom: 1.5rem;
@@ -114,7 +112,6 @@
     box-shadow: 0 8px 25px rgba(0,0,0,0.12);
 }
 
-/* Imaginea */
 .venue-image-wrapper {
     position: relative;
     width: 100%;
@@ -141,7 +138,6 @@
     backdrop-filter: blur(4px);
 }
 
-/* Corpul Cardului */
 .venue-card-body {
     padding: 1.25rem;
     display: flex;
@@ -206,7 +202,6 @@
     background: #555;
 }
 
-/* Stări Loading & Empty */
 .loading-spinner, .empty-state {
     text-align: center;
     padding: 3rem;
@@ -222,7 +217,7 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     display: flex;
     flex-direction: column;
-    cursor: pointer; /* Transformă indicatorul în mână */
+    cursor: pointer; 
 }
 
 .venue-card-clickable:hover {

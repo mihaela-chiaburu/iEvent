@@ -1,0 +1,163 @@
+<div class="container mx-auto p-6 max-w-5xl">
+  <div class="mb-6">
+    <a routerLink="/bookings" class="text-blue-600 hover:text-blue-800 flex items-center gap-2 font-medium">
+      ← Înapoi la listă rezervări
+    </a>
+  </div>
+
+  <div *ngIf="isLoading()" class="flex justify-center items-center py-20">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    <span class="ml-3 text-gray-600 font-medium">Se încarcă detaliile...</span>
+  </div>
+
+  <div *ngIf="!isLoading() && booking()" class="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fadeIn">
+    
+    <div class="lg:col-span-2 space-y-6">
+      
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Cod Rezervare</span>
+            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">{{ booking()?.bookingCode }}</h1>
+          </div>
+          <span [class]="'px-4 py-1.5 rounded-full text-sm font-semibold border ' + statusLabels[booking()?.status]?.class">
+            {{ statusLabels[booking()?.status]?.text }}
+          </span>
+        </div>
+
+        <div class="border-t border-gray-100 pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div *ngIf="customerDetails()">
+            <p><strong>Nume:</strong> {{ customerDetails()?.name }}</p>
+            <p><strong>Email:</strong> {{ customerDetails()?.email }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+        <h2 class="text-xl font-bold text-gray-900 border-b border-gray-100 pb-3">Informații Eveniment</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="md:col-span-2 space-y-3">
+            <h2 class="text-lg font-bold text-gray-850">{{ eventDetails()?.name || 'Se încarcă...' }}</h2>
+            
+            <div class="venue-info text-gray-600" *ngIf="venueDetails()">
+              <p><strong>Locație:</strong> {{ venueDetails()?.name }}</p>
+              <p class="text-sm text-gray-500">
+                <strong>Adresă:</strong> {{ venueDetails()?.address }}, {{ venueDetails()?.city }}
+              </p>
+            </div>
+            <div *ngIf="!venueDetails() && !isLoading()" class="text-gray-400 text-sm italic">
+              Locația nu a putut fi încărcată.
+            </div>
+
+            <p class="text-gray-700"><strong>Dată:</strong> {{ getEventDateFormatted() }}</p>
+          </div>
+          
+          <div class="flex flex-col items-center justify-center bg-gray-50 p-4 rounded-xl border border-gray-100">
+            <img *ngIf="qrCodeUrl()" [src]="qrCodeUrl()" alt="QR Code" class="w-32 h-32 mb-2 rounded-md shadow-sm border border-white">
+            <span class="text-xs text-gray-500 font-mono">{{ booking()?.bookingCode }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+        <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+          <h2 class="text-xl font-bold text-gray-900">Bilete Rezervate</h2>
+          <span class="text-sm bg-blue-50 text-blue-700 font-semibold px-2.5 py-0.5 rounded-full">
+            {{ booking()?.tickets?.length || 0 }} Tipuri
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="text-xs text-gray-400 uppercase border-b border-gray-100">
+                <th class="py-3">Tip Bilet</th>
+                <th class="py-3 text-center">Preț Unitar</th>
+                <th class="py-3 text-center">Cantitate</th>
+                <th class="py-3 text-right">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let t of booking()?.tickets" class="border-b border-gray-50 last:border-0">
+                <td class="py-4 font-semibold text-gray-800">
+                  {{ t.ticketTypeName || 'Se încarcă denumirea...' }}
+                </td>
+                <td class="py-4 text-center font-mono text-gray-600">{{ t.unitPrice | currency:'EUR' }}</td>
+                <td class="py-4">
+                  <div class="flex items-center justify-center gap-2">
+                    <button (click)="updateQuantity(t, -1)" class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 font-bold transition-all">-</button>
+                    <span class="w-8 text-center font-bold text-gray-800">{{ t.quantity }}</span>
+                    <button (click)="updateQuantity(t, 1)" class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 font-bold transition-all">+</button>
+                  </div>
+                </td>
+                <td class="py-4 text-right font-bold text-gray-900 font-mono">{{ (t.quantity * t.unitPrice) | currency:'EUR' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-3 mt-4">
+          <h3 class="text-sm font-bold text-gray-700">Adaugă tip bilet nou pe această rezervare</h3>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <select [(ngModel)]="selectedNewTicketTypeId" class="flex-1 bg-white border border-gray-200 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="" disabled selected>Alege un tip de bilet...</option>
+              <option *ngFor="let tt of allAvailableTicketTypes()" [value]="tt.ticketTypeId">
+                {{ tt.name }} ({{ tt.price | currency:'EUR' }})
+              </option>
+            </select>
+            <div class="flex gap-2">
+              <input type="number" [(ngModel)]="newTicketQuantity" min="1" class="w-20 bg-white border border-gray-200 rounded-lg p-2.5 text-center text-sm font-bold focus:outline-none">
+              <button (click)="addNewTicketType()" [disabled]="!selectedNewTicketTypeId" class="bg-blue-600 text-white font-bold px-4 py-2.5 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50 transition-all">
+                Adaugă
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="space-y-6">
+      
+      <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 sticky top-6 space-y-6">
+        <h2 class="text-xl font-bold text-gray-900 border-b border-gray-100 pb-3">Sumar Financiar</h2>
+
+        <div class="space-y-3">
+          <div class="flex justify-between text-gray-500">
+            <span>Suma Totală de Plată:</span>
+            <span class="font-bold text-gray-800 font-mono text-lg">{{ booking()?.totalPrice | currency:'EUR' }}</span>
+          </div>
+          <div class="flex justify-between text-gray-500">
+            <span>Status Plată:</span>
+            <span class="font-semibold" [ngClass]="booking()?.status === 1 ? 'text-green-600' : 'text-amber-600'">
+              {{ booking()?.status === 1 ? 'Achitat complet' : 'Restant / Neachitat' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="bg-amber-50 p-4 rounded-xl border border-amber-100 space-y-4">
+          <div class="flex items-center gap-2">
+            <span class="p-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold">POS / Cash</span>
+            <h3 class="text-sm font-bold text-amber-900">Încasează la Eveniment</h3>
+          </div>
+
+          <div class="pt-2">
+            <div class="text-xs text-gray-500 uppercase font-bold mb-1">Suma de colectat acum:</div>
+            <div class="text-3xl font-extrabold text-amber-900 font-mono mb-4">
+              {{ booking()?.totalPrice | currency:'EUR' }}
+            </div>
+
+            <button 
+              (click)="collectAtVenue()" 
+              [disabled]="isPaying() || booking()?.totalPrice === 0"
+              class="w-full bg-amber-600 text-white font-bold py-3 px-4 rounded-xl shadow-sm hover:bg-amber-700 transition-all flex justify-center items-center gap-2 disabled:opacity-50">
+              <span *ngIf="isPaying()" class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+              {{ isPaying() ? 'Se procesează plata...' : 'Confirmă Încasare la Locație' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

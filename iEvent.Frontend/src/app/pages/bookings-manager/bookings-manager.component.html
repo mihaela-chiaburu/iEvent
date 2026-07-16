@@ -1,28 +1,144 @@
-<h2>Booking Manager Panel</h2>
+<div class="bookings-manager-container">
+  
+  <header class="bookings-header">
+    <h1>Bookings</h1>
+  </header>
 
-<div class="panel-container">
-    <div class="bookings-column">
-        <h3>All Bookings</h3>
-        @for (b of allBookings(); track b.bookingId) {
-            <div class="booking-card">
-                <p><strong>Code:</strong> {{ b.bookingCode }} | Client ID: {{ b.customerId }}</p>
-                <p>Total: {{ b.totalPrice }} MDL | Status: {{ b.status }}</p>
-                <button (click)="markAsPaid(b.bookingId)" class="btn btn-paid">Mark Paid</button>
-                <button (click)="markAsUnpaid(b.bookingId)" class="btn btn-unpaid">Mark Unpaid</button>
-                <button (click)="viewDetails(b.bookingId)" class="btn btn-details">Details</button>
-            </div>
-        }
-    </div>
+  <div class="actions-row">
+    <button class="btn-add-booking" (click)="navigateToAddBooking()">
+      ➕ Adaugă rezervare
+    </button>
+  </div>
 
-    <div class="stock-sidebar">
-        <h3>Update Ticket Stock</h3>
-        @for (t of ticketTypes(); track t.ticketTypeId) {
-            <div class="stock-item">
-                <p><strong>{{ t.name }}</strong></p>
-                <p>Current Stock: {{ t.quantityAvailable }}</p>
-                <input type="number" [(ngModel)]="t.quantityAvailable" class="stock-input" />
-                <button (click)="updateStock(t)" class="btn btn-update">Update</button>
-            </div>
-        }
+  <section class="filters-card">
+    <div class="filters-grid">
+      
+      <div class="filter-group">
+        <label>Caută</label>
+        <input 
+          type="text" 
+          [ngModel]="searchQuery()" 
+          (ngModelChange)="searchQuery.set($event); applyFilters()" 
+          placeholder="Cod, email sau nume user...">
+      </div>
+
+      <div class="filter-group">
+        <label>Status</label>
+        <select [ngModel]="selectedStatus()" (ngModelChange)="selectedStatus.set(+$event); applyFilters()">
+          <option [value]="-1">Toate statusurile</option>
+          <option [value]="0">Pending</option>
+          <option [value]="1">Paid</option>
+          <option [value]="2">Cancelled</option>
+          <option [value]="3">Refunded</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Dată Rezervare</label>
+        <input 
+          type="date" 
+          [ngModel]="selectedDate()" 
+          (ngModelChange)="selectedDate.set($event); applyFilters()">
+      </div>
+
+      <div class="filter-group reset-group">
+        <button class="btn-reset" (click)="resetFilters()">Reset Filtre</button>
+      </div>
+
     </div>
+  </section>
+
+  <section class="table-section">
+    @if (isLoading()) {
+      <div class="table-spinner">Se încarcă lista de rezervări...</div>
+    } @else if (bookings().length === 0) {
+      <div class="empty-bookings">Nu s-a găsit nicio rezervare conform filtrelor selectate.</div>
+    } @else {
+      <div class="table-responsive">
+        <table class="bookings-table">
+          <thead>
+            <tr>
+              <th>Cod Rezervare</th>
+              <th>Eveniment (Nume / Dată / Oră)</th>
+              <th>Client (Nume / Email)</th>
+              <th>Bilete</th>
+              <th>Total Plătit</th>
+              <th>Status</th>
+              <th>Data/Ora Înregistrării</th>
+              <th>Acțiuni</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (booking of bookings(); track booking.bookingId) {
+              <tr class="table-row-hover" [routerLink]="['/booking-details', booking.bookingId]">
+                
+                <td class="bold-code" (click)="$event.stopPropagation()">
+                  <a [routerLink]="['/booking-details', booking.bookingId]">{{ booking.bookingCode }}</a>
+                </td>
+
+                <td>
+                    <a [routerLink]="['/bookings', booking.bookingId]" class="text-blue-600 hover:underline font-bold pointer">
+                        {{ booking.eventName }}
+                    </a>
+                    <div class="text-sm text-gray-500">{{ booking.eventDateTimeFormatted }}</div>
+                </td>
+
+                <td>
+                    <div class="font-medium text-gray-900">
+                        {{ booking.customerName || booking.customerEmail || 'Client Fără Nume/Email' }}
+                    </div>
+                    <div *ngIf="booking.customerName" class="text-xs text-gray-400">
+                        {{ booking.customerEmail }}
+                    </div>
+                </td>
+
+                <td>
+                  <div class="tickets-cell">
+                    @for (t of booking.tickets; track t.bookingTicketId) {
+                      <span class="ticket-badge">
+                        {{ t.quantity }}x {{ t.ticketTypeName || 'Bilet' }}
+                      </span>
+                    } @empty {
+                      <span class="empty-badge">0 bilete</span>
+                    }
+                  </div>
+                </td>
+
+                <td class="total-price-cell">
+                  {{ booking.totalPrice | number:'1.2-2' }} Lei
+                </td>
+
+                <td>
+                  <span class="status-pill" [ngClass]="statusLabels[booking.status]?.class">
+                    {{ statusLabels[booking.status]?.text || 'Unknown' }}
+                  </span>
+                </td>
+
+                <td class="date-time-cell">
+                  {{ booking.bookingDate | date:'dd.MM.yyyy, HH:mm' }}
+                </td>
+
+                <td class="actions-cell" (click)="$event.stopPropagation()">
+                  <button 
+                    class="btn-action-status" 
+                    [ngClass]="booking.status === 1 ? 'btn-unpaid' : 'btn-paid'" 
+                    (click)="togglePaidStatus(booking)"
+                    [title]="booking.status === 1 ? 'Marchează ca Neplătit' : 'Marchează ca Plătit'">
+                    {{ booking.status === 1 ? 'Unpaid' : 'Paid' }}
+                  </button>
+                  <button 
+                    class="btn-action-delete" 
+                    (click)="deleteBooking(booking.bookingId)" 
+                    title="Șterge rezervare">
+                    🗑️
+                  </button>
+                </td>
+
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
 </div>

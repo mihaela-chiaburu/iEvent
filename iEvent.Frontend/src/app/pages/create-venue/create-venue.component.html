@@ -3,7 +3,6 @@
 
   <form [formGroup]="venueForm" class="event-form">
     
-    <!-- SECTIUNE INCARCARE IMAGINI -->
     <div class="form-section image-upload-section">
       <div class="images-grid-container">
         <div class="gallery-upload-wrapper">
@@ -33,7 +32,6 @@
       </div>
     </div>
 
-    <!-- SECTIUNE DETALII GENERALE -->
     <div class="form-section">
       <div class="form-row">
         <div class="form-group" style="flex: 1;">
@@ -48,7 +46,6 @@
       </div>
     </div>
 
-    <!-- SECTIUNE LOCALIZARE (FĂRĂ HARTĂ INTERACTIVĂ, DOAR DATE REALE) -->
     <div class="form-section">
       <h3 style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Localizare</h3>
       <div class="form-row" style="display: flex; gap: 15px;">
@@ -74,7 +71,6 @@
       </div>
     </div>
 
-    <!-- SECTIUNE DETALII CONTACT ȘI CAPACITATE -->
     <div class="form-section">
       <h3 style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Detalii Locație & Contact</h3>
       <div class="form-row" style="display: flex; gap: 15px;">
@@ -96,7 +92,6 @@
       </div>
     </div>
 
-    <!-- SECTIUNE FACILITĂȚI -->
     <div class="form-section">
       <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
         <label class="section-label" style="font-weight: bold; font-size: 1.1rem;">Facilități Disponibile</label>
@@ -121,7 +116,6 @@
       </div>
     </div>
 
-    <!-- BUTOANE DE SALVARE ȘI ANULARE -->
     <div class="action-footer-buttons" style="display: flex; justify-content: space-between; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
       <button type="button" class="btn-delete-draft" (click)="deleteDraft()" style="background-color: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
         Anulează locația

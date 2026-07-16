@@ -6,12 +6,13 @@ import { VenuesComponent } from './pages/venues/venues.component';
 import { MyBookingsComponent } from './pages/my-bookings/my-bookings.component';
 import { BookingComponent } from './pages/book-ticket/booking.component';
 import { EventFormComponent } from './pages/event-form/event-form.component';
-import { BookingsManagerComponent } from './pages/bookings-manager/bookings-manager.component';
+import { BookingManagerComponent } from './pages/bookings-manager/bookings-manager.component';
 import { UsersComponent } from './pages/users/users.component';
 import { EventDetailsComponent } from './pages/event-details/event-details.component';
 import { VenueDetailsComponent } from './pages/venue-details/venue-details.component';
 import { CreateEventComponent } from './pages/create-event/create-event.component';
 import { CreateVenueComponent } from './pages/create-venue/create-venue.component';
+import { BookingDetailsComponent } from './pages/booking-details/booking-details.component';
 
 export const routes: Routes = [
   { 
@@ -38,7 +39,7 @@ export const routes: Routes = [
     component: BookingComponent },
   { 
     path: 'bookings-manager', 
-    component: BookingsManagerComponent },
+    component: BookingManagerComponent },
   { 
     path: 'users', 
     component: UsersComponent },
@@ -54,6 +55,9 @@ export const routes: Routes = [
   { 
     path: 'create-venue/:id', 
     component: CreateVenueComponent },
+  { 
+    path: 'bookings/:id', 
+    component: BookingDetailsComponent },
   { 
     path: '**', 
     redirectTo: '' 
