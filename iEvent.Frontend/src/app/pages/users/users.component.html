@@ -1,40 +1,151 @@
-<h2>Users Management</h2>
+<div class="users-container">
+  <div class="header-section text-center">
+    <h1>Users</h1>
+    <button (click)="openCreateModal()" class="btn-create-main">
+      <span class="icon">+</span> Crează User
+    </button>
+  </div>
 
-<fieldset class="manager-fieldset">
-    <legend>Create New Manager</legend>
-    <input type="email" [(ngModel)]="newManager.email" placeholder="Email" class="form-input" />
-    <input type="password" [(ngModel)]="newManager.password" placeholder="Password" class="form-input" />
-    <select [(ngModel)]="newManager.role" class="form-select">
-        <option value="EventManager">Event Manager</option>
-        <option value="BookingManager">Booking Manager</option>
-    </select>
-    <button (click)="createManagerAccount()" class="btn-create">Create</button>
-</fieldset>
+  <div class="filters-row">
+    <div class="filter-group">
+      <input 
+        type="text" 
+        [(ngModel)]="filterSearch" 
+        (input)="applyFilters()"
+        placeholder="Caută după nume sau email..." 
+        class="form-control-input" />
+    </div>
 
-<h3>Modify User Roles</h3>
-<table class="user-table">
-    <thead>
-        <tr class="table-header-row">
-            <th>Email</th>
-            <th>Current Role</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-    @for (u of users(); track u.id) {
+    <div class="filter-group">
+      <select [(ngModel)]="filterRole" (change)="applyFilters()" class="form-control-select">
+        <option value="">Toate Rolurile</option>
+        <option value="Customer">Customer</option>
+        <option value="EventManager">EventManager</option>
+        <option value="BookingManager">BookingManager</option>
+        <option value="SuperAdmin">SuperAdmin</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <select [(ngModel)]="filterStatus" (change)="applyFilters()" class="form-control-select">
+        <option value="">Toate Statusurile</option>
+        <option value="active">Activ</option>
+        <option value="locked">Blocat</option>
+      </select>
+    </div>
+
+    <button (click)="resetFilters()" class="btn-reset">Resetează</button>
+  </div>
+
+  <div class="table-container">
+    <table class="styled-table">
+      <thead>
         <tr>
-            <td>{{ u.email }}</td>
-            <td>{{ u.roles && u.roles.length > 0 ? u.roles[0] : 'Niciun rol' }}</td>
-            <td>
-                <select #roleSelect [value]="u.roles && u.roles.length > 0 ? u.roles[0] : 'Customer'">
-                    <option value="Customer">Customer</option>
-                    <option value="EventManager">EventManager</option>
-                    <option value="BookingManager">BookingManager</option>
-                    <option value="SuperAdmin">SuperAdmin</option>
-                </select>
-                <button (click)="changeRole(u.id || '', roleSelect.value)" class="btn-change-role">Change Role</button>
-            </td>
+          <th>Utilizator</th>
+          <th>Rol</th>
+          <th>Status</th>
+          <th class="text-right">Acțiuni</th>
         </tr>
-    }
-    </tbody>
-</table>
+      </thead>
+      <tbody>
+        @for (u of users(); track u.id) {
+          <tr>
+            <td>
+              <div class="user-info">
+                <span class="user-name">{{ u.name || 'Fără Nume' }}</span>
+                <span class="user-email">{{ u.email }}</span>
+              </div>
+            </td>
+
+            <td>
+              <select 
+                [value]="u.roles && u.roles.length > 0 ? u.roles[0] : 'Customer'" 
+                (change)="changeRole(u.id, $any($event.target).value)"
+                class="role-dropdown">
+                <option value="Customer">Customer</option>
+                <option value="EventManager">EventManager</option>
+                <option value="BookingManager">BookingManager</option>
+                <option value="SuperAdmin">SuperAdmin</option>
+              </select>
+            </td>
+
+            <td>
+              <span class="status-badge" [class.active]="u.isActive !== false" [class.locked]="u.isActive === false">
+                {{ u.isActive !== false ? 'Activ' : 'Blocat' }}
+              </span>
+            </td>
+            <td class="text-right">
+              <div class="actions-group">
+                <button 
+                  (click)="toggleLock(u)" 
+                  [class.btn-lock]="u.isActive !== false" 
+                  [class.btn-unlock]="u.isActive === false">
+                  {{ u.isActive !== false ? 'Lock' : 'Unlock' }}
+                </button>
+                <button (click)="openEditModal(u)" class="btn-edit">Edit</button>
+                <button (click)="deleteUser(u.id)" class="btn-delete">Delete</button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="text-center no-data">Nu s-au găsit utilizatori conform filtrelor selectate.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (isCreateModalOpen) {
+  <div class="modal-backdrop">
+    <div class="modal-content">
+      <h2>Creare Manager Nou</h2>
+      <div class="modal-form">
+        <label>Nume complet</label>
+        <input type="text" [(ngModel)]="newManager.name" placeholder="Ex: Popescu Ion" class="form-control-input" />
+
+        <label>Email</label>
+        <input type="email" [(ngModel)]="newManager.email" placeholder="Ex: ion@domeniu.com" class="form-control-input" />
+
+        <label>Parolă</label>
+        <input type="password" [(ngModel)]="newManager.password" placeholder="Minim 6 caractere" class="form-control-input" />
+
+        <label>Telefon (Opțional)</label>
+        <input type="text" [(ngModel)]="newManager.phoneNumber" placeholder="Ex: 068..." class="form-control-input" />
+
+        <label>Rol Manager</label>
+        <select [(ngModel)]="newManager.role" class="form-control-select">
+          <option value="EventManager">Event Manager</option>
+          <option value="BookingManager">Booking Manager</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button (click)="closeCreateModal()" class="btn-cancel">Anulează</button>
+        <button (click)="createManagerAccount()" class="btn-submit">Salvează</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (isEditModalOpen && editingUser) {
+  <div class="modal-backdrop">
+    <div class="modal-content">
+      <h2>Editează Utilizatorul</h2>
+      <div class="modal-form">
+        <label>Nume complet</label>
+        <input type="text" [(ngModel)]="editingUser.name" class="form-control-input" />
+
+        <label>Email (Vizualizare)</label>
+        <input type="email" [value]="editingUser.email" class="form-control-input" disabled />
+
+        <label>Telefon</label>
+        <input type="text" [(ngModel)]="editingUser.phoneNumber" class="form-control-input" />
+      </div>
+      <div class="modal-actions">
+        <button (click)="closeEditModal()" class="btn-cancel">Anulează</button>
+        <button (click)="saveUserEdit()" class="btn-submit">Actualizează</button>
+      </div>
+    </div>
+  </div>
+}
